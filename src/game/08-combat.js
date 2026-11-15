@@ -923,9 +923,9 @@ function armour(p, tier) {
   p.torso.material = tun; p.arms.forEach(a => a.userData.sleeve.material = tun);
   if (p.hatG) p.hatG.visible = false; if (p.apron) p.apron.visible = false;
   if (tier === 1) put(cyl(.197, .197, .05, 10, kiteM, 0, .47, 0));
-  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('skullcap')); }
+  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
   if (tier === 3) {
-    put(cyl(.15, .214, .42, 8, kiteM, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('soldier'));
+    put(cyl(.15, .214, .42, 8, kiteM, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
     for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), steelM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .75, 1.1); }
   }
   return p.armour;

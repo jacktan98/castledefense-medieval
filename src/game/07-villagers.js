@@ -216,9 +216,17 @@ const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', 
 // changing on the spot (Jack: the old hop and spin read as magic), empty-handed (the tool is put away for it): both arms up to pull
 // the tunic over the head (the swap at CHANGE_SWAP, while they are up), the right hand settles the hat, then a kneel to pick the new
 // tool up off the ground (it shows from CHANGE_TOOL, as the hand reaches it) and up again
-const CHANGE_SWAP = .2, CHANGE_TOOL = .72;
+const CHANGE_SWAP = .2, CHANGE_HAT = .44, CHANGE_TOOL = .72;
+// the hat (or a defender's helm) stays off from the swap of clothes until the hand comes up to put it on (Jack)
+function headGear(f, on) {
+  const kit = f.armour && f.armour.length ? f.armour : f.kit && f.kit.length ? f.kit : null;
+  if (kit) { for (const o of kit) if (o.userData.helm) o.visible = on; }
+  else if (f.hatG) f.hatG.visible = on;
+  f.hatOff = !on;
+}
 function changePose(f, p) {
   p = clamp(p, 0, 1);
+  headGear(f, !(p >= CHANGE_SWAP && p < CHANGE_HAT));
   const up = sstep(0, .12, p) * (1 - sstep(.26, .36, p)), hat = sstep(.36, .46, p) * (1 - sstep(.52, .6, p)), pick = f.pivot ? sstep(.58, .7, p) * (1 - sstep(.84, .96, p)) : 0;   // nothing to pick up: no kneel (catapult crews, back to plain clothes)
   f.arms[0].rotation.x = -2.8 * up - .3 * hat - .25 * pick; f.arms[1].rotation.x = -2.8 * up - 2.7 * hat - .75 * pick;
   f.arms[0].rotation.z = .35 * up; f.arms[1].rotation.z = -.35 * up - .45 * hat;
@@ -918,6 +926,7 @@ function updateVillagers(dt, now) {
     else if (barrow) { L = Rt = -.75; lean = 0; }                     // both hands on the barrow's handles (upright, so they stay on them)
     else if (stoneC) { L = Rt = -1.2; }                               // block held against the chest
     else if (v.working && TOOL_POSE[kind]) { ({ w, R: Rt, L, tilt, lean, crouch = 0, twist = 0, big = false } = TOOL_POSE[kind](now / 1000 + v.seed, v.seed)); if (crouch) kneel(v, crouch); } else if (kind) { Rt = -.3 + swing * .25; tilt = -.25; }          // walking with the tool held low
+    if (!v.changing && v.hatOff) headGear(v, true);
     if (v.changing) {
       // a quick-change twirl (Jack wanted better than kneeling): a little hop and one full spin, arms flung out, and a puff of dust
       // at the middle (changeFx) hides the swap of clothes and tool; set exactly below, after the pose easing
