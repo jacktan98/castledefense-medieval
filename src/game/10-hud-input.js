@@ -150,10 +150,10 @@ function refreshCard() {
   $('#cardStats').innerHTML = st.join('');
   const tr = $('#cardTrade'); tr.hidden = B.type !== 'market' || !B.built;
   if (!tr.hidden) {                                   // rebuilt only when something changes, or taps get lost between redraws
-    const key = B.id + ':' + k + ':' + TRADES.map(t => +canAfford({ [t.give]: 10 })).join('');
+    const here = traderAt(B), key = B.id + ':' + k + ':' + here + ':' + TRADES.map(t => +canAfford({ [t.give]: 10 })).join('');
     if (tr.dataset.key !== key) {
       tr.dataset.key = key;
-      tr.innerHTML = TRADES.map((t, i) => `<button data-i="${i}" ${canAfford({ [t.give]: 10 }) ? '' : 'disabled'} title="Trade">${costHTML({ [t.give]: 10 })}<span class="to">›</span>${costHTML({ [t.get]: t.n[k] })}</button>`).join('');
+      tr.innerHTML = TRADES.map((t, i) => `<button data-i="${i}" ${canAfford({ [t.give]: 10 }) && here ? '' : 'disabled'} title="Trade">${costHTML({ [t.give]: 10 })}<span class="to">›</span>${costHTML({ [t.get]: t.n[k] })}</button>`).join('');
     }
   }
   $('#rallyBtn').hidden = $('#recallBtn').hidden = !T.soldiers || !B.built;

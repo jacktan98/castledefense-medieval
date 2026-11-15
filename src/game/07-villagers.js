@@ -67,6 +67,7 @@ function makeTool(kind) {
   if (kind === 'pick') { p.add(box(.035, .05, .46, M.iron, 0, -.52, 0)); }
   if (kind === 'hoe') p.add(box(.15, .02, .13, M.iron, 0, -.53, -.07));   // blade turned down towards the soil
   if (kind === 'hammer') p.add(box(.07, .09, .18, M.iron, 0, -.5, 0));
+  if (kind === 'purse') { p.children.forEach(o => o.visible = false); const b = new THREE.Mesh(new THREE.SphereGeometry(.06, 8, 6), leatherM); b.scale.set(1, 1.15, .8); b.position.y = -.07; b.castShadow = true; p.add(b); p.add(cyl(.022, .03, .04, 6, leatherM, 0, -.01, 0)); }   // a trader's coin purse
   if (kind === 'pail') { p.children.forEach(o => o.visible = false); p.add(cyl(.075, .058, .13, 8, M.wood, 0, -.08, 0)); p.add(cyl(.077, .077, .015, 8, M.iron, 0, -.04, 0)); }   // a feed pail in the hand (no handle shaft)
   return p;
 }
@@ -160,6 +161,7 @@ const OUTFIT = {
   pick:   { tunic: mat('#a8925e'), hat: 'flatcap', hatM: mat('#8c857a'), apron: true },
   hammer: { tunic: mat('#c98f2e'), hat: 'felt', hatM: mat('#6b4a2b'), belt: true },   // builders: amber smock, brown felt hat, tool belt
   pail:   { tunic: mat('#b8934a'), hat: 'coif', hatM: mat('#e6dcc6'), apron: true },  // herders (farmhouse): ochre smock, white linen coif, apron
+  purse:  { tunic: mat('#b4602c'), hat: 'felt', hatM: mat('#2f4a3a'), belt: true },  // traders (market): a madder-orange doublet, dark green felt hat, belt
 };
 const strawM = mat('#d2b56a'), leatherM = mat('#5a4630'), featherM = mat('#b8452c');
 const apronM = (() => { const m = mat('#b9ae96'); m.side = THREE.DoubleSide; return m; })(), apronHemM = (() => { const m = mat('#ddd5c2'); m.side = THREE.DoubleSide; return m; })();
@@ -210,7 +212,7 @@ function giveTool(v, kind) {
   if (!kind) return;
   const p = makeTool(kind); v.arms[1].add(p); v.pivot = p;
 }
-const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', farm: 'hoe', farmhouse: 'pail' };
+const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', farm: 'hoe', farmhouse: 'pail', market: 'purse' };
 // down on one knee by c (0 standing … 1 kneeling): body lowered, front leg forward, back leg behind
 // the quick change (p 0–1): one full turn, eased in and out, over a small hop, both arms swung out to the sides
 // changing on the spot (Jack: the old hop and spin read as magic), empty-handed (the tool is put away for it): both arms up to pull
@@ -671,17 +673,44 @@ function walkTo(v, tx, tz, dt, mode, stop = .2, mult = 1) {
 }
 function enter(v, B, secs) { release(v); v.path = null; v.indoor = B; v.hideT = secs; goIn(v, B); v.stuck = 0; }
 // villagers vanish only at the model's door: from the path tile they walk straight in, and come out the same way
+// the door of a house, workplace or barracks swings open as someone goes in or comes out, and shuts behind them (Jack): a leaf
+// hinged on the door's left edge over a dark doorway, shown only while open, so a shut door is the model's own
+const DOOR_FX = { house: [DOOR_W, DOOR_H], lodge: [DOOR_W, DOOR_H], quarry: [DOOR_W, DOOR_H], barracks: [DOOR_W, DOOR_H], stables: [.78, 1.42] };
+var doorsOpen = [];
+function openDoor(B) {
+  const S = DOOR_FX[B.type]; if (!S || !B.built || !B.group || B.dead) return;
+  let d = B.doorFx;
+  if (!d || d.tier !== B.tier || d.g.parent !== B.group) {
+    if (d) d.g.parent && d.g.parent.remove(d.g);
+    const [x, z] = DOOR[B.type][B.tier - 1], [w, h] = S, y = plinthTop(B.type, B.tier) || 0, g = new THREE.Group();
+    g.position.set(x, y, z); g.userData.doorFx = true;
+    const hole = new THREE.Mesh(new THREE.PlaneGeometry(w * .96, h * .98), doorHoleM); hole.position.set(0, h * .49, -.004); g.add(hole);
+    const hinge = new THREE.Group(); hinge.position.set(-w / 2, 0, .005); g.add(hinge);
+    const leafM = box(w, h, .045, DOOR_M[B.tier], w / 2, h / 2, .022); leafM.castShadow = false; hinge.add(leafM);
+    d = B.doorFx = { g, hinge, k: 0, hold: 0, tier: B.tier, B }; g.visible = false; B.group.add(g);
+  }
+  d.hold = 1.3; if (!doorsOpen.includes(d)) doorsOpen.push(d);
+}
+const doorHoleM = new THREE.MeshBasicMaterial({ color: '#0d0907' });
+function updateOpenDoors(dt) {
+  for (let i = doorsOpen.length - 1; i >= 0; i--) {
+    const d = doorsOpen[i]; d.hold -= dt;
+    d.k = d.hold > 0 ? Math.min(1, d.k + dt * 5) : Math.max(0, d.k - dt * 2.6);
+    const u = d.k * d.k * (3 - 2 * d.k); d.hinge.rotation.y = -1.35 * u; d.g.visible = d.k > .001;
+    if (d.k <= 0 && d.hold <= 0) doorsOpen.splice(i, 1);
+  }
+}
 function goIn(v, B) {
   const p = innerDoor(B), dp = outerDoor(B, v);
   // walk in only from in front of the door; someone who gave up further off just goes inside, rather than through a wall
-  if (p && v.g.visible && Math.hypot(dp.x - v.x, dp.z - v.z) < 1.7) v.doorWalk = { x: p.x, z: p.z, hide: true };
+  if (p && v.g.visible && Math.hypot(dp.x - v.x, dp.z - v.z) < 1.7) { v.doorWalk = { x: p.x, z: p.z, hide: true }; openDoor(B); }
   else { v.doorWalk = null; v.g.visible = false; }
 }
 function exitDoor(v) {
   const B = v.indoor && !v.indoor.dead ? v.indoor : (v.home && !v.home.dead ? v.home : castleB() || v.home), dp = outerDoor(B, v), p = innerDoor(B);
   dropLoad(v);
   if (v.doorWalk && v.g.visible) v.doorWalk = { x: dp.x, z: dp.z };              // turned back on the way in
-  else if (p) { v.x = p.x; v.z = p.z; v.doorWalk = { x: dp.x, z: dp.z }; }
+  else if (p) { v.x = p.x; v.z = p.z; v.doorWalk = { x: dp.x, z: dp.z }; openDoor(B); }
   else { v.x = dp.x; v.z = dp.z; v.doorWalk = null; }
   v.tx = dp.x; v.tz = dp.z; v.indoor = null; v.hideT = 0; v.g.visible = true; v.stuck = 0; v.path = null;
 }
@@ -763,6 +792,10 @@ function mineHaul(v, W) {
   const drop = { ...heap, hold: .7, face: heapFace, on: u => { u.carryStone.visible = false; }, next: back };
   v.doorWalk = { ...cart, hold: .8, face: cartFace, on: u => { u.carryStone.visible = true; }, next: drop };
 }
+// where the trader stands: behind the stall's counter (T1-2), under the hall's roof (T3), in the model's frame
+const STALL_AT = [[.85, .05], [-.5, -.15], [0, -.1]];
+function stallSpot(W) { const c = center(W), [x, z] = faceRot(W.face || 0, ...STALL_AT[W.tier - 1]); return { x: c.x + x, z: c.z + z }; }
+const traderAt = W => villagers.some(v => v.job === W && v.state === 'trade' && !v.doorWalk && v.g.visible && !v.hungry);
 function updateWorker(v, dt, now) {
   const W = v.job, dp = outerDoor(W, v), mult = 1, workMul = W.tier === 3 ? .7 : 1;
   // someone still indoors from another task (a new job, a mine they were moved out of): out first
@@ -773,6 +806,15 @@ function updateWorker(v, dt, now) {
     if (v.state === 'work') { v.working = true; if ((v.wait -= dt) <= 0) v.state = 'find'; return; }
     if (v.state !== 'go') { for (let n = 0; n < 12; n++) { v.tx = lerp(e.x0 + .4, e.x1 - .4, Math.random()); v.tz = lerp(e.z0 + .4, e.z1 - .4, Math.random()); if (canStand(v.tx, v.tz, 1)) break; } v.state = 'go'; v.stuck = 0; }
     if (walkTo(v, v.tx, v.tz, dt, 1, .2, .7) || v.noProg > 3) { v.state = 'work'; v.wait = 2 + Math.random() * 2; }
+    return;
+  }
+  if (W.type === 'market') {         // the trader keeps the stall: in behind the counter, facing out, a hand out at every trade
+    const sp = stallSpot(W);
+    if (v.state !== 'trade') {
+      if (walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) { v.doorWalk = { x: sp.x, z: sp.z }; v.state = 'trade'; }
+      return;
+    }
+    if (!v.doorWalk) { v.g.rotation.y = faceAngle(W); v.working = false; }
     return;
   }
   if (W.type === 'mine') {           // miners dig underground: in through the adit, a load of stone up with every dig; out at night or for another task
@@ -898,10 +940,11 @@ function updateVillagers(dt, now) {
         if (v.push) updatePush(v, dt);
         else if ((v.toolKind || null) !== want || v.changeT > 0 || (want && want !== 'hammer' && v.job && v.dressT !== v.job.tier)) updateChange(v, dt, want);   // new tool, or the workplace's new tier     // wrong clothes for the next task: change first
         else {
-          if (!(v.hideT > 0) && !canStand(v.x, v.z, 1)) exitDoor(v);
+          const atStall = v.state === 'trade' && v.job && v.job.type === 'market';   // the trader stands inside the market's tile on purpose
+          if (!(v.hideT > 0) && !atStall && !canStand(v.x, v.z, 1)) exitDoor(v);
           if (v.build) updateBuilder(v, dt); else if (v.job) updateWorker(v, dt, now); else updateWander(v, dt);
           // out in a pocket that doesn't join up with the castle for 3 s (wandering or pushing at a way out): get them out
-          if (v.g.visible && !(v.hideT > 0) && !v.doorWalk && mainRegion() && regionAt(v.x, v.z) !== mainRegion()) { if ((v.trapT = (v.trapT || 0) + dt) > 3) { freeTrapped(v); v.trapT = 0; } } else v.trapT = 0;
+          if (v.g.visible && !(v.hideT > 0) && !v.doorWalk && !atStall && mainRegion() && regionAt(v.x, v.z) !== mainRegion()) { if ((v.trapT = (v.trapT || 0) + dt) > 3) { freeTrapped(v); v.trapT = 0; } } else v.trapT = 0;
         }
       }
       }
@@ -910,10 +953,14 @@ function updateVillagers(dt, now) {
     const amp = stride(v, dt, 9), swing = Math.sin(v.phase) * .6 * amp;
     if (v.horse) {                                                    // a rider: legs astride, the horse's diagonal pairs stride
       v.legs[0].rotation.set(RIDE_X, 0, -RIDE_Z); v.legs[1].rotation.set(RIDE_X, 0, RIDE_Z); v.body.position.y = SADDLE + Math.abs(Math.sin(v.phase * 1.4)) * .04 * amp;
-      horseGait(v.horseLegs, v.phase * 1.4, amp);
+      horseGait(v.horseLegs, v.phase * 1.4, amp); horseIdle(v, performance.now() / 1000, amp);
     } else {
       v.legs[0].rotation.x = swing; v.legs[1].rotation.x = -swing;
       v.body.position.y = Math.abs(Math.sin(v.phase)) * .05 * amp;
+      // turning on the spot: a few small steps instead of spinning on fixed feet (Jack)
+      { let dy = v.g.rotation.y - (v.lastYaw ?? v.g.rotation.y); dy = Math.atan2(Math.sin(dy), Math.cos(dy)); v.lastYaw = v.g.rotation.y;
+        v.turnK = Math.max((v.turnK || 0) - dt * 3, Math.min(1, Math.abs(dy) / Math.max(dt, .001) / 2.5)) * (amp < .3 ? 1 : 0);
+        if (v.turnK > .05 && !v.working) { const st = Math.sin(now / 1000 * 15 + v.seed) * .3 * v.turnK; v.legs[0].rotation.x += st; v.legs[1].rotation.x -= st; v.body.position.y += Math.abs(st) * .06; } }
     }
     const cheer = v.cheerT > 0 && !v.build && !v.working; if (v.cheerT > 0) v.cheerT -= dt;
     if (v.seed === undefined) v.seed = Math.random() * 6.283;    // fixed per villager: v.phase runs on with the stride, which would speed up swings
@@ -951,6 +998,11 @@ function updateVillagers(dt, now) {
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
+    if (v.soldier) { const bq = blockK(v, now); if (bq) L += (-1.5 - L) * bq; }   // the shield up across the body
+    // a hungry villager trudging home droops, a hand on the belly (Jack)
+    const starving = v.hungry && !v.sleeping && !carrying && !v.soldier && !v.changing && !cheer;
+    if (starving) { lean += .17; L = -.8 + swing * .1; }
+    { const tg = (now - (v.tradeAt || -1e9)) / 1000; if (tg >= 0 && tg < 1.4) Rt = -1.25 * Math.sin(Math.min(1, tg / 1.4) * Math.PI); }   // the trader holds the purse out
     blink(v, now);
     // idle villagers breathe and look about now and then; the head turns back while they work, walk or carry
     const idle = (v.soldier ? !v.foe && !(v.attackT > 0) : !v.working && !v.changing) && !carrying && (v.amp || 0) < .15;
@@ -960,6 +1012,7 @@ function updateVillagers(dt, now) {
     v.arms[0].rotation.x = ease(v.arms[0].rotation.x, L); v.arms[1].rotation.x = ease(v.arms[1].rotation.x, Rt);
     // out and up: the hand round the bundle's outer log; with one log a little out too, the hand on its outer side (Jack)
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .28 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
+    if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
     if (v.soldier) (v.toolKind === 'spear' ? spearPose : swordPose)(v, v.attackT || 0, swing);   // exact: eased, the strikes go soft
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);

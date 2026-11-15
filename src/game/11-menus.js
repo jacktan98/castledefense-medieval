@@ -1128,10 +1128,18 @@ $('#cardTrade').addEventListener('click', e => {
   const b = e.target.closest('button'), B = selected; if (!b || !B || B.type !== 'market' || !B.built) return;
   if (paused) return setHint('Paused', 'bad');
   const t = TRADES[+b.dataset.i], give = { [t.give]: 10 }, n = t.n[B.tier - 1], c = center(B);
+  if (!traderAt(B)) return setHint('No trader', 'bad');
   if (!canAfford(give)) return setHint(`Need ${costHTML(give)}`, 'bad');
-  pay(give); res[t.get] += n; achAdd('trades'); const y = B.group.position.y + 2.4;
+  pay(give); res[t.get] += n; achAdd('trades'); tradeScene(B); const y = B.group.position.y + 2.4;
   floatRes(t.get, n, c.x, y, c.z); coinFly(c.x, y, c.z, Math.min(4, Math.ceil(n / 2)), t.get); sfx('trade'); refreshCard();
 });
+// a trade: the trader holds the purse out, and a villager with nothing to do walks up to the stall (Jack)
+function tradeScene(B) {
+  const now = performance.now(), T = villagers.find(v => v.job === B && v.state === 'trade'); if (T) T.tradeAt = now;
+  const dp = doorPoint(B); let best = null, bd = 25;
+  for (const v of villagers) { if (v.job || v.build || v.post || v.soldier || v.hungry || !v.g.visible || v.doorWalk || v.hideT > 0 || v.custT > now) continue; const d = Math.hypot(v.x - dp.x, v.z - dp.z); if (d < bd) { bd = d; best = v; } }
+  if (best) { const [ox] = faceRot(B.face || 0, (Math.random() - .5) * 1.2, 0), [, oz] = faceRot(B.face || 0, 0, 0); best.visit = null; best.tx = dp.x + ox; best.tz = dp.z + oz; best.wait = 0; best.custT = now + 6000; }
+}
 function volleyAct() {
   if (paused) return setHint('Paused', 'bad'); if (volleyCd > 0) return; if (PH.kind !== 'night') return setHint('Night only', 'bad');
   volleyAim = !volleyAim; if (volleyAim) rallyFor = null; if (!volleyAim) volleyLine.visible = false; setHint(volleyAim ? 'Tap a spot' : 'Select a building'); refreshCard(); updatePowers();

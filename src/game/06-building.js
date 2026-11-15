@@ -176,6 +176,8 @@ function place(type, ci, cj, opts = {}) {
   if (!opts.free) pay(T.cost);
   const B = { id: nextId++, type, tier: 1, ev, plinth: adapt, max: T.hp[0], hp: T.hp[0], cool: [], fed: true, mask: 0, rot: ROTATES[type] ? placeRot : 0, rotFixed: false };
   for (let b = cj; b < cj + (ev.sz || ev.s); b++) for (let a = ci; a < ci + ev.s; a++) { occB[b * N + a] = B; if (type !== 'gate') road[b * N + a] = 0; }
+  // building over a pile of rubble clears it away
+  if (rubble && rubble.length) { const cs = []; for (let b = cj; b < cj + (ev.sz || ev.s); b++) for (let a = ci; a < ci + ev.s; a++) cs.push(b * N + a); clearRubble(true, cs); }
   const c = center(B), now = performance.now();
   const g = makeModel(type, 1, adapt, 0, B.rot); g.userData.B = B; B.group = g;
   if (adapt && type !== 'wall' && !T.movable) {          // walls follow the slope; a movable engine leaves the ground as it is
@@ -191,7 +193,7 @@ function place(type, ci, cj, opts = {}) {
   const bw = type === 'castle' ? 2.6 : T.size === 1 ? 1.2 : 1.8;
   B.bar = makeBar(bw); B.pbar = makeBar(bw);
   if (opts.instant) { B.built = true; syncResidents(B); }
-  else { B.built = false; B.site = { kind: 'new', progress: 0, time: T.build }; g.scale.y = .08; addScaffold(B); if (instantBuild) { B.site.progress = 1; } }
+  else { B.built = false; B.site = { kind: 'new', progress: 0, time: T.build }; stageSite(B, 0); addScaffold(B); if (instantBuild) { B.site.progress = 1; } }
   if (WALLY[type]) refreshWalls();
   if (opts.instant) syncTerrain(); else rebuildRoads();
   villagers.forEach(v => v.path = null); regionDirty = true;
@@ -259,7 +261,7 @@ function completeSite(B) {
   }
   if (S.kind !== 'repair') { B.pop = performance.now(); for (let n = 0; n < 6; n++) { const a = n / 6 * 6.283, r = B.ev.s * CELL * .55; dustAt(c.x + Math.cos(a) * r, B.group.position.y, c.z + Math.sin(a) * r); } }
   if (S.kind === 'new') {
-    B.built = true; B.group.scale.y = 1; soddenPop(B); stats.built++; stats.made[B.type] = (stats.made[B.type] || 0) + 1; codexUse(B.type, B.tier); achAdd('built'); if (B.type === 'wall') achAdd('walls'); if (B.type !== 'castle' || stats.built > 1) sfx('build', c);
+    B.built = true; B.group.scale.y = 1; stageSite(B, -1); soddenPop(B); stats.built++; stats.made[B.type] = (stats.made[B.type] || 0) + 1; codexUse(B.type, B.tier); achAdd('built'); if (B.type === 'wall') achAdd('walls'); if (B.type !== 'castle' || stats.built > 1) sfx('build', c);
     if (B.type !== 'wall') log(`<b>${T.tiers[0]}</b> built${T.residents ? ` · +${T.residents[0]}` : ''}`, 'good');
     // the first of a kind: a one-line tip for what it can do
     if (T.soldiers) tipOnce('rally', T.cavalry ? 'Tap the <b>Stables</b>, then <b>Rally</b> to send riders to a spot' : 'Tap the <b>Barracks</b>, then <b>Rally</b> to send soldiers to a spot');
@@ -292,6 +294,7 @@ function upgrade(B) {
 }
 function removeBuilding(B, raid, cancel) {
   if (B.dead) return; B.dead = true;
+  if (B.fireG) { scene.remove(B.fireG); B.fireG = null; }
   scene.remove(B.group); scene.remove(B.bar.grp); scene.remove(B.pbar.grp); removeScaffold(B);
   for (let n = 0; n < N * N; n++) if (occB[n] === B) occB[n] = null;
   buildings.splice(buildings.indexOf(B), 1);
@@ -325,7 +328,7 @@ function removeBuilding(B, raid, cancel) {
   }
   const c = center(B), name = DEF[B.type].tiers[B.tier - 1].toLowerCase();
   if (!raid) sfx(cancel ? 'click' : 'sold', c);
-  if (raid) { stats.lost++; if (!WALLY[B.type]) stats.lostB++; sfx('destroyed', c); shake(.3, c, 'lost', .6); debrisBurst(B, c); floatText('Destroyed', '#e2715b', c.x, B.group.position.y + 3, c.z); log(`<b>${DEF[B.type].tiers[B.tier - 1]}</b> lost`, 'warn'); }
+  if (raid) { stats.lost++; if (!WALLY[B.type]) stats.lostB++; sfx('destroyed', c); shake(.3, c, 'lost', .6); debrisBurst(B, c); collapse(B, c); floatText('Destroyed', '#e2715b', c.x, B.group.position.y + 3, c.z); log(`<b>${DEF[B.type].tiers[B.tier - 1]}</b> lost`, 'warn'); }
   else if (cancel) { RES_KEYS.forEach(k => res[k] += DEF[B.type].cost[k] || 0); log(`<b>${DEF[B.type].tiers[0]}</b> cancelled · +${costHTML(DEF[B.type].cost)}`); }
   else {
     const back = {}; RES_KEYS.forEach(k => { if (DEF[B.type].cost[k]) back[k] = Math.floor(DEF[B.type].cost[k] / 2); res[k] += back[k] || 0; });

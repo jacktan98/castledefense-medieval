@@ -9,10 +9,14 @@ function mountHorse(p, cloth = blanketM) {
   const h = new THREE.Group(); p.g.add(h);
   h.add(box(.34, .36, .92, horseM, 0, .78, 0));                                   // barrel
   const neck = box(.2, .46, .22, horseM, 0, 1.06, .48); neck.rotation.x = .55; h.add(neck);
-  const head = box(.16, .17, .4, horseM, 0, 1.22, .72); head.rotation.x = .35; h.add(head);
+  // the head (with its ears) and the tail hang on pivots, so a horse standing still can toss its head and swish its tail
+  const hp = new THREE.Group(); hp.position.set(0, 1.2, .55); hp.userData.horseHead = true; h.add(hp);
+  const head = box(.16, .17, .4, horseM, 0, .02, .17); head.rotation.x = .35; hp.add(head);
   const mane = box(.05, .42, .1, maneM, 0, 1.1, .4); mane.rotation.x = .55; h.add(mane);
-  for (const sx of [-1, 1]) h.add(box(.04, .08, .05, horseM, sx * .05, 1.34, .62));  // ears
-  const tail = box(.07, .45, .07, maneM, 0, .76, -.5); tail.rotation.x = -.35; h.add(tail);
+  for (const sx of [-1, 1]) hp.add(box(.04, .08, .05, horseM, sx * .05, .14, .07));  // ears
+  const tp = new THREE.Group(); tp.position.set(0, .97, -.43); tp.userData.horseTail = true; h.add(tp);
+  const tail = box(.07, .45, .07, maneM, 0, -.21, -.07); tail.rotation.x = -.35; tp.add(tail);
+  p.horseHead = hp; p.horseTail = tp;
   h.add(box(.38, .06, .4, cloth, 0, .97, -.02)); h.add(box(.3, .08, .3, saddleM, 0, 1.01, -.02));
   p.horseLegs = [[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sz]) => {
     // upper leg from the hip, then a knee (forelegs) or hock (hind legs) at -.3 carrying the lower leg and hoof
@@ -29,6 +33,13 @@ function mountHorse(p, cloth = blanketM) {
 // a horse's gallop: each leg on its own beat (hind left, hind right, then fore left, fore right), swinging from the hip; while a leg
 // swings forward it is lifted, the foreleg's knee folding the lower leg back and the hind leg's hock folding it forward
 const GALLOP_OFF = [.55, .65, 0, .1];
+// a mounted horse standing still: its head nods, turns and now and then tosses, its tail swishes, its weight shifts (Jack)
+function horseIdle(p, t, amp) {
+  if (!p.horseHead) return; const k = Math.max(0, 1 - amp * 1.5), s = p.seed || p.phase || 0, toss = Math.pow(Math.max(0, Math.sin(t * .37 + s * 2)), 12);
+  p.horseHead.rotation.x = k * (.07 * Math.sin(t * .9 + s) - .35 * toss); p.horseHead.rotation.y = k * .25 * Math.sin(t * .31 + s * 1.7);
+  p.horseTail.rotation.z = k * .35 * Math.sin(t * 2.3 + s) * Math.max(.15, Math.sin(t * .45 + s)); p.horseTail.rotation.x = .25 * amp;
+  p.horse.rotation.z = k * .02 * Math.sin(t * .23 + s);
+}
 function horseGait(legs, ph, amp) {
   legs.forEach((l, i) => { const a = ph + GALLOP_OFF[i] * Math.PI * 2, lift = Math.max(0, -Math.cos(a));   // the swing forward (the hip angle falling)
     l.rotation.x = Math.sin(a) * .65 * amp;
@@ -51,7 +62,7 @@ function roundShield(r, faceM) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(r, .014, 4, 18), M.iron); rim.rotation.y = Math.PI / 2; g.add(rim);
   return g;
 }
-function armShield(p, sh) { sh.position.set(-.09, -.2, .02); p.arms[0].add(sh); return sh; }
+function armShield(p, sh) { sh.userData.shield = true; sh.position.set(-.09, -.2, .02); p.arms[0].add(sh); return sh; }
 // spears are held level at the hip, point forward; a strike (attackT .35 → 0) pushes the spear straight out and draws it back:
 // the arm lifts as the tool tilts back by the same angle (the shaft stays level) and the grip slides down the shaft
 // a strike is three beats over SPEAR_T: draw the spear back, drive it out 0.45 m with a small lunge (body steps in and leans), recover
@@ -215,6 +226,9 @@ function spawnEnemy(kind, sp, wave, tier = 1) {
   // a metre or so from the spawn point, but never onto ground they can't stand on (a mountain or hillside: they'd stand stuck)
   let sx = clamp(sp.x + (Math.random() - .5) * 2, 1, SIZE - 1), sz = clamp(sp.z + (Math.random() - .5) * 2, 1, SIZE - 1);
   if (!canStand(sx, sz, 2)) { sx = sp.x; sz = sp.z; }
+  // at the map's edge they step in from its very rim, as if from beyond it, rather than appearing a metre or two inside (Jack)
+  { const R = .6, ex = sx < 2.6 ? R : sx > SIZE - 2.6 ? SIZE - R : sx, ez = sz < 2.6 ? R : sz > SIZE - 2.6 ? SIZE - R : sz;
+    if ((ex !== sx || ez !== sz) && canStand(ex, ez, 2)) { sx = ex; sz = ez; p.growT = 0; } }
   const e = Object.assign(p, { kind, tier, x: sx, z: sz, via: sp.via ? sp.via.map(q => q.slice()) : null,
     hp, max: hp, speed: E.speed * (.9 + Math.random() * .2), range: E.range, dmg: E.boss ? E.dmg : E.dmg * RAIDER_T.dmg[k], rate: E.rate,
     cool: E.engine ? E.rate * .5 : Math.random(), fresh: true, target: null, retarget: 0, dead: false, deadT: 0, phase: Math.random() * 6,
@@ -386,12 +400,23 @@ function stickBolt(at, dir) {
   m.position.set(at.x - dir.x * .35, at.y + .2, at.z - dir.z * .35); m.lookAt(at.x + dir.x, at.y - .6, at.z + dir.z); scene.add(m);
   stuckBolts.push({ m, t: 3 });
 }
+// an arrow or crossbow bolt that lands stays: stuck in the raider it hit (it falls with them; four at most), or slanting in the ground
+// for a few seconds (Jack)
+function stickArrow(a) {
+  if (a.kind && a.kind !== 'qbolt') return false;
+  const to = a.to; let e = null, bd = .6;
+  for (const q of enemies) { if (ENEMY[q.kind].engine) continue; const d = Math.hypot(q.x - to.x, q.z - to.z); if (d < bd) { bd = d; e = q; } }
+  const dir = tv.subVectors(a.to, a.m.position); if (dir.lengthSq() > 1e-6) a.m.position.addScaledVector(dir.normalize(), .12);
+  if (e && to.y - walkY(e.x, e.z) > .3) { if ((e.stuckN = (e.stuckN || 0) + 1) > 4) return false; e.body.attach(a.m); a.m.castShadow = false; return true; }
+  const g = hAt(to.x, to.z); if (to.y - g > .5) return false;
+  a.m.position.y = Math.max(a.m.position.y, g + .05); stuckBolts.push({ m: a.m, t: 2.5 }); return true;
+}
 function updateArrows(dt) {
   for (let n = stuckBolts.length - 1; n >= 0; n--) { const s = stuckBolts[n]; if ((s.t -= dt) <= 0) { scene.remove(s.m); stuckBolts.splice(n, 1); } }
   for (let n = arrows.length - 1; n >= 0; n--) {
     const a = arrows[n]; a.t += dt / a.dur;
     const t = Math.min(a.t, 1); arrowPos(a, t, a.m.position); if (a.spin) a.m.rotation.x += dt * 6; else a.m.lookAt(arrowPos(a, Math.min(t + .03, 1.03), tv));
-    if (a.t >= 1) { scene.remove(a.m); arrows.splice(n, 1); if (a.kind === 'stone') sfx('rockHit', a.to); a.onHit(); }
+    if (a.t >= 1) { arrows.splice(n, 1); if (!stickArrow(a)) scene.remove(a.m); if (a.kind === 'stone') sfx('rockHit', a.to); a.onHit(); }
   }
 }
 // Arrow volley (castle card): arrows from the castle rain on a small circle anywhere; each enemy inside it takes the volley's
@@ -499,6 +524,7 @@ const BOOST_KEY = { crossbow: 'rangeArch', catapult: 'siegeRate' };
 const DEF_FXT = t => !!DECOR_FX[t];
 function hurtEnemy(e, d, by) {
   if (e.dead) return; e.hp -= d; e.flashT = .14; e.hitAt = performance.now(); if (!(e.hitAt - (e.flinchAt || 0) < 1200)) e.flinchAt = e.hitAt;
+  if (e.hp > 0 && by && by.soldier) tryBlock(e);
   if (e.hp <= 0) {
     e.dead = true; e.bar.grp.visible = false; stats.slain++; const y = walkY(e.x, e.z);
     // achievements (campaign only): every raider slain, burning ones, those a rider struck down, engines and the two bosses
@@ -707,17 +733,20 @@ function animEngine(e, dt, sw) {
   }
 }
 function updateEnemies(dt) {
+  updateDropped(dt);
   for (let n = enemies.length - 1; n >= 0; n--) {
     const e = enemies[n], E = ENEMY[e.kind];
     burnTick(e, dt);
+    // stepping in over the edge: a quick grow from a little smaller, so they don't pop up at full size
+    if (e.growT !== undefined && e.growT < 1) { e.growT = Math.min(1, e.growT + dt * 2.5); const u = e.growT; e.g.scale.setScalar((E.boss || 1) * (.6 + .4 * u * (2 - u))); }
     if (e.dead) {
       e.deadT += dt;
       if (E.engine) {                                       // slumps to one side and sinks; the crew fall
         e.model.rotation.z = e.fallDir * Math.min(.32, e.deadT * .9);
         e.crew.forEach(c => c.body.rotation.x = -Math.min(1.5, e.deadT * 4));
-      } else fallPose(e, e.deadT);
+      } else { fallPose(e, e.deadT); if (e.deadT > .3 && !e.dropped) dropGear(e); }
       e.g.position.y = walkY(e.x, e.z) - Math.max(0, e.deadT - (E.engine ? .8 : 1)) * (E.engine ? 1.2 : .8);
-      if (e.deadT > 1.9) { scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); enemies.splice(n, 1); }
+      if (e.deadT > 1.9) { scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); dropClear(e); enemies.splice(n, 1); }
       continue;
     }
     e.walking = false; e.aiming = false; e.running = false;
@@ -802,13 +831,14 @@ function updateEnemies(dt) {
     else {
       e.body.rotation.x = e.running && e.walking ? .22 : 0;      // leaning into the charge
       if (e.cape) capeWave(e, performance.now() / 1000, e.walking ? (e.running ? 1 : .55) : .15);
-      if (e.horse) horseGait(e.horseLegs, e.phase, e.amp || 0);
+      if (e.horse) { horseGait(e.horseLegs, e.phase, e.amp || 0); horseIdle(e, performance.now() / 1000, e.amp || 0); }
       else { e.legs[0].rotation.x = sw; e.legs[1].rotation.x = -sw; }
       if (e.kind === 'archer') bowPose(e, e.aiming && !(e.attackT > 0) && e.cool < DRAW, e.attackT > 0, -.35 - sw * .3, -sw * .6);
       else if (e.kind === 'xbow') xbowPose(e, e.aiming && (e.attackT > 0 || e.cool < .5));
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
       const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
+      { const bq = blockK(e, now); if (bq) { e.arms[0].rotation.x += (-1.5 - e.arms[0].rotation.x) * bq; e.arms[0].rotation.z += (-.5 - e.arms[0].rotation.z) * bq; } }
       blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);
@@ -1053,7 +1083,7 @@ function updateUnkit(v, dt) {
 function hurtSoldier(v, d) {
   if (!v.soldier) return;
   v.hp -= d; v.hitAt = performance.now(); if (!(v.hitAt - (v.flinchAt || 0) < 1200)) v.flinchAt = v.hitAt;
-  if (v.hp > 0) return;
+  if (v.hp > 0) { tryBlock(v); return; }
   // fallen: out of the town's count; a villager comes back to the same home after 60 s of daylight
   if (v.summoned) { v.gone = true; v.soldier = false; release(v); villagers.splice(villagers.indexOf(v), 1); if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 }); return; }
   log(`<b>${(v.cav ? RIDER : SOLDIER).names[v.kitTier - 1]}</b> fallen`, 'warn'); stats.fallen++;
@@ -1080,6 +1110,34 @@ function fallPose(p, d) {
   else { const f = e(k(d / .5)); p.body.rotation.y = .9 * f; p.body.rotation.z = 1.4 * f; p.legs[1].rotation.z = .35 * f; p.arms[0].rotation.z = -1.1 * f; }
 }
 // a flinch from a blow: how far back (0–1), fading out over half a second (Jack)
+// a shield takes some blows (Jack): the shield arm snaps up across the body, sparks and a clash; only the look, the blow still lands
+const shieldOf = p => p.arms && p.arms[0].children.find(o => o.userData.shield);
+// as a raider falls, its weapon and shield fall from its hands to the ground and sink away with it (Jack)
+const droppedGear = [];
+function dropGear(e) {
+  e.dropped = true;
+  for (const o of [e.pivot, shieldOf(e)]) { if (!o || !o.parent) continue; scene.attach(o);
+    droppedGear.push({ o, e, vx: (Math.random() - .5) * 1.2, vy: .8 + Math.random(), vz: (Math.random() - .5) * 1.2, sx: (Math.random() - .5) * 7, sz: (Math.random() - .5) * 7, rest: false }); }
+}
+function dropClear(e) { for (let i = droppedGear.length - 1; i >= 0; i--) if (droppedGear[i].e === e) { scene.remove(droppedGear[i].o); droppedGear.splice(i, 1); } }
+function updateDropped(dt) {
+  for (const d of droppedGear) {
+    const o = d.o, g = hAt(o.position.x, o.position.z) + .05;
+    if (!d.rest) { d.vy -= 12 * dt; o.position.x += d.vx * dt; o.position.y += d.vy * dt; o.position.z += d.vz * dt; o.rotation.x += d.sx * dt; o.rotation.z += d.sz * dt;
+      if (o.position.y <= g) { o.position.y = g; d.rest = true; } }
+    else if (d.e.deadT > 1) o.position.y -= dt * .8;
+  }
+}
+function blockK(p, now) { const d = (now - (p.blockAt || -1e9)) / 1000; return d >= 0 && d < .45 ? Math.sin(Math.min(1, d / .45) * Math.PI) : 0; }
+function tryBlock(p) {
+  const sh = shieldOf(p), now = performance.now(); if (!sh || Math.random() > .3 || now - (p.blockAt || 0) < 900) return;
+  p.blockAt = now; const w = sh.getWorldPosition(new THREE.Vector3()); sfx('clash', { x: w.x, z: w.z });
+  for (let i = 0; i < 5 && puffs.length < 150; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffe9a8', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    sp.position.set(w.x + (Math.random() - .5) * .15, w.y + .1 + Math.random() * .1, w.z + (Math.random() - .5) * .15); sp.scale.setScalar(.06);
+    scene.add(sp); puffs.push({ sp, t: 0, life: .3 + Math.random() * .25, dx: (Math.random() - .5) * 1.6, ember: true });
+  }
+}
 function flinchK(p, now) { const d = (now - (p.flinchAt || -1e9)) / 1000; return d >= 0 && d < .5 ? Math.exp(-d * 9) * Math.min(1, d * 30) : 0; }
 // a blink now and then, each on its own clock
 function blink(p, now) {
@@ -1439,8 +1497,14 @@ function penSpot(B) {
 }
 function updateEco(dt) {
   const day = PH.kind === 'day';
+  // the fields' crops grow through the day, short after the dawn's harvest and full grown by dusk (Jack)
+  const grow = day ? clamp(1 - PH.t / (DAYLEN[PH.wave - 1] || 300), 0, 1) : 1, cropK = .45 + .55 * grow;
   for (const B of buildings) {
     if (!B.built) continue;
+    if (B.type === 'farm') {
+      const g = B.group; if (g.userData.crops === undefined) { const set = new Set([M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]); g.userData.crops = []; g.traverse(o => { if (o.isMesh && set.has(o.material)) g.userData.crops.push({ o, y0: o.position.y }); }); }
+      for (const c of g.userData.crops) { c.o.scale.y = cropK; c.o.position.y = .08 - cropK * (.08 - c.y0); }
+    }
     if (B.type === 'forester') {
       const T = DEF.forester, k = B.tier - 1, G = ecoGroup(B), c = center(B);
       B.grove = B.grove || [];

@@ -95,7 +95,7 @@ const DEF = {
             up: [{ stone: 60, wood: 40, gold: 70 }, { stone: 100, gold: 100 }], range: [13, 15, 17], dmg: [11, 15, 20], rate: [1.3, 1.15, 1.0],
             archers: [4, 4, 5], shootY: [3.2, 4.6, 5.2], residents: [3, 3, 3], tiers: ['Palisade fort', 'Stone keep', 'Castle'] },
   market: { size: 2, name: 'Market', maxdh: 1.6, hp: [110, 160, 230], cost: { wood: 20, gold: 15 },
-            up: [{ wood: 25, gold: 30 }, { stone: 25, gold: 50 }], tiers: ['Market stall', 'Market', 'Market hall'], key: '9' },
+            up: [{ wood: 25, gold: 30 }, { stone: 25, gold: 50 }], tiers: ['Market stall', 'Market', 'Market hall'], key: '9', workers: [1, 1, 1] },   // a trader keeps the stall (Jack)
   // the other economy picks (one of each pair before a game): a grove grown on its own plot, a mine dug down into its own ground,
   // a yard of animals; none of them needs forest or rock nearby
   forester: { size: 3, name: 'Forester', maxdh: 1.6, plot: true, hp: [100, 140, 200], cost: { gold: 35 },

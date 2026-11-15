@@ -103,6 +103,7 @@ function updateLamps(dt, now) {
     lampT = .5; lampSpots = [];
     if (dark > .05) for (const B of buildings) {
       if (!B.built) continue; const c = center(B), y = B.group.position.y;
+      if (B.fireG) lampSpots.push({ x: c.x, y: B.fireG.position.y + .4, z: c.z, k: .9 });
       if (B.type === 'torch') lampSpots.push({ x: c.x, y: y + 2.3, z: c.z, k: 1 });
       else if (B.type === 'campfire') lampSpots.push({ x: c.x, y: y + .7, z: c.z, k: 1.1 });
       else if (B.type === 'castle') lampSpots.push({ x: c.x, y: y + 2.4, z: B.ev.z1 + .4, k: 1.2 });
@@ -176,6 +177,38 @@ const smokeTex = (() => { const c = document.createElement('canvas'); c.width = 
 const puffs = [];
 const CHIMNEY = { house: [[.4, 2.27, -.22], [.45, 1.72, -.25], [.45, 2.45, -.3]], lodge: [null, null, [1.05, 3.05, -.45]] };
 const emberTex = smokeTex;
+// a badly hurt building smokes below half its health, and below a quarter small fires burn on it, until it is mended (Jack)
+const DMG_SKIP = { path: 1, wall: 1, gate: 1 };
+function damageFx(B, dt) {
+  const hurt = B.built && !B.dead && !DMG_SKIP[B.type] && !DECOR_ALL.includes(B.type) ? 1 - B.hp / B.max : 0;
+  const fire = hurt > .75;
+  if (fire && !B.fireG) B.fireG = buildingFire(B);
+  if (!fire && B.fireG) { scene.remove(B.fireG); B.fireG = null; }
+  if (hurt <= .5) return;
+  const top = B.group.position.y + barTop(B) - .75, c = center(B), s = B.ev.s * CELL * .28;
+  if (B.fireG) { B.fireG.position.set(c.x, top - .55, c.z); const k = .9 + Math.sin(performance.now() * .013 + B.id) * .08; B.fireG.scale.set(k, k * (1 + (hurt - .75) * 1.2), k); }
+  if ((B.dmgT = (B.dmgT || Math.random()) - dt) > 0 || puffs.length > 140) return;
+  B.dmgT = (fire ? .3 : .55) + Math.random() * .3;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: fire ? '#2f2b28' : '#57524c', transparent: true, depthWrite: false, opacity: 0 }));
+  sp.position.set(c.x + (Math.random() - .5) * s, top + .1, c.z + (Math.random() - .5) * s); sp.scale.setScalar(.4);
+  scene.add(sp); puffs.push({ sp, t: 0, life: 3 + Math.random() * 1.5, dx: (Math.random() - .3) * .3, k: fire ? 1.5 : 1.15 });
+  if (fire && puffs.length < 140) {
+    const e = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffa040', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    e.position.set(c.x + (Math.random() - .5) * s, top, c.z + (Math.random() - .5) * s); e.scale.setScalar(.08);
+    scene.add(e); puffs.push({ sp: e, t: 0, life: .8 + Math.random() * .8, dx: (Math.random() - .5) * .4, ember: true });
+  }
+}
+// two or three small clumps of the torches' fire spread over the roof
+function buildingFire(B) {
+  const g = new THREE.Group(), n = B.ev.s > 1 ? 3 : 2, s = B.ev.s * CELL * .22;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * 6.3 + B.id, x = n > 2 || i ? Math.cos(a) * s : 0, z = Math.sin(a) * s;
+    for (const [m, r, h, o] of [[M.flame, .13, .55, 1], [M.flameMid, .09, .4, 2], [M.flameCore, .055, .26, 3]]) {
+      const f = new THREE.Mesh(FLAME_GEO, m); f.scale.set(r, h, r); f.position.set(x, h / 2 - (x || z ? .32 : 0), z); f.renderOrder = o; f.userData.noShadow = true; g.add(f);
+    }
+  }
+  scene.add(g); return g;
+}
 function emitSmoke(dt) {
   for (const F of sceneFires) {   // the scenery's fires: embers, and dark smoke off a burning ruin
     if ((F.emberT = (F.emberT || Math.random()) - dt) <= 0 && puffs.length < 140) {
@@ -191,6 +224,7 @@ function emitSmoke(dt) {
     }
   }
   for (const B of buildings) {
+    damageFx(B, dt);
     if ((B.type === 'torch' || B.type === 'campfire') && B.built && (B.emberT = (B.emberT || Math.random()) - dt) <= 0 && puffs.length < 140) {   // embers lift off the fire
       B.emberT = .15 + Math.random() * .35; const fy = B.type === 'torch' ? 2.25 : .45;
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffa040', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));

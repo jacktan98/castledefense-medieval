@@ -71,7 +71,7 @@ function startGame() {
   // Stage 3 opens tier 2: the upgrade step Stage 1's guide drops comes as a one-time tip here (Jack)
   if (MAP === 'cross') tipOnce('upgrade', 'Tap a building to <b>Upgrade</b> it');
   anims.length = 0; spawnQueue = [];
-  for (const B of buildings) { scene.remove(B.group); scene.remove(B.bar.grp); scene.remove(B.pbar.grp); removeScaffold(B); hideDefenders(B); if (B.rallyFlag) setRally(B, null); } buildings.length = 0;
+  for (const B of buildings) { scene.remove(B.group); if (B.fireG) scene.remove(B.fireG); scene.remove(B.bar.grp); scene.remove(B.pbar.grp); removeScaffold(B); hideDefenders(B); if (B.rallyFlag) setRally(B, null); } buildings.length = 0;
   for (const v of villagers) { scene.remove(v.g); if (v.sbar) scene.remove(v.sbar.grp); } villagers.length = 0;
   for (const f of fallen) scene.remove(f.v.g); fallen.length = 0; for (const c of chips) scene.remove(c.m); chips.length = 0; respawns.length = 0; rallyFor = null; moveFor = null;
   for (const e of enemies) { scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); } enemies.length = 0;
@@ -109,7 +109,7 @@ function startGame() {
   if (MAP === 'ford') { layRoads([scalePts(FORD_ROAD)]); rebuildRoads(); fordWall(); }
   if (MAP === 'mere') { layRoads(MERE_ROADS.map(scalePts)); rebuildRoads(); }   // from the south: the marsh ahead
   if (MAP === 'plains') { layRoads(PLAINS_ROADS.map(scalePts)); rebuildRoads(); }
-  placeBossScenery();
+  resetCollapse(); doorsOpen = []; placeBossScenery();
   if (MAP === 'keep') { layRoads(KEEP_ROADS); rebuildRoads(); }   // from the south, looking up at the keep
   if (MAP === 'hold') { layRoads(HOLD_ROADS); rebuildRoads();
   }                   // from the south: the fords ahead                   // from the south: the north bridge at the top
@@ -646,7 +646,7 @@ function updateDoors(dt) {
 }
 function separateUnits(dt) {
   sepUnits.length = 0;
-  for (const v of villagers) if (v.g.visible && !v.doorWalk && !v.inside && !(v.hideT > 0) && (!v.posted || v.soldier) && !v.sleeping) sepUnits.push({ u: v, r: v.horse ? .5 : .24, fixed: false, mode: 1, w: v.working ? .1 : v.walking ? 1 : .35 });
+  for (const v of villagers) if (v.g.visible && !v.doorWalk && !v.inside && !(v.hideT > 0) && (!v.posted || v.soldier) && !v.sleeping) sepUnits.push({ u: v, r: v.horse ? .5 : .24, fixed: v.state === 'trade' && !!v.job && v.job.type === 'market', mode: 1, w: v.working ? .1 : v.walking ? 1 : .35 });
   for (const e of enemies) sepUnits.push({ u: e, r: e.engine ? ENEMY[e.kind].r : e.horse ? .55 : .26, fixed: e.dead, mode: 2, w: e.walking ? 1 : .35 });
   const k = Math.min(1, dt * 10);
   for (let i = 0; i < sepUnits.length; i++) for (let j = i + 1; j < sepUnits.length; j++) {
@@ -699,6 +699,87 @@ function updateDebris(dt) {
     if (d.life <= 0) { scene.remove(o); o.geometry.dispose(); debris.splice(i, 1); }
   }
 }
+// a new building goes up in stages behind its scaffold (Jack): the base first, then the walls rising course by course, the roof
+// last; each part of the model (merged by material, so a few per building) grows up from its own foot as the build height reaches it.
+// p -1 puts everything back as it was
+function stageSite(B, p) {
+  const g = B.group; let S = g.userData.stages;
+  if (p < 0) { if (S) for (const s of S.list) { s.o.visible = s.vis; s.o.scale.y = s.sy; s.o.position.y = s.y0; } delete g.userData.stages; return; }
+  if (!S) {
+    g.scale.y = 1; g.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), list = [];
+    let H = .3;
+    for (const o of g.children) {
+      const bb = new THREE.Box3().setFromObject(o); if (bb.isEmpty()) continue; bb.applyMatrix4(inv);
+      list.push({ o, vis: o.visible, sy: o.scale.y, y0: o.position.y, lo: Math.max(0, bb.min.y), hi: Math.max(bb.max.y, bb.min.y + .05), mesh: o.isMesh });
+      if (o.visible) H = Math.max(H, bb.max.y);
+    }
+    S = g.userData.stages = { list, H };
+  }
+  const h = p * S.H * 1.04;
+  for (const s of S.list) {
+    if (!s.vis) continue;
+    if (s.lo <= .02 && s.hi < .5) { s.o.visible = true; continue; }   // the base is laid first
+    const k = clamp((h - s.lo) / (s.hi - s.lo), 0, 1);
+    if (s.mesh) { s.o.visible = k > 0; s.o.scale.y = s.sy * Math.max(k, .001); s.o.position.y = s.lo - k * (s.lo - s.y0); }
+    else s.o.visible = k > .35;
+  }
+}
+// a building lost to raiders sinks and tips over into the ground, leaving a pile of rubble that smokes until dawn (Jack)
+// var: place() runs during startup, before this part of the script is reached
+var falling = [], rubble = [], scorchM = null;
+function collapse(B, c) {
+  const g = B.group, bb = new THREE.Box3().setFromObject(g), h = Math.max(1, bb.max.y - g.position.y), a = Math.random() * 6.3;
+  scene.add(g);
+  falling.push({ g, t: 0, T: 1.1 + Math.min(.6, h * .12), y0: g.position.y, h, rx: g.rotation.x, rz: g.rotation.z, tx: Math.cos(a) * .32, tz: Math.sin(a) * .32, c, s: B.ev.s, dustT: 0 });
+  rubble.push(makeRubble(B, c));
+}
+function makeRubble(B, c) {
+  const s = B.ev.s * CELL, wall = WALLY[B.type], stone = B.tier >= 2 && B.type !== 'house' && B.type !== 'farm', g = new THREE.Group();
+  const y0 = B.group.position.y + (wall ? 0 : SLAB_TOP), n = wall ? 6 : Math.round(10 + s * s * 2.6), R = s * .4;
+  if (!burntStoneM) makeRuin(0, false);
+  for (let i = 0; i < n; i++) {
+    const r = Math.sqrt(Math.random()) * R, a = Math.random() * 6.3, k = 1 - r / R * .7, beam = i % 3 === 0;
+    const o = beam ? box(.12 + Math.random() * .06, .1, .5 + Math.random() * .6 * s / 2, M.timber, 0, 0, 0)
+      : box(.18 + Math.random() * .2, .12 + Math.random() * .14, .16 + Math.random() * .2, stone ? burntStoneM : i % 2 ? M.timber : M.wood, 0, 0, 0);
+    o.position.set(Math.cos(a) * r, .04 + k * k * (wall ? .14 : .18 + s * .16) * (.4 + Math.random() * .6), Math.sin(a) * r);
+    o.rotation.set((Math.random() - .5) * (beam ? .5 : 1.4), Math.random() * 6.3, (Math.random() - .5) * (beam ? .4 : 1.4));
+    if (beam) o.material = M.timber; o.castShadow = false; g.add(o);
+  }
+  // a scorched patch of ground under the pile
+  if (!wall) { const d = new THREE.Mesh(new THREE.CircleGeometry(s * .62, 18), scorchM || (scorchM = new THREE.MeshStandardMaterial({ color: '#1e1914', transparent: true, opacity: .55, depthWrite: false, roughness: 1 })));
+    d.rotation.x = -Math.PI / 2; d.position.y = .02; d.scale.set(1, .8 + Math.random() * .3, 1); d.receiveShadow = true; d.userData.scorch = true; g.add(d); }
+  g.traverse(o => { if (o.isMesh && o.material === M.timber && Math.random() < .6) o.material = charM; });
+  g.position.set(c.x, y0, c.z); g.scale.setScalar(.01); scene.add(g); mergeStatic(g);
+  const R0 = { g, c, cells: [], t: 0, fire: null };
+  for (let b = B.ev.cj; b < B.ev.cj + (B.ev.sz || B.ev.s); b++) for (let a2 = B.ev.ci; a2 < B.ev.ci + B.ev.s; a2++) R0.cells.push(b * N + a2);
+  // the smouldering heart of the pile: embers, a glow at night and a thin dark smoke (walls only a little dust, as so many fall)
+  if (!wall && rubble.filter(r => r.fire).length < 8) { R0.fire = { x: c.x, y: y0 + .25, z: c.z, k: .45 + B.ev.s * .12, smoke: true, rubble: true }; sceneFires.push(R0.fire); }
+  return R0;
+}
+// at dawn the rubble is cleared away (it sinks into the ground); building over it clears it at once
+function clearRubble(now, cells) {
+  for (let i = rubble.length - 1; i >= 0; i--) {
+    const r = rubble[i]; if (cells && !r.cells.some(n => cells.includes(n))) continue;
+    if (r.fire) { const j = sceneFires.indexOf(r.fire); if (j >= 0) sceneFires.splice(j, 1); r.fire = null; }
+    if (now) { scene.remove(r.g); rubble.splice(i, 1); } else r.gone = 0;
+  }
+}
+function updateCollapse(dt) {
+  for (let i = falling.length - 1; i >= 0; i--) {
+    const f = falling[i]; f.t += dt; const u = Math.min(1, f.t / f.T), k = u * u * (3 - 2 * u), q = u * u;
+    f.g.position.y = f.y0 - f.h * 1.05 * q; f.g.rotation.x = f.rx + f.tx * k; f.g.rotation.z = f.rz + f.tz * k;
+    f.g.position.x = f.c.x + Math.sin(f.t * 47) * .04 * (1 - u); f.g.position.z = f.c.z + Math.cos(f.t * 41) * .04 * (1 - u);
+    if ((f.dustT -= dt) <= 0) { f.dustT = .07; dustAt(f.c.x + (Math.random() - .5) * f.s * 2.2, f.y0 + .1, f.c.z + (Math.random() - .5) * f.s * 2.2); }
+    if (u >= 1) { scene.remove(f.g); falling.splice(i, 1); }
+  }
+  for (let i = rubble.length - 1; i >= 0; i--) {
+    const r = rubble[i]; r.t += dt;
+    if (r.gone !== undefined) { r.gone += dt; r.g.position.y -= dt * .35; if (r.gone > 1.6) { scene.remove(r.g); rubble.splice(i, 1); } continue; }
+    // the pile settles in as the building goes under
+    const u = Math.min(1, Math.max(0, (r.t - .25) / .9)); r.g.scale.setScalar(.01 + .99 * u * u * (3 - 2 * u));
+  }
+}
+function resetCollapse() { if (!falling) return; for (const f of falling) scene.remove(f.g); falling.length = 0; for (const r of rubble) scene.remove(r.g); rubble.length = 0; }
 // coins rise from a building and fly to the gold counter, which pulses as they land
 let coinsInFlight = 0;
 const RES_CHIP = { gold: '#cGold', wood: '#cWood', stone: '#cStone', food: '#cFood' };
@@ -790,7 +871,7 @@ function tick(dt, now) {
   for (const B of buildings.slice()) {
     if (B.site) {
       const p = clamp(B.site.progress, 0, 1);
-      if (B.site.kind === 'new') B.group.scale.y = .08 + .92 * p;
+      if (B.site.kind === 'new') stageSite(B, p);
       if (B.site.kind === 'repair') B.hp = B.site.hp0 + (B.max - B.site.hp0) * p;
       B.pbar.grp.visible = true; B.pbar.set(Math.max(p, .02)); B.pbar.fg.material.color.set(B.site.kind === 'repair' ? '#8cc46e' : '#e0b84a');
       B.pbar.grp.position.set(center(B).x, B.group.position.y + barTop(B) + .3, center(B).z);
@@ -830,7 +911,7 @@ function frame(now) {
   if (paused || menuOn()) { if (!lite || fresh || (liteN = (liteN + 1) % 2) === 0) renderer.render(scene, camera); requestAnimationFrame(frame); if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); } return; }
   tick(dt, now);
   if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); guideTick(); goalTick(); updatePowers(); updateBossBar(); }
-  updateDebris(dt); updateRaidMarks(dt); updateHitMarks(dt, now); updateTips(dt); updateGuideSpot(now);
+  updateDebris(dt); updateCollapse(dt); updateOpenDoors(dt); updateRaidMarks(dt); updateHitMarks(dt, now); updateTips(dt); updateGuideSpot(now);
   const sh = shakeOffset(dt); camera.position.add(sh);
   renderer.render(scene, camera);
   camera.position.sub(sh);

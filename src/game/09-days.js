@@ -319,7 +319,7 @@ function startDay() {
   sweepGeo();
   const test = PH.testDay; PH.testDay = undefined; nextPts = null;   // the end of an admin test raid: back to the same day, the wave not used up
   sfx('rooster'); if (test === undefined) PH.wave++; PH.kind = 'day'; PH.t = test !== undefined ? Math.max(test, DUSK + 5) : DAYLEN[PH.wave - 1];
-  standDown();
+  standDown(); clearRubble(false);
   const hurt = startRepairs();
   banner(`Day ${PH.wave}`, hurt ? `${hurt} to repair` : 'Wave held'); setMusic('day');
   for (const v of villagers) v.cheerT = 2.6;   // the town cheers as everyone comes out
