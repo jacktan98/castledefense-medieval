@@ -10435,7 +10435,8 @@ var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt:
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser
-var devOn = /[?&]debug\b/.test(location.search); document.body.classList.toggle('dev', devOn);
+// the private test site (tools/demo.js --beta) has the admin buttons too
+var devOn = /[?&]debug\b/.test(location.search) || !!window.MTD_BETA; document.body.classList.toggle('dev', devOn);
 var muted = false; try { muted = devOn && localStorage.getItem('mtd-muted') === '1'; } catch (e) {}
 // music and sounds each have their own loudness (the pause card's two sliders, 0 to 1; all the way down is off); the corner
 // button still mutes everything. Stored as numbers ('mtd-music', 'mtd-sfx'; the old on/off toggles stored '1' and '0')
@@ -10700,7 +10701,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '30a7318d5e'; var updateWait = false, updateT = 0;
+const BUILD = '9774b1ac9c'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
