@@ -1,0 +1,7 @@
+// Jack's private test site (Cloudflare Workers, behind Cloudflare Access): on every push to main Cloudflare runs
+// `node tools/build.js && node tools/demo.js --beta` and then `npx wrangler deploy`, which serves the files in beta/.
+{
+  "name": "castledefense-beta",
+  "compatibility_date": "2025-06-01",
+  "assets": { "directory": "./beta" }
+}
