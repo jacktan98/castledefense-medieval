@@ -1501,6 +1501,10 @@ function updateEco(dt) {
   const grow = day ? clamp(1 - PH.t / (DAYLEN[PH.wave - 1] || 300), 0, 1) : 1, cropK = .45 + .55 * grow;
   for (const B of buildings) {
     if (!B.built) continue;
+    if (B.type === 'market' && B.tier === 3) {
+      const g = B.group; if (g.userData.sign === undefined) { g.userData.sign = null; g.traverse(o => { if (o.userData.tradeSign) { o.material = o.material.clone(); g.userData.sign = o; } }); }
+      const sg = g.userData.sign, on = traderAt(B); if (sg && sg.userData.on !== on) { sg.userData.on = on; sg.material.color.set(on ? '#3f9a4a' : '#b8392e'); }
+    }
     if (B.type === 'farm') {
       const g = B.group; if (g.userData.crops === undefined) { const set = new Set([M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]); g.userData.crops = []; g.traverse(o => { if (o.isMesh && set.has(o.material)) g.userData.crops.push({ o, y0: o.position.y }); }); }
       for (const c of g.userData.crops) { c.o.scale.y = cropK; c.o.position.y = .08 - cropK * (.08 - c.y0); }

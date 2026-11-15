@@ -257,7 +257,7 @@ function makeMarket(tier, plinth) {
     for (const sz of [-1, 1]) { const wh = cyl(.26, .26, .06, 10, M.timber, -.6, .26, 1.2 + sz * .34); wh.rotation.x = Math.PI / 2; g.add(wh); }
     g.add(box(.05, .05, .9, M.timber, .1, .45, 1.2)); sack(-.75, 1.2, .13); sack(-.45, 1.25, .12);
     barrel(1.5, 1.1); barrel(1.15, 1.35); crate(.55, 1.4, .3, .5); crate(-1.6, .6, .3);
-    stones(2.0, .3); wheat(.35, .65); logs(0, -1.85); wheat(1.8, -1.6);
+    stones(2.0, .3); wheat(.85, .85); logs(0, -1.85); wheat(1.8, -1.6);   // the wheat barrel stood where the trader now stands, between the stalls
   } else {
     // open market hall: stone pillars, a timber floor frame, a steep blue gable roof; tables of goods inside
     for (const x of [-1.5, 0, 1.5]) for (const z of [-1.3, 1.3]) { g.add(cyl(.14, .17, 2.1, 8, M.stone2, x, 1.05, z)); g.add(box(.36, .14, .36, M.stone2, x, 2.1, z)); }
@@ -267,12 +267,13 @@ function makeMarket(tier, plinth) {
     for (const x of [-.8, .8]) { g.add(box(1.1, .06, .6, M.wood, x, .78, 0)); for (const sx of [-1, 1]) g.add(box(.06, .76, .5, M.wood, x + sx * .5, .38, 0)); produce(x, -.05, 1.0); }
     // goods under the roof, along the back and front between the pillars
     for (const [x, z] of [[-1.12, -.82], [-.74, -.95], [-.95, -.55], [.78, -.88], [1.15, -.78], [1.12, .2]]) barrel(x, z);
-    crate(1.15, .8, .32, .3); crate(.8, .95, .26, .1); sack(-1.15, .82); sack(-.85, .95, .12); crate(-.3, -.95, .28, .5);
+    crate(1.15, .8, .32, .3); crate(.8, .95, .26, .1); sack(-1.3, .3); sack(-1.32, .58, .12); crate(-.3, -.95, .28, .5);   // the sacks moved off the trader's spot in front of the left table
     // and round the hall, on the open paving
     wheat(-1.7, 2.1); stones(1.9, 2.05); logs(-1.2, -2.1); wheat(2.2, .0);
     // a sign hung from an iron bracket on the middle front pillar, square to the front
     g.add(box(.04, .04, .56, M.iron, 0, 1.86, 1.66));     for (const z of [1.62, 1.86]) g.add(box(.015, .14, .015, M.iron, 0, 1.78, z));
-    g.add(box(.04, .3, .34, M.awning, 0, 1.56, 1.74));
+    // the sign shows whether the trader is in: green, else red (Jack); its own mesh (userData), recoloured in updateEco
+    { const sg = box(.04, .3, .34, M.awning, 0, 1.56, 1.74); sg.userData.tradeSign = true; g.add(sg); }
   }
   return root;
 }
