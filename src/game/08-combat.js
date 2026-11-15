@@ -999,7 +999,7 @@ function updateSoldier(v, dt) {
 // the workplace's door, goes in and comes out a moment later in the work clothes with the tool (v.dressIn); anyone else (builders,
 // a workplace with no door yet) changes on the spot with a quick dressing gesture (changePose) and a puff of dust; indoors it just
 // happens; soldiers change at the barracks
-const CHANGE_T = 1.1;
+const CHANGE_T = 1.4;
 function updateChange(v, dt, want) {
   const W = !(v.changeT > 0) && want && want !== 'hammer' && v.job && !v.job.dead && innerDoor(v.job) ? v.job : null;
   if (v.dressIn && (v.dressIn.W !== W || v.dressIn.want !== want)) { if (!v.g.visible) { v.indoor = v.dressIn.W; exitDoor(v); } v.dressIn = null; }
