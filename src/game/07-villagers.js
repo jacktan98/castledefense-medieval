@@ -867,7 +867,7 @@ function updateVillagers(dt, now) {
             else if (P.B.type === 'catapult') crewUp(v, P.B, P.a);              // a catapult's crew is the villager: they change on the spot and man it
             else if (DEF[P.B.type].back && P.B.door) {                           // towers and the ballista: up the ladder at the back, or in at the door
               P.B.manned[P.a] = false; const B = P.B, a = P.a;
-              if (onLadder(B)) { const Lp = innerDoor(B), c = center(B), d = Math.hypot(Lp.x - c.x, Lp.z - c.z) || 1; v.doorWalk = { x: Lp.x + (Lp.x - c.x) / d * .8, z: Lp.z + (Lp.z - c.z) / d * .8, on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
+              if (onLadder(B)) { const sp = ladderSpot(B, a, .8); v.doorWalk = { x: sp.x, z: sp.z, on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
               else { v.indoor = B; goIn(v, B); const up = () => { B.manned[a] = true; showDefender(B, a, v); }; if (v.doorWalk) v.doorWalk.on = up; else up(); }
             }
             else { v.g.visible = false; showDefender(P.B, P.a, v); }

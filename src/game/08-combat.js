@@ -861,15 +861,20 @@ function updateClimb(v, dt) {
   if (C.up && C.y >= H) { v.climb = null; v.g.visible = false; B.manned[C.a] = true; showDefender(B, C.a, v); }
   else if (!C.up && C.y <= 0) {
     v.climb = null; v.legs.forEach(l => l.rotation.set(0, 0, 0)); if (v.pivot) v.pivot.visible = true;
-    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;   // out to the tile behind, then change back there
+    const dp = ladderSpot(B, C.a, 1.6); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;   // out to the tile behind, then change back there
   }
 }
 // at the ladder's foot a tower's defender changes on the spot like anyone else (Jack): the tier's armour, the helm with the hand, then a
 // kneel to pick the bow or crossbow up off the ground (a ballista's crew have none to pick up); then up the ladder
+// where a tower's defender changes: out from the ladder by `out` m, the first a little to its left and the second to its right, so they never stand in one spot (Jack)
+function ladderSpot(B, a, out) {
+  const L = innerDoor(B), c = center(B), d = Math.hypot(L.x - c.x, L.z - c.z) || 1, ux = (L.x - c.x) / d, uz = (L.z - c.z) / d, s = a % 2 ? .45 : -.45;
+  return { x: L.x + ux * out - uz * s, z: L.z + uz * out + ux * s };
+}
 function updateLadderKit(v, dt) {
   const { B, a } = v.ladderB;
   if (B.dead || !buildings.includes(B) || !innerDoor(B)) { v.ladderKit = 0; v.posted = false; return; }
-  const L = innerDoor(B), c = center(B), d = Math.hypot(L.x - c.x, L.z - c.z) || 1, px = L.x + (L.x - c.x) / d * .8, pz = L.z + (L.z - c.z) / d * .8;   // .8 m out from the ladder, clear of the tower's base
+  const L = innerDoor(B), c = center(B), sp = ladderSpot(B, a, .8), px = sp.x, pz = sp.z;   // .8 m out from the ladder, clear of the tower's base, each on their own side
   v.g.visible = true; v.x = v.rx = px; v.z = v.rz = pz; v.g.position.set(px, walkY(px, pz), pz); v.g.rotation.y = Math.atan2(L.x - c.x, L.z - c.z);
   if ((v.ladderKit -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !v.kitSwap) {
     v.kitSwap = true; crewKit(v, B.tier); changeFx(v);

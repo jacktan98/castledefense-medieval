@@ -5849,7 +5849,7 @@ function updateVillagers(dt, now) {
             else if (P.B.type === 'catapult') crewUp(v, P.B, P.a);              // a catapult's crew is the villager: they change on the spot and man it
             else if (DEF[P.B.type].back && P.B.door) {                           // towers and the ballista: up the ladder at the back, or in at the door
               P.B.manned[P.a] = false; const B = P.B, a = P.a;
-              if (onLadder(B)) { const Lp = innerDoor(B), c = center(B), d = Math.hypot(Lp.x - c.x, Lp.z - c.z) || 1; v.doorWalk = { x: Lp.x + (Lp.x - c.x) / d * .8, z: Lp.z + (Lp.z - c.z) / d * .8, on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
+              if (onLadder(B)) { const sp = ladderSpot(B, a, .8); v.doorWalk = { x: sp.x, z: sp.z, on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
               else { v.indoor = B; goIn(v, B); const up = () => { B.manned[a] = true; showDefender(B, a, v); }; if (v.doorWalk) v.doorWalk.on = up; else up(); }
             }
             else { v.g.visible = false; showDefender(P.B, P.a, v); }
@@ -6820,15 +6820,20 @@ function updateClimb(v, dt) {
   if (C.up && C.y >= H) { v.climb = null; v.g.visible = false; B.manned[C.a] = true; showDefender(B, C.a, v); }
   else if (!C.up && C.y <= 0) {
     v.climb = null; v.legs.forEach(l => l.rotation.set(0, 0, 0)); if (v.pivot) v.pivot.visible = true;
-    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;   // out to the tile behind, then change back there
+    const dp = ladderSpot(B, C.a, 1.6); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;   // out to the tile behind, then change back there
   }
 }
 // at the ladder's foot a tower's defender changes on the spot like anyone else (Jack): the tier's armour, the helm with the hand, then a
 // kneel to pick the bow or crossbow up off the ground (a ballista's crew have none to pick up); then up the ladder
+// where a tower's defender changes: out from the ladder by `out` m, the first a little to its left and the second to its right, so they never stand in one spot (Jack)
+function ladderSpot(B, a, out) {
+  const L = innerDoor(B), c = center(B), d = Math.hypot(L.x - c.x, L.z - c.z) || 1, ux = (L.x - c.x) / d, uz = (L.z - c.z) / d, s = a % 2 ? .45 : -.45;
+  return { x: L.x + ux * out - uz * s, z: L.z + uz * out + ux * s };
+}
 function updateLadderKit(v, dt) {
   const { B, a } = v.ladderB;
   if (B.dead || !buildings.includes(B) || !innerDoor(B)) { v.ladderKit = 0; v.posted = false; return; }
-  const L = innerDoor(B), c = center(B), d = Math.hypot(L.x - c.x, L.z - c.z) || 1, px = L.x + (L.x - c.x) / d * .8, pz = L.z + (L.z - c.z) / d * .8;   // .8 m out from the ladder, clear of the tower's base
+  const L = innerDoor(B), c = center(B), sp = ladderSpot(B, a, .8), px = sp.x, pz = sp.z;   // .8 m out from the ladder, clear of the tower's base, each on their own side
   v.g.visible = true; v.x = v.rx = px; v.z = v.rz = pz; v.g.position.set(px, walkY(px, pz), pz); v.g.rotation.y = Math.atan2(L.x - c.x, L.z - c.z);
   if ((v.ladderKit -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !v.kitSwap) {
     v.kitSwap = true; crewKit(v, B.tier); changeFx(v);
@@ -7704,7 +7709,7 @@ function standDown() {
   for (const v of villagers) if (v.climb && v.climb.up) { v.climb.up = false; v.post = null; v.posted = false; }   // dawn caught them on the way up: back down
   for (const v of villagers) if (v.ladderKit > 0) {                 // dawn caught them changing at the ladder's foot: out to the tile behind and change back
     const B = v.ladderB.B; v.ladderKit = 0; v.post = null; v.posted = false; v.spun = false;
-    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find';
+    const dp = ladderSpot(B, v.ladderB.a, 1.6); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find';
   }
   for (const v of villagers) if (v.post) {
     if (v.summoned) { v.foe = null; v.path = null; v.prog = null; continue; }
@@ -10695,7 +10700,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'a053c2ff4b'; var updateWait = false, updateT = 0;
+const BUILD = '30a7318d5e'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

@@ -290,7 +290,7 @@ function standDown() {
   for (const v of villagers) if (v.climb && v.climb.up) { v.climb.up = false; v.post = null; v.posted = false; }   // dawn caught them on the way up: back down
   for (const v of villagers) if (v.ladderKit > 0) {                 // dawn caught them changing at the ladder's foot: out to the tile behind and change back
     const B = v.ladderB.B; v.ladderKit = 0; v.post = null; v.posted = false; v.spun = false;
-    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find';
+    const dp = ladderSpot(B, v.ladderB.a, 1.6); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find';
   }
   for (const v of villagers) if (v.post) {
     if (v.summoned) { v.foe = null; v.path = null; v.prog = null; continue; }
