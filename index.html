@@ -151,6 +151,9 @@ button.danger{border-color:#6b3a33;color:var(--bad)}
 .ldOpt{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;padding:5px 8px;border-radius:9px;background:#24261f;border-color:#4a4838;text-align:left;min-height:0;height:auto}
 .ldOpt .tIco{width:24px;height:24px;flex:0 0 auto;display:inline-flex;color:#cfc4a6} .ldOpt .tIco svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round} .ldOpt[aria-pressed="true"] .tIco{color:var(--gold)} .ldOpt b{font-family:var(--display);font-weight:400;font-size:16px;color:var(--parch);line-height:1.05;display:block}
 .ldOpt small{display:block;font-size:11px;color:var(--muted)} .ldOpt small .cost .ico{width:11px;height:11px}
+/* the name and cost lines trimmed to their letters, so the box centres what you see whatever the browser does with the display
+   font's line box (Jack: they sat high on an iPad and in a browser, where the font's room above its letters is bigger) */
+.ldOpt b,.ldOpt small{text-box:trim-both cap alphabetic} .ldRows .ldOpt small{margin-top:6px} .ldRows .ldOpt{padding:10px 8px}
 .ldOpt[aria-pressed="true"]{border-color:var(--gold);background:#2e2b1e} .ldOpt[aria-pressed="true"] b{color:var(--gold)}
 .ldOpt.locked{opacity:.5;cursor:default;justify-content:center} .ldOpt.locked b{color:var(--muted)} .lockIco{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vertical-align:-2px} .ldOpt .tIco .lockIco{width:100%;height:100%;stroke-width:1.7}
 .ldGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
@@ -763,7 +766,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
   .ldRows{display:flex!important;flex-direction:column;gap:4px}
   .ldRow{grid-template-columns:20px 1fr 1fr;gap:4px}
   .ldCat .ico{width:18px;height:18px}
-  .ldOpt{height:44px;min-height:0!important;padding:7px 7px 3px!important;gap:6px;box-sizing:border-box}
+  .ldOpt{height:44px;min-height:0!important;padding:5px 7px!important;gap:6px;box-sizing:border-box}
   .ldGrid .ldOpt{height:auto}
   .ldOpt .tIco{width:18px;height:18px}
   .ldOpt b{font-size:13px;line-height:1.1;white-space:nowrap} .ldOpt small{font-size:10px}
@@ -10943,7 +10946,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'fb2e077aa3'; var updateWait = false, updateT = 0;
+const BUILD = '62c5f7d0eb'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
