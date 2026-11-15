@@ -712,9 +712,16 @@ function stageSite(B, p) {
     // part way up, roof first: Jack); a mesh straight under the root grows up from its foot, a nested one appears once the build
     // height is past most of it
     g.traverse(o => {
-      if (!o.isMesh || o === g) return; let hid = false; for (let q = o; q && q !== g; q = q.parent) if (!q.visible) hid = true; if (hid) return;
-      const bb = new THREE.Box3().setFromObject(o); if (bb.isEmpty()) return; bb.applyMatrix4(inv);
-      list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: Math.max(0, bb.min.y), hi: Math.max(bb.max.y, bb.min.y + .05), mesh: o.parent === g });
+      if (!o.isMesh || o === g) return; let hid = false, horse = false;
+      for (let q = o; q && q !== g; q = q.parent) { if (!q.visible) hid = true; if (q.userData.stallHorse) horse = true; }
+      if (hid) return;
+      // the stables' horses only come once it is finished (Jack: they were built up with it)
+      if (horse) { list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: 0, hi: 1, horse: true }); return; }
+      // the parts of a small group of meshes alone (an awning's stripes, a roof and its eave) come together, by the group's height
+      // (the market's white and coloured stripes came in apart: Jack)
+      const P = o.parent, leaf = P !== g && P.children.every(c => c.isMesh);
+      const bb = new THREE.Box3().setFromObject(leaf ? P : o); if (bb.isEmpty()) return; bb.applyMatrix4(inv);
+      list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: Math.max(0, bb.min.y), hi: Math.max(bb.max.y, bb.min.y + .05), mesh: P === g });
       H = Math.max(H, bb.max.y);
     });
     S = g.userData.stages = { list, H };
@@ -722,6 +729,7 @@ function stageSite(B, p) {
   const h = p * S.H * 1.04;
   for (const s of S.list) {
     if (!s.vis) continue;
+    if (s.horse) { s.o.visible = false; continue; }
     if (s.lo <= .02 && s.hi < .5) { s.o.visible = true; continue; }   // the base is laid first
     const k = clamp((h - s.lo) / (s.hi - s.lo), 0, 1);
     if (s.mesh) { s.o.visible = k > 0; s.o.scale.y = s.sy * Math.max(k, .001); s.o.position.y = s.lo - k * (s.lo - s.y0); }
