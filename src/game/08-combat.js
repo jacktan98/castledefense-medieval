@@ -995,10 +995,25 @@ function updateSoldier(v, dt) {
   else if (v.summoned) { const c = center(B); turnTo(v, B.rally ? Math.atan2(hx - c.x, hz - c.z) : faceAngle(B), dt); }
 }
 // dawn: back to the barracks, in, out of the kit, out again to the day's work (a lost barracks: change where they stand)
-// a change of job (or to and from building) means a change of clothes, on the spot: the villager stops, bends down,
-// swaps outfit and tool at the bottom of the bend and straightens up (indoors it just happens); soldiers change at the barracks
+// a change of job (or to and from building) means a change of clothes (Jack: nothing that looks like magic): a worker walks to
+// the workplace's door, goes in and comes out a moment later in the work clothes with the tool (v.dressIn); anyone else (builders,
+// a workplace with no door yet) changes on the spot with a quick dressing gesture (changePose) and a puff of dust; indoors it just
+// happens; soldiers change at the barracks
 const CHANGE_T = 1.1;
 function updateChange(v, dt, want) {
+  const W = !(v.changeT > 0) && want && want !== 'hammer' && v.job && !v.job.dead && innerDoor(v.job) ? v.job : null;
+  if (v.dressIn && (v.dressIn.W !== W || v.dressIn.want !== want)) { if (!v.g.visible) { v.indoor = v.dressIn.W; exitDoor(v); } v.dressIn = null; }
+  if (W && !(v.hideT > 0 && !v.dressIn) && v.g.visible || v.dressIn) {
+    if (!v.dressIn) {
+      const dp = outerDoor(W, v);
+      if (walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) { release(v); v.path = null; v.indoor = W; v.hideT = 1; v.dressIn = { W, want, t: 1.2 }; goIn(v, W); }
+      return;
+    }
+    // back out before the change (fed and woken at home, say): walk to the door again
+    if (v.g.visible) { v.dressIn = null; v.hideT = 0; return; }
+    if ((v.dressIn.t -= dt) <= 0) { giveTool(v, want); v.dressIn = null; v.indoor = W; exitDoor(v); v.state = 'commute'; v.wait = .1; }
+    return;
+  }
   if (v.hideT > 0 || !v.g.visible) { giveTool(v, want); v.changeT = 0; return; }
   if (!(v.changeT > 0)) { v.changeT = CHANGE_T; v.swapped = false; release(v); v.path = null; }
   v.changing = true;

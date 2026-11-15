@@ -213,10 +213,14 @@ function giveTool(v, kind) {
 const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', farm: 'hoe', farmhouse: 'pail' };
 // down on one knee by c (0 standing … 1 kneeling): body lowered, front leg forward, back leg behind
 // the quick change (p 0–1): one full turn, eased in and out, over a small hop, both arms swung out to the sides
+// changing on the spot (Jack: the old hop and spin read as magic): both arms up to pull the tunic over the head, the swap while
+// they are up, then the right hand settles the hat
 function changePose(f, p) {
-  p = clamp(p, 0, 1); const k = Math.sin(Math.PI * p);
-  f.body.rotation.y = Math.PI * 2 * sstep(.08, .92, p); f.body.position.y = .17 * k; f.spun = true;
-  f.arms[0].rotation.z = -.9 * k; f.arms[1].rotation.z = .9 * k;
+  p = clamp(p, 0, 1);
+  const up = sstep(0, .3, p) * (1 - sstep(.45, .62, p)), hat = sstep(.55, .72, p) * (1 - sstep(.86, 1, p));
+  f.arms[0].rotation.x = -2.8 * up - .3 * hat; f.arms[1].rotation.x = -2.8 * up - 2.7 * hat;
+  f.arms[0].rotation.z = .35 * up; f.arms[1].rotation.z = -.35 * up - .45 * hat;
+  f.body.rotation.y = 0; f.body.position.y = -.03 * up; f.spun = true;
 }
 // the puff that hides the swap: dust round the feet and a few scraps of the old clothes flung off
 function changeFx(f) {
