@@ -3509,6 +3509,8 @@ function makeQuarry(tier, plinth) {
 }
 // blighted crops (Meadowmere's damp blight, the Blighted Isle): brown, wilted, spotted, so the fields show they do badly
 const BLIGHT_M = { crop1: mat('#6e6436'), crop2: mat('#7a6a3a'), wheat: mat('#8c7442') };
+// the crops' materials are marked (tinted copies keep the mark), so stageSite and updateEco find them on any field
+for (const m of [M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]) m.userData.crop = true;
 const blightMap = () => MAP === 'mere' || MAP === 'keep' || (bonusOn() && MAP === 'isle');
 function makeFarm(tier) {
   const g = new THREE.Group(), CM = blightMap() ? BLIGHT_M : M;
@@ -7606,7 +7608,7 @@ function updateEco(dt) {
       const sg = g.userData.sign, on = traderAt(B); if (sg && sg.userData.on !== on) { sg.userData.on = on; sg.material.color.set(on ? '#3f9a4a' : '#b8392e'); }
     }
     if (B.type === 'farm') {
-      const g = B.group; if (g.userData.crops === undefined) { const set = new Set([M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]); g.userData.crops = []; g.traverse(o => { if (o.isMesh && set.has(o.material)) g.userData.crops.push({ o, y0: o.position.y }); }); }
+      const g = B.group; if (g.userData.crops === undefined) { g.userData.crops = []; g.traverse(o => { if (o.isMesh && o.material.userData.crop) g.userData.crops.push({ o, y0: o.position.y }); }); }
       for (const c of g.userData.crops) { c.o.scale.y = cropK; c.o.position.y = .08 - cropK * (.08 - c.y0); }
     }
     if (B.type === 'forester') {
@@ -10941,7 +10943,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '3dd590e723'; var updateWait = false, updateT = 0;
+const BUILD = 'fb2e077aa3'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -11100,6 +11102,8 @@ function stageSite(B, p) {
     g.traverse(o => {
       if (!o.isMesh || o === g) return; let hid = false, horse = false;
       for (let q = o; q && q !== g; q = q.parent) { if (!q.visible) hid = true; if (q.userData.stallHorse) horse = true; }
+      // the fields' crops are sown once the site is done (Jack: they grew up with the construction)
+      if (B.type === 'farm' && o.material.userData.crop) horse = true;
       if (hid) return;
       // the stables' horses only come once it is finished (Jack: they were built up with it)
       if (horse) { list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: 0, hi: 1, horse: true }); return; }

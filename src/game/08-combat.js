@@ -1508,7 +1508,7 @@ function updateEco(dt) {
       const sg = g.userData.sign, on = traderAt(B); if (sg && sg.userData.on !== on) { sg.userData.on = on; sg.material.color.set(on ? '#3f9a4a' : '#b8392e'); }
     }
     if (B.type === 'farm') {
-      const g = B.group; if (g.userData.crops === undefined) { const set = new Set([M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]); g.userData.crops = []; g.traverse(o => { if (o.isMesh && set.has(o.material)) g.userData.crops.push({ o, y0: o.position.y }); }); }
+      const g = B.group; if (g.userData.crops === undefined) { g.userData.crops = []; g.traverse(o => { if (o.isMesh && o.material.userData.crop) g.userData.crops.push({ o, y0: o.position.y }); }); }
       for (const c of g.userData.crops) { c.o.scale.y = cropK; c.o.position.y = .08 - cropK * (.08 - c.y0); }
     }
     if (B.type === 'forester') {

@@ -714,6 +714,8 @@ function stageSite(B, p) {
     g.traverse(o => {
       if (!o.isMesh || o === g) return; let hid = false, horse = false;
       for (let q = o; q && q !== g; q = q.parent) { if (!q.visible) hid = true; if (q.userData.stallHorse) horse = true; }
+      // the fields' crops are sown once the site is done (Jack: they grew up with the construction)
+      if (B.type === 'farm' && o.material.userData.crop) horse = true;
       if (hid) return;
       // the stables' horses only come once it is finished (Jack: they were built up with it)
       if (horse) { list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: 0, hi: 1, horse: true }); return; }

@@ -378,6 +378,8 @@ function makeQuarry(tier, plinth) {
 }
 // blighted crops (Meadowmere's damp blight, the Blighted Isle): brown, wilted, spotted, so the fields show they do badly
 const BLIGHT_M = { crop1: mat('#6e6436'), crop2: mat('#7a6a3a'), wheat: mat('#8c7442') };
+// the crops' materials are marked (tinted copies keep the mark), so stageSite and updateEco find them on any field
+for (const m of [M.wheat, M.crop1, M.crop2, BLIGHT_M.wheat, BLIGHT_M.crop1, BLIGHT_M.crop2]) m.userData.crop = true;
 const blightMap = () => MAP === 'mere' || MAP === 'keep' || (bonusOn() && MAP === 'isle');
 function makeFarm(tier) {
   const g = new THREE.Group(), CM = blightMap() ? BLIGHT_M : M;
