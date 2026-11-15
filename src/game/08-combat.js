@@ -830,10 +830,12 @@ POSTS.crossbow = XBOW_TOP.map(y => [[.3, y, .18], [-.3, y, -.18]]);
 POSTS.ballista = BALLISTA_DECK.map((y, i) => [[.55 * BALLISTA_K[i], y, -.3], [-.2, y, -.7 * BALLISTA_K[i]]]);
 POSTS.catapult = [[[.72, 0, -.4], [-.62, 0, .15]], [[.8, 0, -.45], [-.7, 0, .15]], [[-.85, 0, -.62], [.85, 0, .5]]];
 function postOffset(B, a) { const L = POSTS[B.type][B.tier - 1], [x, y, z] = L[a % L.length], [rx, rz] = faceRot(B.face || 0, x, z); return [rx, y, rz]; }
-function showDefender(B, a) {
+function showDefender(B, a, v) {
   B.figs = B.figs || [];
+  // the defender is drawn as the villager who went up (same hair and own clothes under the armour)
+  if (v && B.figs[a] && !B.figs[a].crewOf && B.figs[a].of !== v) { scene.remove(B.figs[a].g); B.figs[a] = null; }
   // the same armour on every defender of the tier; the weapon by post: bow, crossbow, or none for a siege crew
-  if (!B.figs[a]) { const T = DEF[B.type]; B.figs[a] = makePerson({ tool: T.crew ? null : T.weapon || 'bow' }); armour(B.figs[a], B.tier); }
+  if (!B.figs[a]) { const T = DEF[B.type]; B.figs[a] = makePerson({ tool: T.crew ? null : T.weapon || 'bow', hair: v && v.hairC, tunic: v && v.baseTunic }); B.figs[a].of = v; armour(B.figs[a], B.tier); }
   const f = B.figs[a], o = postOffset(B, a), c = B.move ? B.group.position : center(B);
   f.g.position.set(c.x + o[0], B.group.position.y + o[1], c.z + o[2]); f.g.rotation.y = DEF[B.type].crew ? Math.atan2(-o[0], -o[2]) : Math.atan2(o[0] || .01, o[2] || .01); f.g.visible = true;
 }
@@ -856,11 +858,26 @@ function updateClimb(v, dt) {
   v.legs[0].rotation.x = -.7 * Math.max(0, Math.sin(ph)); v.legs[1].rotation.x = -.7 * Math.max(0, -Math.sin(ph));
   v.arms[0].rotation.set(-2.6 - .3 * Math.sin(ph), 0, 0); v.arms[1].rotation.set(-2.6 + .3 * Math.sin(ph), 0, 0); v.body.rotation.x = 0; v.body.position.y = 0;
   if (v.pivot) v.pivot.visible = false;
-  if (C.up && C.y >= H) { v.climb = null; v.g.visible = false; B.manned[C.a] = true; showDefender(B, C.a); }
+  if (C.up && C.y >= H) { v.climb = null; v.g.visible = false; B.manned[C.a] = true; showDefender(B, C.a, v); }
   else if (!C.up && C.y <= 0) {
     v.climb = null; v.legs.forEach(l => l.rotation.set(0, 0, 0)); if (v.pivot) v.pivot.visible = true;
-    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;
+    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .2;   // out to the tile behind, then change back there
   }
+}
+// at the ladder's foot a tower's defender changes on the spot like anyone else (Jack): the tier's armour, the helm with the hand, then a
+// kneel to pick the bow or crossbow up off the ground (a ballista's crew have none to pick up); then up the ladder
+function updateLadderKit(v, dt) {
+  const { B, a } = v.ladderB;
+  if (B.dead || !buildings.includes(B) || !innerDoor(B)) { v.ladderKit = 0; v.posted = false; return; }
+  const L = innerDoor(B), c = center(B);
+  v.g.visible = true; v.x = v.rx = L.x; v.z = v.rz = L.z; v.g.position.set(L.x, walkY(L.x, L.z), L.z); v.g.rotation.y = Math.atan2(L.x - c.x, L.z - c.z);
+  if ((v.ladderKit -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !v.kitSwap) {
+    v.kitSwap = true; crewKit(v, B.tier); changeFx(v);
+    const T = DEF[B.type]; if (!T.crew) { const w = T.weapon || 'bow', p = makeTool(w); (w === 'bow' ? v.arms[0] : v.arms[1]).add(p); v.pivot = p; v.toolKind = w; }
+  }
+  v.legs.forEach(l => l.rotation.set(0, 0, 0)); v.arms.forEach(r => r.rotation.set(0, 0, 0)); v.body.rotation.set(0, 0, 0); v.body.position.y = 0;
+  const p = 1 - v.ladderKit / CHANGE_T; changePose(v, p); if (v.pivot) v.pivot.visible = p >= CHANGE_TOOL;
+  if (v.ladderKit <= 0) { v.ladderKit = 0; v.arms.forEach(r => r.rotation.set(0, 0, 0)); v.legs.forEach(l => l.rotation.set(0, 0, 0)); v.body.rotation.set(0, 0, 0); v.body.position.y = 0; v.spun = false; v.climb = { B, a, up: true, y: 0 }; }
 }
 // a catapult's crew: the villager themself, at the engine; down on a knee to change into the tier's kit, then they man it
 function crewUp(v, B, a) {

@@ -136,13 +136,13 @@ function makePerson(opts) {
   // two small dark eyes (Jack: faces were blank up close); helms and hoods that cover the face sit over them
   // the eyes sit in a group round the head's upright axis, so the head, eyes and hair can turn together (idle villagers look about)
   const eyes = new THREE.Mesh(EYE_GEO, eyeM); eyes.position.set(0, 1.045, .119); const eyeG = new THREE.Group(); eyeG.add(eyes); body.add(eyeG);
-  const hair = makeHair(opts.hair || hairs[Math.floor(Math.random() * hairs.length)]); body.add(hair);
+  const hairC = opts.hair || hairs[Math.floor(Math.random() * hairs.length)], hair = makeHair(hairC); body.add(hair);
   let hatG = null; if (opts.helm) { hatG = makeHelm(opts.helm); body.add(hatG); }
   let pivot = null;
   if (opts.tool) { pivot = makeTool(opts.tool); (opts.tool === 'bow' ? arms[0] : arms[1]).add(pivot); }
   body.scale.setScalar((opts.scale || 1) * UNIT_K);
   g.add(body); scene.add(g);
-  return { g, body, legs, arms, torso, hatG, baseTunic: tun, pivot, eyes, headParts: [head, eyeG, hair], x: 0, z: 0, tx: 0, tz: 0, wait: Math.random() * 2, speed: .9 + Math.random() * .6, phase: Math.random() * 6, stuck: 0 };
+  return { g, body, legs, arms, torso, hatG, baseTunic: tun, pivot, eyes, headParts: [head, eyeG, hair], hairC, x: 0, z: 0, tx: 0, tz: 0, wait: Math.random() * 2, speed: .9 + Math.random() * .6, phase: Math.random() * 6, stuck: 0 };
 }
 // work clothes: each job has its own tunic, hat and (for masons and builders) a leather apron
 // a checked (plaid) cloth: wide dark bands crossing a base colour, with a finer thread through the base
@@ -849,6 +849,7 @@ function updateVillagers(dt, now) {
   for (const v of villagers) {
     v.walking = false; v.working = false; v.changing = false; v.pushing = false;
     if (v.climb) updateClimb(v, dt);
+    else if (v.ladderKit > 0) updateLadderKit(v, dt);
     else if (v.doorWalk && doorStep(v, dt)) { /* walking through a door */ }
     else if (night) {
       if (v.sleeping) continue;
@@ -863,10 +864,10 @@ function updateVillagers(dt, now) {
             else if (P.B.type === 'catapult') crewUp(v, P.B, P.a);              // a catapult's crew is the villager: they change on the spot and man it
             else if (DEF[P.B.type].back && P.B.door) {                           // towers and the ballista: up the ladder at the back, or in at the door
               P.B.manned[P.a] = false; const B = P.B, a = P.a;
-              if (onLadder(B)) { v.doorWalk = { ...innerDoor(B), on: u => { u.climb = { B, a, up: true, y: 0 }; } }; }
-              else { v.indoor = B; goIn(v, B); const up = () => { B.manned[a] = true; showDefender(B, a); }; if (v.doorWalk) v.doorWalk.on = up; else up(); }
+              if (onLadder(B)) { v.doorWalk = { ...innerDoor(B), on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
+              else { v.indoor = B; goIn(v, B); const up = () => { B.manned[a] = true; showDefender(B, a, v); }; if (v.doorWalk) v.doorWalk.on = up; else up(); }
             }
-            else { v.g.visible = false; showDefender(P.B, P.a); }
+            else { v.g.visible = false; showDefender(P.B, P.a, v); }
           }
         } else if (v.kitT > 0) {                    // changing inside the barracks; out again armed
           if (!v.g.visible && !v.doorWalk && (v.kitT -= dt) <= 0) { soldierKit(v, v.post.B.tier, DEF[v.post.B.type].cavalry); v.sbar = v.sbar || makeBar(.6); v.prog = null; v.indoor = v.post.B; exitDoor(v); }

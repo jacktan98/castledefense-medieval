@@ -288,6 +288,10 @@ function resumeGame() {
 // everyone off their posts and out again (dawn, and the cheer after the last night is won)
 function standDown() {
   for (const v of villagers) if (v.climb && v.climb.up) { v.climb.up = false; v.post = null; v.posted = false; }   // dawn caught them on the way up: back down
+  for (const v of villagers) if (v.ladderKit > 0) {                 // dawn caught them changing at the ladder's foot: out to the tile behind and change back
+    const B = v.ladderB.B; v.ladderKit = 0; v.post = null; v.posted = false; v.spun = false;
+    const dp = doorPoint(B); v.doorWalk = { x: dp.x, z: dp.z, on: u => { if (u.kit) u.crewStrip = CHANGE_T; } }; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find';
+  }
   for (const v of villagers) if (v.post) {
     if (v.summoned) { v.foe = null; v.path = null; v.prog = null; continue; }
     if (v.soldier) { v.unkit = v.post.B; v.posted = false; v.prog = null; v.path = null; }     // walk back to the barracks to change
@@ -307,6 +311,8 @@ function standDown() {
     }
     v.post = null;
   }
+  // anyone still in a tower's armour off a post (their tower fell) changes back where they stand
+  for (const v of villagers) if (v.kit && !v.soldier && !v.horse && !v.crewOf && !v.summoned && !v.climb && !v.doorWalk && !(v.crewStrip > 0) && !v.unkit) v.crewStrip = CHANGE_T;
   for (const B of buildings) { B.manned = []; hideDefenders(B); }
 }
 function startDay() {
