@@ -58,12 +58,14 @@ if(want('town')){const p=await L.open(env,SC.hero.map,W,H,D);
  await G(p,`(()=>{const K=castleB(),c=center(K);let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647;};
   const L=buildings.filter(B=>B!==K).map(B=>({B,t:B.tier,d:Math.hypot(center(B).x-c.x,center(B).z-c.z)+(B.type==='wall'||B.type==='gate'?6:0)})).sort((a,b)=>a.d-b.d);
   L.forEach((o,i)=>{o.a=.02+.5*i/L.length;o.u2=o.t>=2?Math.min(.93,o.a+.12+R()*.4):9;o.u3=o.t>=3?Math.min(.97,o.u2+.1+R()*.3):9;});
-  const pop=(B,up)=>{B.pop=window.__T;const q=center(B);for(let n=0;n<6;n++){const a=n/6*6.283;dustAt(q.x+Math.cos(a)*1.2,hAt(q.x,q.z),q.z+Math.sin(a)*1.2);}
+  const RISE=.07;const pop=(B,up)=>{B.pop=window.__T;const q=center(B);for(let n=0;n<6;n++){const a=n/6*6.283;dustAt(q.x+Math.cos(a)*1.2,hAt(q.x,q.z),q.z+Math.sin(a)*1.2);}
    if(B===K){window.__ev.push([window.__fi||0,'castleUp',1]);return;}if(B.type!=='wall'&&B.type!=='gate')sfx('build',{x:q.x,z:q.z},up?.55:.7);};
   const set=(B,t)=>{if(B.tier>=t)return;B.tier=t;B.max=DEF[B.type].hp[t-1];B.hp=B.max;swapModel(B);pop(B,1);};
   for(const o of L){o.B.tier=1;o.B.max=DEF[o.B.type].hp[0];o.B.hp=o.B.max;swapModel(o.B);o.B.group.visible=false;}K.tier=1;swapModel(K);refreshWalls();for(const o of L)if(o.B.type==='wall'||o.B.type==='gate')o.B.group.visible=false;
   paused=false;PH.kind='day';const lo=updateLight;updateLight=(dt,now)=>{light=PH.t<DUSK?.25+.75*sstep(0,DUSK,PH.t):1;lo(dt,now);};
-  window.__tick=t=>{for(const o of L){if(t>=o.a&&!o.B.group.visible){o.B.group.visible=true;pop(o.B,0);}if(t>=o.u2)set(o.B,2);if(t>=o.u3)set(o.B,3);}
+  window.__tick=t=>{for(const o of L){
+   // each building rises in stages, base first and roof last, like a site in the game, then pops as it is finished
+   if(t>=o.a&&!o.done){o.B.group.visible=true;const k=(t-o.a)/RISE;if(k<1)stageSite(o.B,k);else{stageSite(o.B,-1);o.done=true;pop(o.B,0);}}if(t>=o.u2)set(o.B,2);if(t>=o.u3)set(o.B,3);}
    if(t>=.42)set(K,2);if(t>=.74)set(K,3);
    // morning slides toward dusk, as the next part is night
    const k=Math.min(1,Math.max(0,(t-.2)/.8));PH.t=DUSK+6-(DUSK*.8+6)*k*k*(3-2*k);
