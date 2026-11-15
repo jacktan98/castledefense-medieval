@@ -1087,6 +1087,23 @@ function blink(p, now) {
   if (now > p.blinkNext) { p.blinkEnd = now + 130; p.blinkNext = now + 2500 + Math.random() * 4000; }
   p.eyes.scale.y = now < p.blinkEnd ? .12 : 1;
 }
+// turn a figure's head (and hair, hat or helm with it) to `turn` radians
+function turnHead(p, turn) {
+  if (!p.headParts) return;
+  for (const o of p.headParts) o.rotation.y = turn; if (p.hatG) p.hatG.rotation.y = turn;
+  const kit = p.armour || p.kit; if (kit) for (const o of kit) if (o.userData.helm) o.rotation.y = turn;
+}
+// defenders at their posts blink, and look about while nothing is in range (Jack); the head eases back to the front to aim
+function headLook(figs, dt, idle) {
+  const now = performance.now();
+  for (const f of figs || []) {
+    if (!f || !f.g.visible || f.crewT > 0 || f.stepping) continue;
+    if (f.seed === undefined) f.seed = Math.random() * 10;
+    blink(f, now);
+    const cur = f.headParts ? f.headParts[0].rotation.y : 0, want = idle ? .35 * Math.sin(now / 1000 * .55 + f.seed * 3) : 0;
+    turnHead(f, cur + (want - cur) * Math.min(1, dt * 3));
+  }
+}
 function updateFallen(dt) {
   for (let n = fallen.length - 1; n >= 0; n--) {
     const f = fallen[n], v = f.v; f.t += dt;
@@ -1202,7 +1219,7 @@ function setRally(B, pt) {
 function updateDefense(dt) {
   for (const B of buildings) {
     const T = DEF[B.type]; if (!T.range || !B.built) continue;
-    if (T.crew) { updateSiege(B, T, dt); continue; }
+    if (T.crew) { updateSiege(B, T, dt); headLook(B.figs, dt, B.idleNow && !B.move); continue; }
     const k = B.tier - 1, n = T.archers[k], c = center(B), R = rangeOf(B);
     while (B.cool.length < n) B.cool.push(Math.random() * T.rate[k]);
     let best = null, bd = R;
@@ -1214,6 +1231,7 @@ function updateDefense(dt) {
       if (draw) f.g.rotation.y = Math.atan2(best.x - f.g.position.x, best.z - f.g.position.z);
       if (T.weapon === 'crossbow') xbowPose(f, draw || f.attackT > 0); else bowPose(f, draw, f.attackT > 0, -.9, -.6);
     });
+    headLook(B.figs, dt, !best);
     for (let a = 0; a < n; a++) {
       if (!(B.manned && B.manned[a])) continue;
       if ((B.cool[a] -= dt) > 0) continue;
@@ -1275,7 +1293,9 @@ function catapultCrew(B, k, crew, moving, dt, best) {
     return true;
   };
   const walkLegs = (f, on) => { const sw = on ? Math.sin(now * 9) * .5 : 0; f.legs[0].rotation.set(sw, 0, 0); f.legs[1].rotation.set(-sw, 0, 0); f.body.position.y = on ? Math.abs(Math.sin(now * 9)) * .04 : 0; };
-  if (L && L.crewOf && L.crewT > 0) { place(L, ...R.loader); changing(L); }
+  // a crew member still to change walks onto their spot first, then stops and changes there (Jack: they changed while sliding in)
+  const walkIn = f => { const sw = Math.sin(now * 9) * .4; walkLegs(f, true); f.arms[0].rotation.set(sw, 0, 0); f.arms[1].rotation.set(-sw, 0, 0); f.body.rotation.x = 0; };
+  if (L && L.crewOf && L.crewT > 0) { place(L, ...R.loader); if (L.stepping) walkIn(L); else { walkLegs(L, false); changing(L); } }
   else if (L) {
     if (roll) { place(L, ...R.walk); if (!L.stepping) L.g.rotation.y = engYaw(B, [0, 0, 0], [0, 0, 1]); walkLegs(L, moving || L.stepping); L.body.rotation.x = 0; const sw = Math.sin(now * 9) * .4; L.arms[0].rotation.set(sw, 0, 0); L.arms[1].rotation.set(-sw, 0, 0); }
     else {
@@ -1284,7 +1304,7 @@ function catapultCrew(B, k, crew, moving, dt, best) {
       else { L.g.updateMatrixWorld(true); const h = rig.crank.localToWorld(new THREE.Vector3(.1, R.cr, 0)); aimArm(L, L.arms[1], h); aimArm(L, L.arms[0], h); }
     }
   }
-  if (G && G.crewOf && G.crewT > 0) { place(G, ...R.gunner); changing(G); }
+  if (G && G.crewOf && G.crewT > 0) { place(G, ...R.gunner); if (G.stepping) walkIn(G); else { walkLegs(G, false); changing(G); } }
   else if (G) {
     if (roll) { const pr = pushRig(k); place(G, 0, pr.z); if (!G.stepping) G.g.rotation.y = engYaw(B, [0, 0, 0], [0, 0, 1]); walkLegs(G, moving || G.stepping); const s = G.stepping ? Math.sin(now * 9) * .4 : 0; if (G.stepping) { G.arms[0].rotation.set(s, 0, 0); G.arms[1].rotation.set(-s, 0, 0); G.body.rotation.x = 0; } else { G.arms[0].rotation.set(pr.arm, 0, .15); G.arms[1].rotation.set(pr.arm, 0, -.15); G.body.rotation.x = pr.lean; } }
     else {
@@ -1359,6 +1379,7 @@ function updateSiege(B, T, dt) {
   B.fireT = Math.max(0, (B.fireT || 0) - dt);
   let best = null, bd = R;
   if (crew) for (const e of enemies) if (!e.dead) { const d = Math.hypot(e.x - c.x, e.z - c.z); if (d < bd && d >= mn) { bd = d; best = e; } }
+  B.idleNow = !best;
   let aimed = false;
   if (best && B.turret) {
     const want = Math.atan2(best.x - c.x, best.z - c.z) - B.group.rotation.y, cur = B.turret.rotation.y;

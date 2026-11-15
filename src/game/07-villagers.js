@@ -952,10 +952,10 @@ function updateVillagers(dt, now) {
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
     blink(v, now);
     // idle villagers breathe and look about now and then; the head turns back while they work, walk or carry
-    const idle = !v.soldier && !v.working && !carrying && !v.changing && (v.amp || 0) < .15;
+    const idle = (v.soldier ? !v.foe && !(v.attackT > 0) : !v.working && !v.changing) && !carrying && (v.amp || 0) < .15;
     { const br = 1 + .012 * Math.sin(now / 1000 * 2.2 + v.seed); v.torso.scale.set(br, 1, br);
       const turn = ease(v.headParts[0].rotation.y, idle ? .32 * Math.sin(now / 1000 * .55 + v.seed * 3) : 0);
-      for (const o of v.headParts) o.rotation.y = turn; if (v.hatG) v.hatG.rotation.y = turn; }
+      turnHead(v, turn); }
     v.arms[0].rotation.x = ease(v.arms[0].rotation.x, L); v.arms[1].rotation.x = ease(v.arms[1].rotation.x, Rt);
     // out and up: the hand round the bundle's outer log; with one log a little out too, the hand on its outer side (Jack)
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .28 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
