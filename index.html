@@ -9932,6 +9932,7 @@ $('#cardTrade').addEventListener('click', e => {
   const b = e.target.closest('button'), B = selected; if (!b || !B || B.type !== 'market' || !B.built) return;
   if (paused) return setHint('Paused', 'bad');
   const t = TRADES[+b.dataset.i], give = { [t.give]: 10 }, n = t.n[B.tier - 1], c = center(B);
+  if (PH.kind === 'night') return setHint('Not at night', 'bad');   // the market shuts at night (Jack)
   if (!traderAt(B)) return setHint('No trader', 'bad');
   if (!canAfford(give)) return setHint(`Need ${costHTML(give)}`, 'bad');
   pay(give); res[t.get] += n; achAdd('trades'); tradeScene(B); const y = B.group.position.y + 2.4;
@@ -10895,7 +10896,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '03a2de3f88'; var updateWait = false, updateT = 0;
+const BUILD = '61eea82153'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

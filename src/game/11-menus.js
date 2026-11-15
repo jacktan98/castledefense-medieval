@@ -1128,6 +1128,7 @@ $('#cardTrade').addEventListener('click', e => {
   const b = e.target.closest('button'), B = selected; if (!b || !B || B.type !== 'market' || !B.built) return;
   if (paused) return setHint('Paused', 'bad');
   const t = TRADES[+b.dataset.i], give = { [t.give]: 10 }, n = t.n[B.tier - 1], c = center(B);
+  if (PH.kind === 'night') return setHint('Not at night', 'bad');   // the market shuts at night (Jack)
   if (!traderAt(B)) return setHint('No trader', 'bad');
   if (!canAfford(give)) return setHint(`Need ${costHTML(give)}`, 'bad');
   pay(give); res[t.get] += n; achAdd('trades'); tradeScene(B); const y = B.group.position.y + 2.4;
