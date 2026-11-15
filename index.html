@@ -4939,6 +4939,10 @@ function removeBuilding(B, raid, cancel) {
     if (v.kitT > 0) { v.kitT = 0; if (!v.g.visible || v.doorWalk) exitDoor(v); }
     v.post = null; v.posted = false;
   }
+  // a defender still on the ground (walking to the post, or changing at the ladder's foot) is spared and sent on to another
+  // open post (Jack); only those on the ladder, up top or inside fall with it
+  const freed = villagers.filter(v => v.post && v.post.B === B && !v.soldier && (!v.posted || (v.ladderKit > 0 && v.ladderB && v.ladderB.B === B)));
+  for (const v of freed) { v.post = null; v.posted = false; v.ladderKit = 0; v.ladderB = null; v.doorWalk = null; v.path = null; v.spun = false; v.body.rotation.set(0, 0, 0); v.body.position.y = 0; }
   for (const v of villagers.slice()) if (v.home === B || (v.post && v.post.B === B && v.posted && !v.soldier)) killVillager(v);   // (only the castle's own, at the very end)
   if (B.rallyFlag) setRally(B, null);
   for (const v of villagers) {
@@ -4947,6 +4951,11 @@ function removeBuilding(B, raid, cancel) {
     if (v.build === B) { v.build = null; v.state = v.job ? 'commute' : 'find'; }
   }
   regionDirty = true; hideDefenders(B); assignJobs(); villagers.forEach(v => v.path = null);
+  if (PH.kind === 'night' && freed.length) {
+    assignPosts(freed.filter(v => villagers.includes(v)));
+    // no post left for them: out of the armour where they stand, then off to shelter
+    for (const v of freed) if (!v.post && v.kit && !v.soldier) v.crewStrip = CHANGE_T;
+  }
   const c = center(B), name = DEF[B.type].tiers[B.tier - 1].toLowerCase();
   if (!raid) sfx(cancel ? 'click' : 'sold', c);
   if (raid) { stats.lost++; if (!WALLY[B.type]) stats.lostB++; sfx('destroyed', c); shake(.3, c, 'lost', .6); debrisBurst(B, c); floatText('Destroyed', '#e2715b', c.x, B.group.position.y + 3, c.z); log(`<b>${DEF[B.type].tiers[B.tier - 1]}</b> lost`, 'warn'); }
@@ -5838,6 +5847,7 @@ function updateVillagers(dt, now) {
     else if (v.doorWalk && doorStep(v, dt)) { /* walking through a door */ }
     else if (night) {
       if (v.sleeping) continue;
+      if (!v.post && v.crewStrip > 0) { updateCrewStrip(v, dt); continue; }   // a lost tower's defender changing back before they shelter
       if (v.post) {
         if (!v.posted) {
           release(v); v.visit = null;
@@ -6866,20 +6876,21 @@ function postPoint(B, v) {
   for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, x = c.x + Math.cos(a) * r, z = c.z + Math.sin(a) * r; if (!canStand(x, z, 1)) continue; const d = Math.hypot(x - v.x, z - v.z); if (d < bd) { bd = d; best = { x, z }; } }
   return best || doorPoint(B);
 }
-function assignPosts() {
+// pool: only these villagers may be posted (a lost tower's defenders sent on to another post); otherwise anyone free
+function assignPosts(pool) {
   const slots = [];
   // manned in priority order: the castle, then archer towers, then barracks with whoever is left (a barracks may go short)
   const rank = B => B.type === 'castle' ? 0 : DEF[B.type].archers ? 1 : DEF[B.type].crew ? 1.5 : 2;
   const order = buildings.filter(B => (DEF[B.type].archers || DEF[B.type].soldiers || DEF[B.type].crew) && B.built).sort((a, b) => rank(a) - rank(b));
   for (const B of order) { const T = DEF[B.type]; B.manned = B.manned || []; for (let a = 0; a < (T.archers || T.soldiers || T.crew)[B.tier - 1]; a++) if (!villagers.some(v => v.post && !v.post.fled && !v.post.summon && v.post.B === B && v.post.a === a)) slots.push({ B, a }); }
   let posted = 0;
-  const free = () => villagers.filter(v => !v.post && !v.sleeping).length;
+  const cand = pool || villagers, free = () => cand.filter(v => !v.post && !v.sleeping).length;
   for (const S of slots) {
     // a siege engine is no use half-crewed: its crew is posted as a pair or not at all
     if (DEF[S.B.type].crew && S.a === 0 && free() < 2 && !villagers.some(v => v.post && v.post.B === S.B)) continue;
     if (DEF[S.B.type].crew && S.a === 1 && !villagers.some(v => v.post && v.post.B === S.B && v.post.a === 0)) continue;
     const c = center(S.B); let best = null, bd = 1e9;
-    for (const v of villagers) if (!v.post && !v.sleeping) { const d = Math.hypot(v.x - c.x, v.z - c.z) + (v.job ? 10 : 0); if (d < bd) { bd = d; best = v; } }
+    for (const v of cand) if (!v.post && !v.sleeping) { const d = Math.hypot(v.x - c.x, v.z - c.z) + (v.job ? 10 : 0); if (d < bd) { bd = d; best = v; } }
     if (!best) break;
     release(best); best.post = S; best.posted = false; S.p = postPoint(S.B, best); posted++;
     if (S.B.type === 'catapult' && S.B.turret) { const R = CATA_RIG[S.B.tier - 1], q = S.a ? R.gunner : R.loader; const w = engPt(S.B, q[0], 0, q[1]); S.p = standNear(w.x, w.z); }   // a catapult's crew walk right up to their own spot
@@ -10722,7 +10733,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '04d3be3a07'; var updateWait = false, updateT = 0;
+const BUILD = '66f950a31b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

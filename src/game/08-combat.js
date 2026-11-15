@@ -907,20 +907,21 @@ function postPoint(B, v) {
   for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, x = c.x + Math.cos(a) * r, z = c.z + Math.sin(a) * r; if (!canStand(x, z, 1)) continue; const d = Math.hypot(x - v.x, z - v.z); if (d < bd) { bd = d; best = { x, z }; } }
   return best || doorPoint(B);
 }
-function assignPosts() {
+// pool: only these villagers may be posted (a lost tower's defenders sent on to another post); otherwise anyone free
+function assignPosts(pool) {
   const slots = [];
   // manned in priority order: the castle, then archer towers, then barracks with whoever is left (a barracks may go short)
   const rank = B => B.type === 'castle' ? 0 : DEF[B.type].archers ? 1 : DEF[B.type].crew ? 1.5 : 2;
   const order = buildings.filter(B => (DEF[B.type].archers || DEF[B.type].soldiers || DEF[B.type].crew) && B.built).sort((a, b) => rank(a) - rank(b));
   for (const B of order) { const T = DEF[B.type]; B.manned = B.manned || []; for (let a = 0; a < (T.archers || T.soldiers || T.crew)[B.tier - 1]; a++) if (!villagers.some(v => v.post && !v.post.fled && !v.post.summon && v.post.B === B && v.post.a === a)) slots.push({ B, a }); }
   let posted = 0;
-  const free = () => villagers.filter(v => !v.post && !v.sleeping).length;
+  const cand = pool || villagers, free = () => cand.filter(v => !v.post && !v.sleeping).length;
   for (const S of slots) {
     // a siege engine is no use half-crewed: its crew is posted as a pair or not at all
     if (DEF[S.B.type].crew && S.a === 0 && free() < 2 && !villagers.some(v => v.post && v.post.B === S.B)) continue;
     if (DEF[S.B.type].crew && S.a === 1 && !villagers.some(v => v.post && v.post.B === S.B && v.post.a === 0)) continue;
     const c = center(S.B); let best = null, bd = 1e9;
-    for (const v of villagers) if (!v.post && !v.sleeping) { const d = Math.hypot(v.x - c.x, v.z - c.z) + (v.job ? 10 : 0); if (d < bd) { bd = d; best = v; } }
+    for (const v of cand) if (!v.post && !v.sleeping) { const d = Math.hypot(v.x - c.x, v.z - c.z) + (v.job ? 10 : 0); if (d < bd) { bd = d; best = v; } }
     if (!best) break;
     release(best); best.post = S; best.posted = false; S.p = postPoint(S.B, best); posted++;
     if (S.B.type === 'catapult' && S.B.turret) { const R = CATA_RIG[S.B.tier - 1], q = S.a ? R.gunner : R.loader; const w = engPt(S.B, q[0], 0, q[1]); S.p = standNear(w.x, w.z); }   // a catapult's crew walk right up to their own spot

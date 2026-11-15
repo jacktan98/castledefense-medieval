@@ -306,6 +306,10 @@ function removeBuilding(B, raid, cancel) {
     if (v.kitT > 0) { v.kitT = 0; if (!v.g.visible || v.doorWalk) exitDoor(v); }
     v.post = null; v.posted = false;
   }
+  // a defender still on the ground (walking to the post, or changing at the ladder's foot) is spared and sent on to another
+  // open post (Jack); only those on the ladder, up top or inside fall with it
+  const freed = villagers.filter(v => v.post && v.post.B === B && !v.soldier && (!v.posted || (v.ladderKit > 0 && v.ladderB && v.ladderB.B === B)));
+  for (const v of freed) { v.post = null; v.posted = false; v.ladderKit = 0; v.ladderB = null; v.doorWalk = null; v.path = null; v.spun = false; v.body.rotation.set(0, 0, 0); v.body.position.y = 0; }
   for (const v of villagers.slice()) if (v.home === B || (v.post && v.post.B === B && v.posted && !v.soldier)) killVillager(v);   // (only the castle's own, at the very end)
   if (B.rallyFlag) setRally(B, null);
   for (const v of villagers) {
@@ -314,6 +318,11 @@ function removeBuilding(B, raid, cancel) {
     if (v.build === B) { v.build = null; v.state = v.job ? 'commute' : 'find'; }
   }
   regionDirty = true; hideDefenders(B); assignJobs(); villagers.forEach(v => v.path = null);
+  if (PH.kind === 'night' && freed.length) {
+    assignPosts(freed.filter(v => villagers.includes(v)));
+    // no post left for them: out of the armour where they stand, then off to shelter
+    for (const v of freed) if (!v.post && v.kit && !v.soldier) v.crewStrip = CHANGE_T;
+  }
   const c = center(B), name = DEF[B.type].tiers[B.tier - 1].toLowerCase();
   if (!raid) sfx(cancel ? 'click' : 'sold', c);
   if (raid) { stats.lost++; if (!WALLY[B.type]) stats.lostB++; sfx('destroyed', c); shake(.3, c, 'lost', .6); debrisBurst(B, c); floatText('Destroyed', '#e2715b', c.x, B.group.position.y + 3, c.z); log(`<b>${DEF[B.type].tiers[B.tier - 1]}</b> lost`, 'warn'); }

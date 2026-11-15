@@ -856,6 +856,7 @@ function updateVillagers(dt, now) {
     else if (v.doorWalk && doorStep(v, dt)) { /* walking through a door */ }
     else if (night) {
       if (v.sleeping) continue;
+      if (!v.post && v.crewStrip > 0) { updateCrewStrip(v, dt); continue; }   // a lost tower's defender changing back before they shelter
       if (v.post) {
         if (!v.posted) {
           release(v); v.visit = null;
