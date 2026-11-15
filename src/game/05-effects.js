@@ -103,7 +103,7 @@ function updateLamps(dt, now) {
     lampT = .5; lampSpots = [];
     if (dark > .05) for (const B of buildings) {
       if (!B.built) continue; const c = center(B), y = B.group.position.y;
-      if (B.fireG) lampSpots.push({ x: c.x, y: B.fireG.position.y + .4, z: c.z, k: .9 });
+      if (B.fireG) lampSpots.push({ x: c.x, y: B.fireG.userData.top + .4, z: c.z, k: .9 });
       if (B.type === 'torch') lampSpots.push({ x: c.x, y: y + 2.3, z: c.z, k: 1 });
       else if (B.type === 'campfire') lampSpots.push({ x: c.x, y: y + .7, z: c.z, k: 1.1 });
       else if (B.type === 'castle') lampSpots.push({ x: c.x, y: y + 2.4, z: B.ev.z1 + .4, k: 1.2 });
@@ -185,8 +185,7 @@ function damageFx(B, dt) {
   if (fire && !B.fireG) B.fireG = buildingFire(B);
   if (!fire && B.fireG) { scene.remove(B.fireG); B.fireG = null; }
   if (hurt <= .5) return;
-  const top = B.group.position.y + barTop(B) - .75, c = center(B), s = B.ev.s * CELL * .28;
-  if (B.fireG) { B.fireG.position.set(c.x, top - .55, c.z); const k = .9 + Math.sin(performance.now() * .013 + B.id) * .08; B.fireG.scale.set(k, k * (1 + (hurt - .75) * 1.2), k); }
+  const c = center(B), s = B.ev.s * CELL * .28, top = B.fireG ? B.fireG.userData.top : roofTop(B);
   if ((B.dmgT = (B.dmgT || Math.random()) - dt) > 0 || puffs.length > 140) return;
   B.dmgT = (fire ? .3 : .55) + Math.random() * .3;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: fire ? '#2f2b28' : '#57524c', transparent: true, depthWrite: false, opacity: 0 }));
@@ -198,15 +197,27 @@ function damageFx(B, dt) {
     scene.add(e); puffs.push({ sp: e, t: 0, life: .8 + Math.random() * .8, dx: (Math.random() - .5) * .4, ember: true });
   }
 }
-// two or three small clumps of the torches' fire spread over the roof
+// the roof's height under a point: a ray straight down onto the building's own model (not its flags or banners)
+const roofRay = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0);
+function roofAt(B, x, z) {
+  B.group.updateMatrixWorld(true);
+  roofRay.set(new THREE.Vector3(x, B.group.position.y + 30, z), DOWN);
+  const hit = roofRay.intersectObject(B.group, true).find(h => h.object.visible && h.object.isMesh && !h.object.userData.noShadow && h.object.material !== M.flag && h.object.material !== M.drape && !(h.object.material && h.object.material.transparent));
+  return hit ? hit.point.y : null;
+}
+// the roof's middle, worked out once per tier (smoke rises from it)
+function roofTop(B) { if (B.roofT !== B.tier + ':' + B.group.uuid) { B.roofT = B.tier + ':' + B.group.uuid; B.roofY = roofAt(B, center(B).x, center(B).z) ?? B.group.position.y + 1.5; } return B.roofY; }
+// two or three small clumps of the torches' fire, each sat on the roof right under it (they floated at the model's top: Jack)
 function buildingFire(B) {
-  const g = new THREE.Group(), n = B.ev.s > 1 ? 3 : 2, s = B.ev.s * CELL * .22;
+  const g = new THREE.Group(), n = B.ev.s > 1 ? 3 : 2, s = B.ev.s * CELL * .22, c = center(B); let top = -1e9;
   for (let i = 0; i < n; i++) {
-    const a = i / n * 6.3 + B.id, x = n > 2 || i ? Math.cos(a) * s : 0, z = Math.sin(a) * s;
+    const a = i / n * 6.3 + B.id, x = c.x + Math.cos(a) * s * (n > 2 || i ? 1 : .5), z = c.z + Math.sin(a) * s * (n > 2 || i ? 1 : .5), y = roofAt(B, x, z);
+    if (y == null) continue; top = Math.max(top, y);
     for (const [m, r, h, o] of [[M.flame, .13, .55, 1], [M.flameMid, .09, .4, 2], [M.flameCore, .055, .26, 3]]) {
-      const f = new THREE.Mesh(FLAME_GEO, m); f.scale.set(r, h, r); f.position.set(x, h / 2 - (x || z ? .32 : 0), z); f.renderOrder = o; f.userData.noShadow = true; g.add(f);
+      const f = new THREE.Mesh(FLAME_GEO, m); f.scale.set(r, h, r); f.position.set(x, y - .06 + h / 2, z); f.renderOrder = o; f.userData.noShadow = true; g.add(f);
     }
   }
+  g.userData.top = top > -1e9 ? top : B.group.position.y + 1.5;
   scene.add(g); return g;
 }
 function emitSmoke(dt) {

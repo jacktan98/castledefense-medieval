@@ -726,7 +726,7 @@ function stageSite(B, p) {
 }
 // a building lost to raiders sinks and tips over into the ground, leaving a pile of rubble that smokes until dawn (Jack)
 // var: place() runs during startup, before this part of the script is reached
-var falling = [], rubble = [], scorchM = null;
+var falling = [], rubble = [];
 function collapse(B, c) {
   const g = B.group, bb = new THREE.Box3().setFromObject(g), h = Math.max(1, bb.max.y - g.position.y), a = Math.random() * 6.3;
   scene.add(g);
@@ -743,11 +743,8 @@ function makeRubble(B, c) {
       : box(.18 + Math.random() * .2, .12 + Math.random() * .14, .16 + Math.random() * .2, stone ? burntStoneM : i % 2 ? M.timber : M.wood, 0, 0, 0);
     o.position.set(Math.cos(a) * r, .04 + k * k * (wall ? .14 : .18 + s * .16) * (.4 + Math.random() * .6), Math.sin(a) * r);
     o.rotation.set((Math.random() - .5) * (beam ? .5 : 1.4), Math.random() * 6.3, (Math.random() - .5) * (beam ? .4 : 1.4));
-    if (beam) o.material = M.timber; o.castShadow = false; g.add(o);
+    if (beam) o.material = M.timber; g.add(o);
   }
-  // a scorched patch of ground under the pile
-  if (!wall) { const d = new THREE.Mesh(new THREE.CircleGeometry(s * .62, 18), scorchM || (scorchM = new THREE.MeshStandardMaterial({ color: '#1e1914', transparent: true, opacity: .55, depthWrite: false, roughness: 1 })));
-    d.rotation.x = -Math.PI / 2; d.position.y = .02; d.scale.set(1, .8 + Math.random() * .3, 1); d.receiveShadow = true; d.userData.scorch = true; g.add(d); }
   g.traverse(o => { if (o.isMesh && o.material === M.timber && Math.random() < .6) o.material = charM; });
   g.position.set(c.x, y0, c.z); g.scale.setScalar(.01); scene.add(g); mergeStatic(g);
   const R0 = { g, c, cells: [], t: 0, fire: null };
@@ -764,6 +761,7 @@ function clearRubble(now, cells) {
     if (now) { scene.remove(r.g); rubble.splice(i, 1); } else r.gone = 0;
   }
 }
+function clearRubbleOne(r) { if (r.fire) { const j = sceneFires.indexOf(r.fire); if (j >= 0) sceneFires.splice(j, 1); r.fire = null; } r.gone = 0; }
 function updateCollapse(dt) {
   for (let i = falling.length - 1; i >= 0; i--) {
     const f = falling[i]; f.t += dt; const u = Math.min(1, f.t / f.T), k = u * u * (3 - 2 * u), q = u * u;
@@ -774,6 +772,8 @@ function updateCollapse(dt) {
   }
   for (let i = rubble.length - 1; i >= 0; i--) {
     const r = rubble[i]; r.t += dt;
+    // the pile sinks away 10 s after the fall (Jack)
+    if (r.gone === undefined && r.t > 10) clearRubbleOne(r);
     if (r.gone !== undefined) { r.gone += dt; r.g.position.y -= dt * .35; if (r.gone > 1.6) { scene.remove(r.g); rubble.splice(i, 1); } continue; }
     // the pile settles in as the building goes under
     const u = Math.min(1, Math.max(0, (r.t - .25) / .9)); r.g.scale.setScalar(.01 + .99 * u * u * (3 - 2 * u));
