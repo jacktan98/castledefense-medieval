@@ -869,15 +869,15 @@ function updateClimb(v, dt) {
 function updateLadderKit(v, dt) {
   const { B, a } = v.ladderB;
   if (B.dead || !buildings.includes(B) || !innerDoor(B)) { v.ladderKit = 0; v.posted = false; return; }
-  const L = innerDoor(B), c = center(B);
-  v.g.visible = true; v.x = v.rx = L.x; v.z = v.rz = L.z; v.g.position.set(L.x, walkY(L.x, L.z), L.z); v.g.rotation.y = Math.atan2(L.x - c.x, L.z - c.z);
+  const L = innerDoor(B), c = center(B), d = Math.hypot(L.x - c.x, L.z - c.z) || 1, px = L.x + (L.x - c.x) / d * .8, pz = L.z + (L.z - c.z) / d * .8;   // .8 m out from the ladder, clear of the tower's base
+  v.g.visible = true; v.x = v.rx = px; v.z = v.rz = pz; v.g.position.set(px, walkY(px, pz), pz); v.g.rotation.y = Math.atan2(L.x - c.x, L.z - c.z);
   if ((v.ladderKit -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !v.kitSwap) {
     v.kitSwap = true; crewKit(v, B.tier); changeFx(v);
     const T = DEF[B.type]; if (!T.crew) { const w = T.weapon || 'bow', p = makeTool(w); (w === 'bow' ? v.arms[0] : v.arms[1]).add(p); v.pivot = p; v.toolKind = w; }
   }
   v.legs.forEach(l => l.rotation.set(0, 0, 0)); v.arms.forEach(r => r.rotation.set(0, 0, 0)); v.body.rotation.set(0, 0, 0); v.body.position.y = 0;
   const p = 1 - v.ladderKit / CHANGE_T; changePose(v, p); if (v.pivot) v.pivot.visible = p >= CHANGE_TOOL;
-  if (v.ladderKit <= 0) { v.ladderKit = 0; v.arms.forEach(r => r.rotation.set(0, 0, 0)); v.legs.forEach(l => l.rotation.set(0, 0, 0)); v.body.rotation.set(0, 0, 0); v.body.position.y = 0; v.spun = false; v.climb = { B, a, up: true, y: 0 }; }
+  if (v.ladderKit <= 0) { v.ladderKit = 0; v.arms.forEach(r => r.rotation.set(0, 0, 0)); v.legs.forEach(l => l.rotation.set(0, 0, 0)); v.body.rotation.set(0, 0, 0); v.body.position.y = 0; v.spun = false; v.doorWalk = { x: L.x, z: L.z, on: u => { u.climb = { B, a, up: true, y: 0 }; } }; }
 }
 // a catapult's crew: the villager themself, at the engine; down on a knee to change into the tier's kit, then they man it
 function crewUp(v, B, a) {

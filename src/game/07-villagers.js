@@ -218,8 +218,11 @@ const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', 
 // tool up off the ground (it shows from CHANGE_TOOL, as the hand reaches it) and up again
 const CHANGE_SWAP = .2, CHANGE_HAT = .44, CHANGE_TOOL = .72;
 // the hat (or a defender's helm) stays off from the swap of clothes until the hand comes up to put it on (Jack)
+const headKit = f => f.armour && f.armour.length ? f.armour : f.kit && f.kit.length ? f.kit : null;
+// is there a hat or helm to put on? with none, no hand to the head (Jack: it read as fixing their hair)
+function hasHat(f) { const kit = headKit(f); return kit ? kit.some(o => o.userData.helm) : !!(f.hatG && f.hatG.children.length); }
 function headGear(f, on) {
-  const kit = f.armour && f.armour.length ? f.armour : f.kit && f.kit.length ? f.kit : null;
+  const kit = headKit(f);
   if (kit) { for (const o of kit) if (o.userData.helm) o.visible = on; }
   else if (f.hatG) f.hatG.visible = on;
   f.hatOff = !on;
@@ -227,7 +230,7 @@ function headGear(f, on) {
 function changePose(f, p) {
   p = clamp(p, 0, 1);
   headGear(f, !(p >= CHANGE_SWAP && p < CHANGE_HAT));
-  const up = sstep(0, .12, p) * (1 - sstep(.26, .36, p)), hat = sstep(.36, .46, p) * (1 - sstep(.52, .6, p)), pick = f.pivot ? sstep(.58, .7, p) * (1 - sstep(.84, .96, p)) : 0;   // nothing to pick up: no kneel (catapult crews, back to plain clothes)
+  const up = sstep(0, .12, p) * (1 - sstep(.26, .36, p)), hat = p < CHANGE_SWAP || !hasHat(f) ? 0 : sstep(.36, .46, p) * (1 - sstep(.52, .6, p)), pick = f.pivot ? sstep(.58, .7, p) * (1 - sstep(.84, .96, p)) : 0;   // nothing to pick up: no kneel (catapult crews, back to plain clothes)
   f.arms[0].rotation.x = -2.8 * up - .3 * hat - .25 * pick; f.arms[1].rotation.x = -2.8 * up - 2.7 * hat - .75 * pick;
   f.arms[0].rotation.z = .35 * up; f.arms[1].rotation.z = -.35 * up - .45 * hat;
   f.body.rotation.y = 0; f.body.position.y = -.03 * up; f.spun = true;
@@ -864,7 +867,7 @@ function updateVillagers(dt, now) {
             else if (P.B.type === 'catapult') crewUp(v, P.B, P.a);              // a catapult's crew is the villager: they change on the spot and man it
             else if (DEF[P.B.type].back && P.B.door) {                           // towers and the ballista: up the ladder at the back, or in at the door
               P.B.manned[P.a] = false; const B = P.B, a = P.a;
-              if (onLadder(B)) { v.doorWalk = { ...innerDoor(B), on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
+              if (onLadder(B)) { const Lp = innerDoor(B), c = center(B), d = Math.hypot(Lp.x - c.x, Lp.z - c.z) || 1; v.doorWalk = { x: Lp.x + (Lp.x - c.x) / d * .8, z: Lp.z + (Lp.z - c.z) / d * .8, on: u => { u.ladderKit = CHANGE_T; u.ladderB = { B, a }; u.kitSwap = false; } }; }   // they change at the ladder's foot, then climb
               else { v.indoor = B; goIn(v, B); const up = () => { B.manned[a] = true; showDefender(B, a, v); }; if (v.doorWalk) v.doorWalk.on = up; else up(); }
             }
             else { v.g.visible = false; showDefender(P.B, P.a, v); }
