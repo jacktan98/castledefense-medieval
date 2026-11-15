@@ -793,7 +793,7 @@ function mineHaul(v, W) {
   v.doorWalk = { ...cart, hold: .8, face: cartFace, on: u => { u.carryStone.visible = true; }, next: drop };
 }
 // where the trader stands: behind the stall's counter (T1-2), under the hall's roof (T3), in the model's frame
-const STALL_AT = [[.85, .05], [-.5, -.15], [0, -.1]];
+const STALL_AT = [[.85, .05], [-1.72, -.3], [0, -.1]];
 function stallSpot(W) { const c = center(W), [x, z] = faceRot(W.face || 0, ...STALL_AT[W.tier - 1]); return { x: c.x + x, z: c.z + z }; }
 const traderAt = W => villagers.some(v => v.job === W && v.state === 'trade' && !v.doorWalk && v.g.visible && !v.hungry);
 function updateWorker(v, dt, now) {
