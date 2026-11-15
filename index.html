@@ -10914,7 +10914,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '73112675f3'; var updateWait = false, updateT = 0;
+const BUILD = 'ae2cd379b0'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -11093,20 +11093,27 @@ function collapse(B, c) {
   rubble.push(makeRubble(B, c));
 }
 function makeRubble(B, c) {
-  const s = B.ev.s * CELL, wall = WALLY[B.type], stone = B.tier >= 2 && B.type !== 'house' && B.type !== 'farm', g = new THREE.Group();
-  const y0 = B.group.position.y + (wall ? 0 : SLAB_TOP), n = wall ? 6 : Math.round(10 + s * s * 2.6), R = s * .4;
+  // a low heap that covers about half the footprint; its pieces stay small and few whatever the building's size (a castle's
+  // heap was a huge mound of 2 m beams: Jack)
+  const fs = B.ev.s, s = fs * CELL, wall = WALLY[B.type], stone = B.tier >= 2 && B.type !== 'house' && B.type !== 'farm', g = new THREE.Group();
+  const y0 = B.group.position.y + (wall ? 0 : SLAB_TOP), n = wall ? 6 : Math.min(36, 10 + fs * fs * 4), R = Math.min(s * .32, 1.9), H = wall ? .12 : Math.min(.22 + fs * .08, .45);
   if (!burntStoneM) makeRuin(0, false);
+  const fall = [];
   for (let i = 0; i < n; i++) {
     const r = Math.sqrt(Math.random()) * R, a = Math.random() * 6.3, k = 1 - r / R * .7, beam = i % 3 === 0;
-    const o = beam ? box(.12 + Math.random() * .06, .1, .5 + Math.random() * .6 * s / 2, M.timber, 0, 0, 0)
-      : box(.18 + Math.random() * .2, .12 + Math.random() * .14, .16 + Math.random() * .2, stone ? burntStoneM : i % 2 ? M.timber : M.wood, 0, 0, 0);
-    o.position.set(Math.cos(a) * r, .04 + k * k * (wall ? .14 : .18 + s * .16) * (.4 + Math.random() * .6), Math.sin(a) * r);
+    const o = beam ? box(.1 + Math.random() * .05, .09, .45 + Math.random() * .45, M.timber, 0, 0, 0)
+      : box(.15 + Math.random() * .17, .1 + Math.random() * .12, .14 + Math.random() * .17, stone ? burntStoneM : i % 2 ? M.timber : M.wood, 0, 0, 0);
+    const ry = .04 + k * k * H * (.4 + Math.random() * .6);
+    o.position.set(Math.cos(a) * r, ry, Math.sin(a) * r);
     o.rotation.set((Math.random() - .5) * (beam ? .5 : 1.4), Math.random() * 6.3, (Math.random() - .5) * (beam ? .4 : 1.4));
     if (beam) o.material = M.timber; g.add(o);
+    // each piece drops onto the heap from a little above, one after another as the building goes down (it grew out of the middle: Jack)
+    fall.push({ o, ry, y: ry + .8 + Math.random() * 1.4, vy: 0, d: .15 + Math.random() * .7, rx: o.rotation.x, sx: (Math.random() - .5) * 3, done: false });
+    o.position.y = fall[i].y; o.visible = false;
   }
   g.traverse(o => { if (o.isMesh && o.material === M.timber && Math.random() < .6) o.material = charM; });
-  g.position.set(c.x, y0, c.z); g.scale.setScalar(.01); scene.add(g); mergeStatic(g);
-  const R0 = { g, c, cells: [], t: 0, fire: null };
+  g.position.set(c.x, y0, c.z); scene.add(g);
+  const R0 = { g, c, cells: [], t: 0, fire: null, fall };
   for (let b = B.ev.cj; b < B.ev.cj + (B.ev.sz || B.ev.s); b++) for (let a2 = B.ev.ci; a2 < B.ev.ci + B.ev.s; a2++) R0.cells.push(b * N + a2);
   // the smouldering heart of the pile: embers, a glow at night and a thin dark smoke (walls only a little dust, as so many fall)
   if (!wall && rubble.filter(r => r.fire).length < 8) { R0.fire = { x: c.x, y: y0 + .25, z: c.z, k: .45 + B.ev.s * .12, smoke: true, rubble: true }; sceneFires.push(R0.fire); }
@@ -11135,7 +11142,16 @@ function updateCollapse(dt) {
     if (r.gone === undefined && r.t > 10) clearRubbleOne(r);
     if (r.gone !== undefined) { r.gone += dt; r.g.position.y -= dt * .35; if (r.gone > 1.6) { scene.remove(r.g); rubble.splice(i, 1); } continue; }
     // the pile settles in as the building goes under
-    const u = Math.min(1, Math.max(0, (r.t - .25) / .9)); r.g.scale.setScalar(.01 + .99 * u * u * (3 - 2 * u));
+    if (r.fall) {
+      let left = 0;
+      for (const f of r.fall) {
+        if (f.done) continue; left++; if (r.t < f.d) continue;
+        f.o.visible = true; f.vy -= 14 * dt; f.o.position.y += f.vy * dt; f.o.rotation.x += f.sx * dt;
+        if (f.o.position.y <= f.ry) { f.o.position.y = f.ry; if (f.vy < -2.5) f.vy *= -.25; else f.done = true; }
+      }
+      // once every piece lies still the heap is merged into a few meshes, as buildings are
+      if (!left) { r.fall = null; mergeStatic(r.g); }
+    }
   }
 }
 function resetCollapse() { if (!falling) return; for (const f of falling) scene.remove(f.g); falling.length = 0; for (const r of rubble) scene.remove(r.g); rubble.length = 0; }
