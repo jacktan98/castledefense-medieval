@@ -267,7 +267,7 @@ function makeMarket(tier, plinth) {
     for (const x of [-.8, .8]) { g.add(box(1.1, .06, .6, M.wood, x, .78, 0)); for (const sx of [-1, 1]) g.add(box(.06, .76, .5, M.wood, x + sx * .5, .38, 0)); produce(x, -.05, 1.0); }
     // goods under the roof, along the back and front between the pillars
     for (const [x, z] of [[-1.12, -.82], [-.74, -.95], [-.95, -.55], [.78, -.88], [1.15, -.78], [1.12, .2]]) barrel(x, z);
-    crate(1.15, .8, .32, .3); crate(.8, .95, .26, .1); sack(-1.3, .3); sack(-1.32, .58, .12); crate(-.3, -.95, .28, .5);   // the sacks moved off the trader's spot in front of the left table
+    crate(1.15, .8, .32, .3); crate(.8, .95, .26, .1); crate(-.3, -.95, .28, .5);   // no sacks here: they stood by the trader's spot in front of the left table (Jack)
     // and round the hall, on the open paving
     wheat(-1.7, 2.1); stones(1.9, 2.05); logs(-1.2, -2.1); wheat(2.2, .0);
     // a sign hung from an iron bracket on the middle front pillar, square to the front
