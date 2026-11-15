@@ -5735,6 +5735,8 @@ const doorHoleM = new THREE.MeshBasicMaterial({ color: '#0d0907' });
 function updateOpenDoors(dt) {
   for (let i = doorsOpen.length - 1; i >= 0; i--) {
     const d = doorsOpen[i]; d.hold -= dt;
+    // held open while anyone is in the doorway or just outside it, going in or out (Jack: it swung shut on villagers)
+    if (d.hold < .4 && !d.B.dead) { const p = innerDoor(d.B), q = p && outerDoor(d.B); if (p && villagers.some(v => v.g.visible && (Math.hypot(v.rx - p.x, v.rz - p.z) < 1.1 || (v.doorWalk && Math.hypot(v.rx - q.x, v.rz - q.z) < 1.6)))) d.hold = .4; }
     d.k = d.hold > 0 ? Math.min(1, d.k + dt * 5) : Math.max(0, d.k - dt * 2.6);
     const u = d.k * d.k * (3 - 2 * d.k); d.hinge.rotation.y = -1.35 * u; d.g.visible = d.k > .001;
     if (d.k <= 0 && d.hold <= 0) doorsOpen.splice(i, 1);
@@ -5840,7 +5842,7 @@ function updateWorker(v, dt, now) {
   const W = v.job, dp = outerDoor(W, v), mult = 1, workMul = W.tier === 3 ? .7 : 1;
   // someone still indoors from another task (a new job, a mine they were moved out of): out first
   if (v.hideT > 0 && v.state !== 'drop' && v.state !== 'dig' && !v.doorWalk) { v.hideT = 0; exitDoor(v); }
-  if (v.state === 'commute') { if (walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) v.state = 'find'; return; }
+  if (v.state === 'commute' && W.type !== 'market') { if (walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) v.state = 'find'; return; }
   if (DEF[W.type].field) {           // fields and the farmhouse yard: work a spot inside the plot (hoe, or feed from the pail)
     const e = W.ev;
     if (v.state === 'work') { v.working = true; if ((v.wait -= dt) <= 0) v.state = 'find'; return; }
@@ -5850,10 +5852,13 @@ function updateWorker(v, dt, now) {
   }
   if (W.type === 'market') {         // the trader keeps the stall: in behind the counter, facing out, a hand out at every trade
     const sp = stallSpot(W);
+    // already by the stall (after a change of clothes there) or at the front: step straight to the spot
     if (v.state !== 'trade') {
-      if (walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) { v.doorWalk = { x: sp.x, z: sp.z }; v.state = 'trade'; }
+      if (Math.hypot(sp.x - v.x, sp.z - v.z) < 3 || walkTo(v, dp.x, dp.z, dt, 1, .4) || nearDoor(v, W, dp) || v.noProg > 6) { v.doorWalk = { x: sp.x, z: sp.z }; v.state = 'trade'; }
       return;
     }
+    // the stall moved (the market turned or upgraded): walk over to the new spot (Jack: they stood in the stall)
+    if (!v.doorWalk && Math.hypot(sp.x - v.x, sp.z - v.z) > .12) { v.doorWalk = { x: sp.x, z: sp.z }; return; }
     if (!v.doorWalk) { v.g.rotation.y = faceAngle(W); v.working = false; }
     return;
   }
@@ -5980,7 +5985,9 @@ function updateVillagers(dt, now) {
         if (v.push) updatePush(v, dt);
         else if ((v.toolKind || null) !== want || v.changeT > 0 || (want && want !== 'hammer' && v.job && v.dressT !== v.job.tier)) updateChange(v, dt, want);   // new tool, or the workplace's new tier     // wrong clothes for the next task: change first
         else {
-          const atStall = v.state === 'trade' && v.job && v.job.type === 'market';   // the trader stands inside the market's tile on purpose
+          // the trader inside the market's tile on purpose (also mid-change there, after an upgrade: the 'not standable' check sent them
+          // out through their home's door, the castle's: Jack saw them vanish and come out of the castle)
+          const atStall = v.job && v.job.type === 'market' && (v.state === 'trade' || occB[cellAt(v.x, v.z)] === v.job);   // the trader stands inside the market's tile on purpose
           if (!(v.hideT > 0) && !atStall && !canStand(v.x, v.z, 1)) exitDoor(v);
           if (v.build) updateBuilder(v, dt); else if (v.job) updateWorker(v, dt, now); else updateWander(v, dt);
           // out in a pocket that doesn't join up with the castle for 3 s (wandering or pushing at a way out): get them out
@@ -10914,7 +10921,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'ae2cd379b0'; var updateWait = false, updateT = 0;
+const BUILD = 'ce28276c6b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
