@@ -708,11 +708,15 @@ function stageSite(B, p) {
   if (!S) {
     g.scale.y = 1; g.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), list = [];
     let H = .3;
-    for (const o of g.children) {
-      const bb = new THREE.Box3().setFromObject(o); if (bb.isEmpty()) continue; bb.applyMatrix4(inv);
-      list.push({ o, vis: o.visible, sy: o.scale.y, y0: o.position.y, lo: Math.max(0, bb.min.y), hi: Math.max(bb.max.y, bb.min.y + .05), mesh: o.isMesh });
-      if (o.visible) H = Math.max(H, bb.max.y);
-    }
+    // every mesh in the model, however deep (the market's awnings and stalls sit in nested groups, which used to pop in whole
+    // part way up, roof first: Jack); a mesh straight under the root grows up from its foot, a nested one appears once the build
+    // height is past most of it
+    g.traverse(o => {
+      if (!o.isMesh || o === g) return; let hid = false; for (let q = o; q && q !== g; q = q.parent) if (!q.visible) hid = true; if (hid) return;
+      const bb = new THREE.Box3().setFromObject(o); if (bb.isEmpty()) return; bb.applyMatrix4(inv);
+      list.push({ o, vis: true, sy: o.scale.y, y0: o.position.y, lo: Math.max(0, bb.min.y), hi: Math.max(bb.max.y, bb.min.y + .05), mesh: o.parent === g });
+      H = Math.max(H, bb.max.y);
+    });
     S = g.userData.stages = { list, H };
   }
   const h = p * S.H * 1.04;
@@ -721,7 +725,7 @@ function stageSite(B, p) {
     if (s.lo <= .02 && s.hi < .5) { s.o.visible = true; continue; }   // the base is laid first
     const k = clamp((h - s.lo) / (s.hi - s.lo), 0, 1);
     if (s.mesh) { s.o.visible = k > 0; s.o.scale.y = s.sy * Math.max(k, .001); s.o.position.y = s.lo - k * (s.lo - s.y0); }
-    else s.o.visible = k > .35;
+    else s.o.visible = k > .6;
   }
 }
 // a building lost to raiders sinks and tips over into the ground, leaving a pile of rubble that smokes until dawn (Jack)
