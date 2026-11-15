@@ -242,7 +242,8 @@ function makeMarket(tier, plinth) {
     s.add(box(w - .1, .08, .5, M.wood, 0, .78, d / 2 - .3)); s.add(box(w - .1, .7, .06, M.wood, 0, .38, d / 2 - .1));
     const stripes = 7, aw = new THREE.Group(); aw.position.set(0, 1.62, 0); aw.rotation.x = .32;
     for (let i = 0; i < stripes; i++) aw.add(box((w + .2) / stripes, .03, d + .25, i % 2 ? M.awning : M.canvas, -w / 2 - .1 + (i + .5) * (w + .2) / stripes, 0, .05));
-    s.add(aw);
+    // kept whole (not merged with the other canvas, the sacks): its white stripes come in with the coloured ones while it is built (Jack)
+    aw.userData.awning = true; s.add(aw);
     for (let i = 0; i < 5; i++) { const o = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), FLOWER[i % 5]); o.position.set(-w / 2 + .3 + i * (w - .6) / 4, .86, d / 2 - .3); o.castShadow = true; s.add(o); }
     g.add(s);
   };
