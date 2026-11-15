@@ -13,3 +13,4 @@ plugins/store/.swiftpm/
 demo/
 demo.zip
 beta/
+.preview/
