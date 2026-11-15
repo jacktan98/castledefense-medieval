@@ -406,14 +406,31 @@ function assignBuilders() {
       if (v.build || v.post || v.hungry || v.unkit) continue;
       if (!reach.has(villagerRegion(v, R)) || (v.noBuild && v.noBuild.S === S && v.noBuild.t > now)) continue;
       const own = repair && v.job === S;
-      if (v.job && !own && !urgent && (anyBuilding || crew > 0)) continue;
+      const dressed = v.toolKind === 'hammer';   // still in the builder's clothes: no change needed
+      if (v.job && !own && !urgent && !dressed && (anyBuilding || crew > 0)) continue;
       if (v.carryLog.visible || v.carryStone.visible) continue;
-      const d = Math.hypot(v.x - c.x, v.z - c.z) + (own ? -100 : v.job ? 40 : 0); if (d < bd) { bd = d; best = v; }
+      const d = Math.hypot(v.x - c.x, v.z - c.z) + (own ? -100 : dressed ? -30 : v.job ? 40 : 0); if (d < bd) { bd = d; best = v; }
     }
     if (!best) continue;
     release(best); best.build = S; best.state = 'tobuild'; best.path = null; best.visit = null;
     if (best.hideT > 0) exitDoor(best);
   }
+}
+// a builder whose site is done goes straight on to another that still wants hands, in the same clothes (Jack: they changed
+// out of the builder's smock and back into it for the next site)
+function nextSite(v) {
+  if (PH.kind === 'night' || v.post || v.hungry || v.unkit) return false;
+  const R = regions(), now = performance.now(), here = villagerRegion(v, R);
+  let best = null, bd = 1e9;
+  for (const S of buildings) {
+    if (!S.site || S.dead || villagers.filter(u => u.build === S).length >= 2) continue;
+    if (v.noBuild && v.noBuild.S === S && v.noBuild.t > now) continue;
+    if (!ringCells(S.ev).some(n => R[n] === here)) continue;
+    const c = center(S), d = Math.hypot(v.x - c.x, v.z - c.z); if (d < bd) { bd = d; best = S; }
+  }
+  if (!best) return false;
+  release(v); v.build = best; v.state = 'tobuild'; v.path = null; v.visit = null; v.spot = null; v.spotN = 0; v.prog = null;
+  return true;
 }
 function randomNear(B, rmin, rmax) {
   const c = center(B), half = B.ev.s * CELL / 2; rmin += half; rmax += half;
@@ -769,7 +786,7 @@ function workSpot(S, v, avoid) {
 function dropBuild(v, S) { v.noBuild = { S, t: performance.now() + 15000 }; v.build = null; v.spot = null; v.spotN = 0; v.prog = null; v.state = v.job ? 'commute' : 'find'; }
 function updateBuilder(v, dt) {
   const S = v.build;
-  if (S.dead || !S.site) { v.build = null; v.state = v.job ? 'commute' : 'find'; return; }
+  if (S.dead || !S.site) { v.build = null; v.state = v.job ? 'commute' : 'find'; nextSite(v); return; }
   if (v.spotS !== S || !v.spot) { v.spot = workSpot(S, v); v.spotS = S; v.spotN = 0; if (!v.spot && distRect(S, v.x, v.z) > 1.3) { dropBuild(v, S); return; } }
   if (v.state !== 'building') {
     const sp = v.spot || center(S), near = distRect(S, v.x, v.z);

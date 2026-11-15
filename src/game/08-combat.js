@@ -1054,6 +1054,8 @@ function updateSoldier(v, dt) {
 // happens; soldiers change at the barracks
 const CHANGE_T = 2.2;
 function updateChange(v, dt, want) {
+  // a change not yet under way that is no longer needed (a builder given the next site before the smock came off): stop it
+  if (v.changeT > 0 && !v.swapped && (v.toolKind || null) === want && !(want && want !== 'hammer' && v.job && v.dressT !== v.job.tier)) { v.changeT = 0; v.changing = false; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; return; }
   const W = !(v.changeT > 0) && want && want !== 'hammer' && v.job && !v.job.dead && innerDoor(v.job) ? v.job : null;
   if (v.dressIn && (v.dressIn.W !== W || v.dressIn.want !== want)) { if (!v.g.visible) { v.indoor = v.dressIn.W; exitDoor(v); } v.dressIn = null; }
   if (W && !(v.hideT > 0 && !v.dressIn) && v.g.visible || v.dressIn) {
