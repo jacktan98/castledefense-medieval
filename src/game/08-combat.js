@@ -498,7 +498,7 @@ function engineWreck(e, y) {
 const BOOST_KEY = { crossbow: 'rangeArch', catapult: 'siegeRate' };
 const DEF_FXT = t => !!DECOR_FX[t];
 function hurtEnemy(e, d, by) {
-  if (e.dead) return; e.hp -= d; e.flashT = .14; e.hitAt = performance.now();
+  if (e.dead) return; e.hp -= d; e.flashT = .14; e.hitAt = performance.now(); if (!(e.hitAt - (e.flinchAt || 0) < 1200)) e.flinchAt = e.hitAt;
   if (e.hp <= 0) {
     e.dead = true; e.bar.grp.visible = false; stats.slain++; const y = walkY(e.x, e.z);
     // achievements (campaign only): every raider slain, burning ones, those a rider struck down, engines and the two bosses
@@ -715,8 +715,8 @@ function updateEnemies(dt) {
       if (E.engine) {                                       // slumps to one side and sinks; the crew fall
         e.model.rotation.z = e.fallDir * Math.min(.32, e.deadT * .9);
         e.crew.forEach(c => c.body.rotation.x = -Math.min(1.5, e.deadT * 4));
-      } else e.body.rotation.x = -Math.min(1.5, e.deadT * 4);
-      e.g.position.y = walkY(e.x, e.z) - Math.max(0, e.deadT - .8) * (E.engine ? 1.2 : .8);
+      } else fallPose(e, e.deadT);
+      e.g.position.y = walkY(e.x, e.z) - Math.max(0, e.deadT - (E.engine ? .8 : 1)) * (E.engine ? 1.2 : .8);
       if (e.deadT > 1.9) { scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); enemies.splice(n, 1); }
       continue;
     }
@@ -808,6 +808,8 @@ function updateEnemies(dt) {
       else if (e.kind === 'xbow') xbowPose(e, e.aiming && (e.attackT > 0 || e.cool < .5));
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
+      const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
+      blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);
     e.g.position.set(e.rx, y < 0 ? y * .4 - .2 : y, e.rz);
@@ -1012,20 +1014,46 @@ function updateUnkit(v, dt) {
 }
 function hurtSoldier(v, d) {
   if (!v.soldier) return;
-  v.hp -= d; v.hitAt = performance.now();
+  v.hp -= d; v.hitAt = performance.now(); if (!(v.hitAt - (v.flinchAt || 0) < 1200)) v.flinchAt = v.hitAt;
   if (v.hp > 0) return;
   // fallen: out of the town's count; a villager comes back to the same home after 60 s of daylight
-  if (v.horse) stripKit(v);
   if (v.summoned) { v.gone = true; v.soldier = false; release(v); villagers.splice(villagers.indexOf(v), 1); if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 }); return; }
   log(`<b>${(v.cav ? RIDER : SOLDIER).names[v.kitTier - 1]}</b> fallen`, 'warn'); stats.fallen++;
   if (v.post && !v.post.fled && v.post.B.manned) v.post.B.manned[v.post.a] = false;
   release(v); villagers.splice(villagers.indexOf(v), 1); if (v.sbar) scene.remove(v.sbar.grp);
   respawns.push({ home: v.home, t: 60 }); fallen.push({ v, t: 0 });
 }
+// falls (Jack): each body goes down one of three ways, picked at random: the legs give way and it topples backwards, it drops to
+// its knees and falls forward, or it twists and falls sideways; a horse buckles at the forelegs, pitches forward and rolls onto
+// its side, the rider thrown off forwards. d: seconds since the last blow (the body sinks away after, as before)
+function fallPose(p, d) {
+  if (p.fallK === undefined) p.fallK = Math.floor(Math.random() * 3);
+  const k = s => clamp(s, 0, 1), e = s => s * s * (3 - 2 * s), i = p.fallK;
+  if (p.horse && p.horseLegs) {
+    const a = e(k(d / .35)), b = e(k((d - .3) / .5)), r = e(k((d - .15) / .6)), side = i % 2 ? -1 : 1;
+    p.horseLegs.forEach(l => { if (l.userData.fore) { l.rotation.x = -.9 * a; l.userData.knee.rotation.x = 1.6 * a; } else l.rotation.x = .4 * b; });
+    p.horse.rotation.set(.32 * a * (1 - b * .4), 0, side * 1.35 * b); p.horse.position.y = -.18 * a;
+    p.body.position.set(0, SADDLE * (1 - r) + .05 * r, .55 * r); p.body.rotation.set(1.45 * r, 0, -side * .4 * r);
+    p.arms.forEach(m => m.rotation.x = -2.4 * r); p.legs.forEach(l => l.rotation.x = RIDE_X * (1 - r));
+    return;
+  }
+  if (i === 0) { const b = e(k(d / .2)), f = e(k((d - .12) / .42)); p.body.position.y = -.06 * b; p.legs[0].rotation.x = -.35 * b; p.legs[1].rotation.x = .2 * b; p.body.rotation.x = -1.45 * f; p.arms.forEach(m => m.rotation.x = -1.9 * f); }
+  else if (i === 1) { const b = e(k(d / .35)), f = e(k((d - .45) / .4)); kneel(p, b); p.body.rotation.x = 1.35 * f; p.arms.forEach(m => m.rotation.x = -.6 * b - 1.2 * f); }
+  else { const f = e(k(d / .5)); p.body.rotation.y = .9 * f; p.body.rotation.z = 1.4 * f; p.legs[1].rotation.z = .35 * f; p.arms[0].rotation.z = -1.1 * f; }
+}
+// a flinch from a blow: how far back (0–1), fading out over half a second (Jack)
+function flinchK(p, now) { const d = (now - (p.flinchAt || -1e9)) / 1000; return d >= 0 && d < .5 ? Math.exp(-d * 9) * Math.min(1, d * 30) : 0; }
+// a blink now and then, each on its own clock
+function blink(p, now) {
+  if (!p.eyes) return;
+  if (!(p.blinkNext > 0)) p.blinkNext = now + 1000 + Math.random() * 4000;
+  if (now > p.blinkNext) { p.blinkEnd = now + 130; p.blinkNext = now + 2500 + Math.random() * 4000; }
+  p.eyes.scale.y = now < p.blinkEnd ? .12 : 1;
+}
 function updateFallen(dt) {
   for (let n = fallen.length - 1; n >= 0; n--) {
     const f = fallen[n], v = f.v; f.t += dt;
-    v.body.rotation.x = -Math.min(1.5, f.t * 4); v.g.position.y = walkY(v.x, v.z) - Math.max(0, f.t - 1.2) * .6;
+    fallPose(v, f.t); v.g.position.y = walkY(v.x, v.z) - Math.max(0, f.t - 1.2) * .6;
     if (f.t > 2.4) { scene.remove(v.g); fallen.splice(n, 1); }
   }
   if (PH.kind !== 'day') return;

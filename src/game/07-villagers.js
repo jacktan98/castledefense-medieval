@@ -134,14 +134,15 @@ function makePerson(opts) {
   });
   const head = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), skin); head.position.y = 1.03; head.castShadow = true; body.add(head);
   // two small dark eyes (Jack: faces were blank up close); helms and hoods that cover the face sit over them
-  { const e = new THREE.Mesh(EYE_GEO, eyeM); e.position.set(0, 1.045, .119); body.add(e); }
-  body.add(makeHair(opts.hair || hairs[Math.floor(Math.random() * hairs.length)]));
+  // the eyes sit in a group round the head's upright axis, so the head, eyes and hair can turn together (idle villagers look about)
+  const eyes = new THREE.Mesh(EYE_GEO, eyeM); eyes.position.set(0, 1.045, .119); const eyeG = new THREE.Group(); eyeG.add(eyes); body.add(eyeG);
+  const hair = makeHair(opts.hair || hairs[Math.floor(Math.random() * hairs.length)]); body.add(hair);
   let hatG = null; if (opts.helm) { hatG = makeHelm(opts.helm); body.add(hatG); }
   let pivot = null;
   if (opts.tool) { pivot = makeTool(opts.tool); (opts.tool === 'bow' ? arms[0] : arms[1]).add(pivot); }
   body.scale.setScalar((opts.scale || 1) * UNIT_K);
   g.add(body); scene.add(g);
-  return { g, body, legs, arms, torso, hatG, baseTunic: tun, pivot, x: 0, z: 0, tx: 0, tz: 0, wait: Math.random() * 2, speed: .9 + Math.random() * .6, phase: Math.random() * 6, stuck: 0 };
+  return { g, body, legs, arms, torso, hatG, baseTunic: tun, pivot, eyes, headParts: [head, eyeG, hair], x: 0, z: 0, tx: 0, tz: 0, wait: Math.random() * 2, speed: .9 + Math.random() * .6, phase: Math.random() * 6, stuck: 0 };
 }
 // work clothes: each job has its own tunic, hat and (for masons and builders) a leather apron
 // a checked (plaid) cloth: wide dark bands crossing a base colour, with a finer thread through the base
@@ -927,6 +928,13 @@ function updateVillagers(dt, now) {
     if (v.pivot) { v.pivot.visible = !logC && !stoneC && !(v.changing && v.toolOff); v.pivot.rotation.x = ease(v.pivot.rotation.x, tilt); }
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
+    if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
+    blink(v, now);
+    // idle villagers breathe and look about now and then; the head turns back while they work, walk or carry
+    const idle = !v.soldier && !v.working && !carrying && !v.changing && (v.amp || 0) < .15;
+    { const br = 1 + .012 * Math.sin(now / 1000 * 2.2 + v.seed); v.torso.scale.set(br, 1, br);
+      const turn = ease(v.headParts[0].rotation.y, idle ? .32 * Math.sin(now / 1000 * .55 + v.seed * 3) : 0);
+      for (const o of v.headParts) o.rotation.y = turn; if (v.hatG) v.hatG.rotation.y = turn; }
     v.arms[0].rotation.x = ease(v.arms[0].rotation.x, L); v.arms[1].rotation.x = ease(v.arms[1].rotation.x, Rt);
     // out and up: the hand round the bundle's outer log; with one log a little out too, the hand on its outer side (Jack)
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .28 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
