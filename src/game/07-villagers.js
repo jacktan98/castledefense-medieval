@@ -214,14 +214,16 @@ const JOB_TOOL = { lodge: 'axe', forester: 'axe', quarry: 'pick', mine: 'pick', 
 // down on one knee by c (0 standing … 1 kneeling): body lowered, front leg forward, back leg behind
 // the quick change (p 0–1): one full turn, eased in and out, over a small hop, both arms swung out to the sides
 // changing on the spot (Jack: the old hop and spin read as magic), empty-handed (the tool is put away for it): both arms up to pull
-// the tunic over the head, the swap while they are up, the right hand settles the hat, then reaches behind to the back and brings
-// the new tool round (it shows from .86, as the hand comes forward)
+// the tunic over the head (the swap at CHANGE_SWAP, while they are up), the right hand settles the hat, then a kneel to pick the new
+// tool up off the ground (it shows from CHANGE_TOOL, as the hand reaches it) and up again
+const CHANGE_SWAP = .2, CHANGE_TOOL = .72;
 function changePose(f, p) {
   p = clamp(p, 0, 1);
-  const up = sstep(0, .22, p) * (1 - sstep(.36, .5, p)), hat = sstep(.46, .58, p) * (1 - sstep(.64, .72, p)), reach = sstep(.7, .8, p) * (1 - sstep(.86, 1, p));
-  f.arms[0].rotation.x = -2.8 * up - .3 * hat; f.arms[1].rotation.x = -2.8 * up - 2.7 * hat + .9 * reach;
-  f.arms[0].rotation.z = .35 * up; f.arms[1].rotation.z = -.35 * up - .45 * hat + .25 * reach;
+  const up = sstep(0, .12, p) * (1 - sstep(.26, .36, p)), hat = sstep(.36, .46, p) * (1 - sstep(.52, .6, p)), pick = f.pivot ? sstep(.58, .7, p) * (1 - sstep(.84, .96, p)) : 0;   // nothing to pick up: no kneel (catapult crews, back to plain clothes)
+  f.arms[0].rotation.x = -2.8 * up - .3 * hat - .25 * pick; f.arms[1].rotation.x = -2.8 * up - 2.7 * hat - .75 * pick;
+  f.arms[0].rotation.z = .35 * up; f.arms[1].rotation.z = -.35 * up - .45 * hat;
   f.body.rotation.y = 0; f.body.position.y = -.03 * up; f.spun = true;
+  if (pick > 0) { kneel(f, .85 * pick); f.body.rotation.x = .25 * pick; }
 }
 // the puff that hides the swap: dust round the feet and a few scraps of the old clothes flung off
 function changeFx(f) {
@@ -921,7 +923,7 @@ function updateVillagers(dt, now) {
       // at the middle (changeFx) hides the swap of clothes and tool; set exactly below, after the pose easing
       const k = Math.sin(Math.PI * clamp(1 - v.changeT / CHANGE_T, 0, 1)); lean = 0; L = Rt = -.5 * k; tilt = -.2;
       // the old tool is put away for the whole change (Jack); the new one comes out of the reach behind at the end (changePose)
-      v.toolOff = 1 - v.changeT / CHANGE_T < .86;
+      v.toolOff = 1 - v.changeT / CHANGE_T < CHANGE_TOOL;
     }
     if (v.soldier) {                                                  // weapon carried upright; a thrust or a cut when striking
       const at = v.attackT || 0; L = -.55 - swing * .2; lean = 0;

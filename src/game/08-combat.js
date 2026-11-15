@@ -876,7 +876,7 @@ function crewKit(v, tier) {
 // dawn: the crew kneel and change back where they stand, then go off to the day's work
 function updateCrewStrip(v, dt) {
   v.changing = true; v.changeT = v.crewStrip;
-  if ((v.crewStrip -= dt) <= CHANGE_T / 2 && v.kit) { stripKit(v); changeFx(v); }
+  if ((v.crewStrip -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && v.kit) { stripKit(v); changeFx(v); }
   if (v.crewStrip <= 0) { v.crewStrip = 0; v.changeT = 0; v.changing = false; v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .1; }
 }
 function postPoint(B, v) {
@@ -999,7 +999,7 @@ function updateSoldier(v, dt) {
 // the workplace's door, goes in and comes out a moment later in the work clothes with the tool (v.dressIn); anyone else (builders,
 // a workplace with no door yet) changes on the spot with a quick dressing gesture (changePose) and a puff of dust; indoors it just
 // happens; soldiers change at the barracks
-const CHANGE_T = 1.4;
+const CHANGE_T = 2.2;
 function updateChange(v, dt, want) {
   const W = !(v.changeT > 0) && want && want !== 'hammer' && v.job && !v.job.dead && innerDoor(v.job) ? v.job : null;
   if (v.dressIn && (v.dressIn.W !== W || v.dressIn.want !== want)) { if (!v.g.visible) { v.indoor = v.dressIn.W; exitDoor(v); } v.dressIn = null; }
@@ -1017,7 +1017,7 @@ function updateChange(v, dt, want) {
   if (v.hideT > 0 || !v.g.visible) { giveTool(v, want); v.changeT = 0; return; }
   if (!(v.changeT > 0)) { v.changeT = CHANGE_T; v.swapped = false; release(v); v.path = null; }
   v.changing = true;
-  if ((v.changeT -= dt) <= CHANGE_T / 2 && !v.swapped) { giveTool(v, want); v.swapped = true; changeFx(v); }
+  if ((v.changeT -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !v.swapped) { giveTool(v, want); v.swapped = true; changeFx(v); }
   if (v.changeT <= 0) { v.changeT = 0; if (!v.swapped) giveTool(v, want); v.state = v.build ? 'tobuild' : v.job ? 'commute' : 'find'; v.wait = .1; }
 }
 function updateUnkit(v, dt) {
@@ -1246,7 +1246,7 @@ function catapultCrew(B, k, crew, moving, dt, best) {
   const changing = f => {
     if (!(f.crewT > 0)) return false;
     const k = Math.sin(Math.PI * clamp(1 - f.crewT / CHANGE_T, 0, 1));
-    if ((f.crewT -= dt) <= CHANGE_T / 2 && !f.crewSwap) { crewKit(f, B.tier); f.crewSwap = true; changeFx(f); }
+    if ((f.crewT -= dt) <= CHANGE_T * (1 - CHANGE_SWAP) && !f.crewSwap) { crewKit(f, B.tier); f.crewSwap = true; changeFx(f); }
     // the same quick-change twirl as everyone else's (changePose)
     f.arms[0].rotation.set(-.5 * k, 0, 0); f.arms[1].rotation.set(-.5 * k, 0, 0); f.body.rotation.x = 0; changePose(f, 1 - f.crewT / CHANGE_T);
     if (f.crewT <= 0) { f.crewT = 0; f.body.rotation.y = 0; f.body.position.y = 0; f.arms[0].rotation.z = f.arms[1].rotation.z = 0; f.spun = false; }
