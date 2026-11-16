@@ -91,17 +91,11 @@ function swordPose(p, at, sw) {
   const cut = t > .4 && t < .85 ? Math.sin(Math.PI * (t - .4) / .45) : 0;
   p.body.position.z = .1 * cut; if (cut > 0) p.body.rotation.x = .08 * cut;
 }
-// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): the sword drawn back out to the right
-// with the body turned that way, then a level cut across the body, the body turning through it, and back
-function slashPose(p, at, sw) {
-  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
-  const t = 1 - at / SWORD_T, up = sstep(0, .35, t), cut = sstep(.35, .6, t), back = sstep(.6, 1, t);
-  p.arms[1].rotation.x = -.45 - 1.05 * up + 1.05 * back;
-  p.arms[1].rotation.z = 1.1 * up - 1.8 * cut + .7 * back;
-  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
-  p.body.rotation.y = .5 * up - 1 * cut + .5 * back;
-  const c = t > .35 && t < .75 ? Math.sin(Math.PI * (t - .35) / .4) : 0;
-  p.body.position.z = .08 * c;
+// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): a spearman's thrust with the sword,
+// held level and driven straight out with a lunge (a level slash came first: mounted, it cut through the horse's head, Jack)
+function thrustPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.pivot.position.set(0, -.33, 0); return; }
+  spearPose(p, at * SPEAR_T / SWORD_T, sw);
 }
 // the Captain's Sweeping blow (Jack: its own strike): the sword held out to the side, a wind-up, then a full turn on the spot with the
 // blade sweeping round, and back to guard; `at` runs over SWORD_T like the others (the hero step plays it slower, `v.atkK`)

@@ -1088,11 +1088,11 @@ function galPose(p, t, dt) {
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
-    // every other blow is the hero's second strike: the Heir's level slash, the Captain's sweep
+    // every other blow is the hero's second strike: the Heir's thrust, the Captain's sweep
     p.arms[0].rotation.x = -.55 - sw * .2; const c = (t + p.seed) % 1.6, n = !gWalk && Math.floor((t + p.seed) / 1.6) % 2;
-    if (n && p.heroId === 'heir') slashPose(p, Math.max(0, SWORD_T - c), sw);
+    if (n && p.heroId === 'heir') thrustPose(p, Math.max(0, SWORD_T - c), sw);
     else if (n && p.heroId === 'captain') sweepPose(p, Math.max(0, SWEEP_T - c) * SWORD_T / SWEEP_T, sw);
-    else { slashPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
+    else { thrustPose(p, 0, sw); sweepPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
     return;
   }
   if (p.xbow || p.raider === 'xbow') { xbowPose(p, (t + p.seed) % 1.4 > .7); return; }   // crossbowmen: level and shoot, then down to reload

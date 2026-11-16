@@ -279,12 +279,12 @@ function rangerStep(v, dt, home) {
     if (two) shoot(two, dm * HERO_SK.twin.k[HERO.sk.twin - 1]);
   }
 }
-// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a level slash (Flurry's
+// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
 // quick blows too); the Captain swings round on the spot whenever his Sweeping blow catches a raider beside his foe
 const SWEEP_T = .75;
 function heroStrike(v, foe) {
-  v.strike = 'chop';
-  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'slash' : 'chop';
+  v.strike = 'chop'; if (v.pivot) v.pivot.position.set(0, -.33, 0);   // a thrust slides the grip along the blade: put it back
+  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'thrust' : 'chop';
   else if (HERO.sk.sweep && enemies.some(e => e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6)) {
     v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
   }

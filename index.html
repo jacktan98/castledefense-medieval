@@ -1150,7 +1150,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 35%,#3a2d18,#15100a 78%);border:2px solid rgba(217,176,78,.7)}
 .hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 0 auto;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
-.modal.tome .hsTile.sel{border:2px solid #f0c95a!important;padding:6px 8px!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
+.modal.tome .hsTile.sel{border:1px solid #f0c95a!important;padding:7px 9px!important;box-shadow:inset 0 0 0 1px #f0c95a,0 0 8px rgba(240,201,90,.3)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
 .hsTile .hsIco{width:38px;height:38px}.hsTile .hsIco svg{width:22px;height:22px}
 .hsTile.off .hsIco svg{filter:saturate(.4) brightness(.75)}
 .hsTile .hsTx{display:flex;flex-direction:column;gap:5px;min-width:0;padding-right:18px}
@@ -1185,14 +1185,14 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 .hsNote{display:flex;align-items:center;gap:4px;min-height:36px;font:600 13px var(--body);color:var(--muted)}.hsNote .skp{width:13px;height:13px}
 .hsDesc{min-height:2.5em}  /* every skill's line takes two rows, so the details never change height between skills (Jack) */
 /* a phone held sideways: the Hero screen's heroes row runs under both columns (Jack: room for more heroes), so the Heir sits
-   beside the name and the skills are drawn tighter to fit the height (after the base rules, which they override) */
+   on top of its column as before and the skills are drawn tighter to fit the height (after the base rules, which they override) */
 @media (max-height:520px){
-  .heroSheet .hpBody{flex-direction:row!important;align-items:center!important;gap:12px!important} .heroSheet .hpStage{width:76px;height:76px}
-  .heroSheet .hsWrap .hsList{gap:5px} .modal.tome .hsTile{padding:4px 8px!important} .modal.tome .hsTile.sel{padding:3px 7px!important}
+  .heroSheet .hpStage{width:76px;height:76px}
+  .heroSheet .hsWrap .hsList{gap:5px} .modal.tome .hsTile{padding:4px 8px!important} .modal.tome .hsTile.sel{padding:4px 8px!important}
   .hsTile .hsIco{width:32px;height:32px}.hsTile .hsIco svg{width:19px;height:19px} .hsTile .hsTx{gap:3px} .hsTile .hsTx b{font-size:14px}
   .heroSheet .hsDet{gap:4px;padding:6px 10px} .hsDh{gap:3px} .hsDh .hsIco{width:38px;height:38px}.hsDh .hsIco svg{width:24px;height:24px}
   .hsDh b{font-size:16px} .hsDh small{margin-top:1px} .hsDesc{font-size:13px} .modal.tome .hsLearn{height:30px}
-  .heroSheet .hRosHead{margin:6px 0 4px} .hRoster{justify-content:flex-start} .modal.tome .hRos{padding:4px 4px!important} .hRos .hrPic{width:40px;height:40px}
+  .heroSheet .hRosHead{margin:6px 0 4px} .hRoster{justify-content:flex-start} .modal.tome .hRos{flex:0 0 100px;max-width:100px;padding:4px 4px!important} .hRos .hrPic{width:40px;height:40px}   /* narrow cards: room for six (Jack) */
 }
 </style>
 
@@ -6262,7 +6262,7 @@ function updateVillagers(dt, now) {
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .47 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
-    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'slash' ? slashPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
@@ -6373,17 +6373,11 @@ function swordPose(p, at, sw) {
   const cut = t > .4 && t < .85 ? Math.sin(Math.PI * (t - .4) / .45) : 0;
   p.body.position.z = .1 * cut; if (cut > 0) p.body.rotation.x = .08 * cut;
 }
-// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): the sword drawn back out to the right
-// with the body turned that way, then a level cut across the body, the body turning through it, and back
-function slashPose(p, at, sw) {
-  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
-  const t = 1 - at / SWORD_T, up = sstep(0, .35, t), cut = sstep(.35, .6, t), back = sstep(.6, 1, t);
-  p.arms[1].rotation.x = -.45 - 1.05 * up + 1.05 * back;
-  p.arms[1].rotation.z = 1.1 * up - 1.8 * cut + .7 * back;
-  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
-  p.body.rotation.y = .5 * up - 1 * cut + .5 * back;
-  const c = t > .35 && t < .75 ? Math.sin(Math.PI * (t - .35) / .4) : 0;
-  p.body.position.z = .08 * c;
+// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): a spearman's thrust with the sword,
+// held level and driven straight out with a lunge (a level slash came first: mounted, it cut through the horse's head, Jack)
+function thrustPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.pivot.position.set(0, -.33, 0); return; }
+  spearPose(p, at * SPEAR_T / SWORD_T, sw);
 }
 // the Captain's Sweeping blow (Jack: its own strike): the sword held out to the side, a wind-up, then a full turn on the spot with the
 // blade sweeping round, and back to guard; `at` runs over SWORD_T like the others (the hero step plays it slower, `v.atkK`)
@@ -9352,12 +9346,12 @@ function rangerStep(v, dt, home) {
     if (two) shoot(two, dm * HERO_SK.twin.k[HERO.sk.twin - 1]);
   }
 }
-// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a level slash (Flurry's
+// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
 // quick blows too); the Captain swings round on the spot whenever his Sweeping blow catches a raider beside his foe
 const SWEEP_T = .75;
 function heroStrike(v, foe) {
-  v.strike = 'chop';
-  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'slash' : 'chop';
+  v.strike = 'chop'; if (v.pivot) v.pivot.position.set(0, -.33, 0);   // a thrust slides the grip along the blade: put it back
+  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'thrust' : 'chop';
   else if (HERO.sk.sweep && enemies.some(e => e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6)) {
     v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
   }
@@ -10666,11 +10660,11 @@ function galPose(p, t, dt) {
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
-    // every other blow is the hero's second strike: the Heir's level slash, the Captain's sweep
+    // every other blow is the hero's second strike: the Heir's thrust, the Captain's sweep
     p.arms[0].rotation.x = -.55 - sw * .2; const c = (t + p.seed) % 1.6, n = !gWalk && Math.floor((t + p.seed) / 1.6) % 2;
-    if (n && p.heroId === 'heir') slashPose(p, Math.max(0, SWORD_T - c), sw);
+    if (n && p.heroId === 'heir') thrustPose(p, Math.max(0, SWORD_T - c), sw);
     else if (n && p.heroId === 'captain') sweepPose(p, Math.max(0, SWEEP_T - c) * SWORD_T / SWEEP_T, sw);
-    else { slashPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
+    else { thrustPose(p, 0, sw); sweepPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
     return;
   }
   if (p.xbow || p.raider === 'xbow') { xbowPose(p, (t + p.seed) % 1.4 > .7); return; }   // crossbowmen: level and shoot, then down to reload
@@ -11690,7 +11684,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'ba2e952cec'; var updateWait = false, updateT = 0;
+const BUILD = 'e26f8b76df'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
