@@ -392,7 +392,15 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 .audioRows{display:flex;flex-direction:column;gap:9px;margin-top:12px;width:min(240px,70vw)}
 .volRow{display:flex;align-items:center;gap:10px;font-size:13px;color:#f4e3b2}
 .volRow span{width:52px;flex-shrink:0}
-.volRow input{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;margin:0;background:linear-gradient(90deg,#d9b04e 0,#d9b04e var(--p,100%),rgba(10,8,4,.6) var(--p,100%));border:1px solid rgba(212,168,78,.55);outline:none;touch-action:none}
+/* the bar runs from the knob's middle at its lowest to its middle at its highest, so the knob covers its ends (Jack: the bar's tips
+   showed past the knob at full and at nothing); drawn as layers inset by half the knob (10 px): a gold edge, the dark groove, the fill */
+.volRow input{flex:1;-webkit-appearance:none;appearance:none;height:8px;margin:0;border:0;outline:none;touch-action:none;background:
+  radial-gradient(circle 3px at 10px 50%,#d9b04e 96%,transparent 100%),
+  radial-gradient(circle 3px at calc(100% - 10px) 50%,rgb(26,21,12) 96%,transparent 100%),
+  linear-gradient(90deg,#d9b04e 0,#d9b04e var(--p,100%),rgb(26,21,12) var(--p,100%)) center / calc(100% - 20px) 6px no-repeat,
+  radial-gradient(circle 4px at 10px 50%,rgba(212,168,78,.55) 96%,transparent 100%),
+  radial-gradient(circle 4px at calc(100% - 10px) 50%,rgba(212,168,78,.55) 96%,transparent 100%),
+  linear-gradient(rgba(212,168,78,.55),rgba(212,168,78,.55)) center / calc(100% - 20px) 8px no-repeat}
 .volRow input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c9962f);border:2px solid #5a4422;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .volRow input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c9962f);border:2px solid #5a4422}
 #summary .sheet{background:var(--panel)!important;max-height:calc(100% - 8px);overflow-y:auto}
@@ -11687,7 +11695,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '77d1e20db7'; var updateWait = false, updateT = 0;
+const BUILD = '6286d71f55'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
