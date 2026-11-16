@@ -1110,7 +1110,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 /* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
 @media (max-height:520px){
   .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
-  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
+  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hpStage{align-self:flex-start} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
   .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
@@ -1148,6 +1148,8 @@ body.tablet .hsDh{flex-direction:column;gap:8px;text-align:center}
 body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{width:42px;height:42px}
 body.tablet .hsDt{align-items:center}
 body.tablet .hsDet .hsDesc{text-align:center}
+/* a phone held sideways takes the tablet's centred details too (Jack), the picture a little smaller to keep the height */
+@media (max-height:520px){.hsDh{flex-direction:column;gap:6px;text-align:center}.hsDh .hsIco{width:56px;height:56px}.hsDh .hsIco svg{width:35px;height:35px}.hsDt{align-items:center}.hsDet .hsDesc{text-align:center}}
 
 .hsDesc .hsRk{display:block;margin-bottom:2px;font:700 11px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
