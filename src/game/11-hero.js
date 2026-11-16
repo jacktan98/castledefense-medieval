@@ -76,7 +76,7 @@ const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .
 // the Ranger: a hooded green cloak over a leather jerkin, a quiver and a bow; the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
-const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), rangerHoodM = mat('#466333'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
+const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
 function heroKit(v, id = HERO_ID, foot) {
   if (v.horse) stripKit(v);
   const D = HERO_DEFS[id], hc = hairs[D.hair % hairs.length];
@@ -89,14 +89,11 @@ function heroKit(v, id = HERO_ID, foot) {
     v.kit = []; if (v.carryLog) v.carryLog.visible = v.carryStone.visible = false;
     v.kit.push(...armour(v, 1)); v.armour = null;
     v.torso.material = rangerTunM; v.arms.forEach(a => a.userData.sleeve.material = rangerTunM);
-    // the hood (Jack: cloth, not a helmet): loose and a little bigger than the head, low-poly so it reads as folds, open over the
-    // face below the brow, a point drooping at the back, and a short mantle over the shoulders
-    const hd = put(head()), ph = Math.PI / 2 + .78, pl = Math.PI * 2 - 1.56;
-    const top = new THREE.Mesh(new THREE.SphereGeometry(.178, 9, 3, 0, Math.PI * 2, 0, Math.PI * .3), rangerHoodM);
-    const side = new THREE.Mesh(new THREE.SphereGeometry(.178, 9, 4, ph, pl, Math.PI * .3, Math.PI * .4), rangerHoodM);
-    for (const o of [top, side]) { o.position.set(0, 1.035, -.03); o.scale.set(1, 1.12, 1.12); hd.add(o); }
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(.075, .24, 6), rangerHoodM); tip.position.set(0, 1.12, -.2); tip.rotation.x = -2.2; hd.add(tip);
-    const mantle = new THREE.Mesh(new THREE.CylinderGeometry(.13, .24, .13, 9, 1, true), rangerHoodM); mantle.position.y = .885; put(mantle);
+    // the hood: a cap over the brow and the sides and back down to the neck, open over the face (the eyes show)
+    const hd = put(head()), cap = new THREE.Mesh(new THREE.SphereGeometry(.158, 14, 5, 0, Math.PI * 2, 0, Math.PI * .36), rangerCloakM);
+    const hood = new THREE.Mesh(new THREE.SphereGeometry(.16, 14, 8, Math.PI / 2 + .85, Math.PI * 2 - 1.7, 0, Math.PI * .64), rangerCloakM);
+    cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
     put(box(.42, .05, .1, rangerCloakM, 0, .88, -.13)); put(box(.36, .5, .03, rangerCloakM, 0, .6, -.19));
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
     for (let i = 0; i < 3; i++) qv.add(box(.02, .1, .02, arrowMat, (i - 1) * .022, .2, 0));
@@ -111,8 +108,6 @@ function heroKit(v, id = HERO_ID, foot) {
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .118, .055, Math.cos(a) * .118); c.add(p); }
       c.position.y = 1.12; put(c);
     } else {
-      // the helm's gorget takes the shoulder plates' place
-      for (const o of v.kit.slice()) if (o.isMesh && o.material === steelM && o.geometry.type === 'SphereGeometry') { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
       put(captainHelm());
       put(box(.48, .05, .1, capCloakM, 0, .88, -.13)); put(box(.42, .56, .03, capCloakM, 0, .58, -.2)); put(cyl(.05, .05, .02, 8, heroGold, -.15, .86, .1));
     }
@@ -121,8 +116,8 @@ function heroKit(v, id = HERO_ID, foot) {
   v.maxHp = v.hp = heroHp();
 }
 // the Captain's helm (Jack's reference: a knight's close helm): a polished dome with a raised ridge from brow to nape, a pointed
-// visor whose top edge leaves a dark eye slit under the brow, three breathing slits each side of its prow, and a gorget flaring
-// out over the shoulders
+// visor whose top edge leaves a dark eye slit under the brow, three breathing slits each side of its prow (the gorget was dropped:
+// Jack)
 const capSteelM = mat('#c6ccd3'); capSteelM.metalness = .55; capSteelM.roughness = .32;
 function captainHelm() {
   const g = new THREE.Group(), add = (o, to = g) => { o.castShadow = true; to.add(o); return o; };
@@ -130,7 +125,6 @@ function captainHelm() {
   const dome = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 16, 8, 0, Math.PI * 2, 0, Math.PI * .5), capSteelM)); dome.position.y = 1.07; dome.scale.y = 1.12;
   const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(.172, .172, .026, 18, 1, false, 0, Math.PI), capSteelM)); ridge.rotation.z = Math.PI / 2; ridge.position.y = 1.07; ridge.scale.x = 1.12;
   add(cyl(.158, .158, .14, 16, capSteelM, 0, 1.0, 0));
-  add(cyl(.13, .25, .1, 12, capSteelM, 0, .89, 0));
   // the prow: two plates meeting in front; the slit is a dark band of the same shape just behind their top edge
   for (const sx of [-1, 1]) {
     const vis = add(box(.17, .15, .02, capSteelM, sx * .07, .995, .14)); vis.rotation.y = sx * .62;
