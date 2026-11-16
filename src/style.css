@@ -1036,8 +1036,8 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .campCirc .heroBtnFace{width:38px;height:38px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);display:block}
 .campCirc .heroBtnFace svg{width:100%;height:100%;display:block}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
-.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 70%,#2e5f22,#16300f 70%);border:2px solid #d9b04e;overflow:hidden}
-.heroSheet .hpStage svg{width:100%;height:100%;display:block}
+.heroSheet .hpStage{width:140px;height:140px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpView{width:100%;height:100%;display:block}
 .heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
 .heroSheet .hpXp{font-size:12px}

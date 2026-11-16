@@ -27,8 +27,11 @@ var hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false
 var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
+const HERO_HAIR = hairs[1];
 function heroKit(v) {
   if (v.horse) stripKit(v);
+  // the Heir's own brown hair (as on the portrait), whoever the villager was
+  if (!v.heroHair && v.headParts) { const old = v.headParts[2], h = makeHair(HERO_HAIR); old.parent.add(h); old.parent.remove(old); v.headParts[2] = h; v.hairC = HERO_HAIR; v.heroHair = true; }
   soldierKit(v, 3, HERO.sk.horse > 0);
   for (const o of v.kit.slice()) if (o.userData && o.userData.helm) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
   const c = new THREE.Group(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
@@ -190,7 +193,34 @@ document.addEventListener('click', ev => {
 // ---- the Hero screen (from the campaign's round Hero button, shown only with heroes on): the Heir, level, XP, stats and the
 // three passive skills, each with its ranks and a gold + while a point can be spent (laid out like the Upgrades screen) ----
 function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.textContent = HERO.pts; n.hidden = !HERO.pts; } }
-function openHeroPick() { sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick')); }
+function openHeroPick() {
+  sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
+  codexRenderer(); cancelAnimationFrame(hpRaf); hpT0 = hpLast = performance.now(); hpRaf = requestAnimationFrame(heroLoop);
+}
+// ---- the Heir in 3D on the Hero screen: drawn by the Archive's small renderer (codexRenderer), turning slowly on its grass
+// patch, sword raised now and then; on a horse once Royal horse is learnt ----
+// framed closer than the Archive's figures: the Heir alone fills the round picture
+CX_FIT.hero = [.66, .62, .42]; CX_FIT.heroHorse = [1.18, .5, .62];
+let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpHorse = -1;
+function heroModel() {
+  const p = makePerson({ hair: HERO_HAIR }); p.heroHair = true; heroKit(p); p.seed = 0;
+  return { g: p.g, p, cat: HERO.sk.horse ? 'heroHorse' : 'hero' };
+}
+function heroPose(p, t) {
+  if (p.horseLegs) { horseGait(p.horseLegs, 0, 0); p.body.position.y = SADDLE; horseIdle(p, t, 0); }
+  else { p.legs[0].rotation.x = p.legs[1].rotation.x = 0; p.body.position.y = 0; }
+  p.arms[0].rotation.x = -.55;
+  swordPose(p, Math.max(0, SWORD_T - t % 3.4), 0);
+}
+function heroLoop(now) {
+  if ($('#heroPick').hidden) { hpRaf = 0; if (hpModel) { codexDrop(hpModel); hpModel = null; hpHorse = -1; } return; }
+  hpRaf = requestAnimationFrame(heroLoop); hpLast = now;
+  if (!hpModel || hpHorse !== HERO.sk.horse) { if (hpModel) codexDrop(hpModel); hpModel = heroModel(); hpHorse = HERO.sk.horse; codexFrame(hpModel); }
+  const cv = $('#heroPick .hpView'); if (!cv) return;
+  const t = (now - hpT0) / 1000; windU.value = now / 1000;
+  heroPose(hpModel.p, t); codexShot(hpModel, .5 + t * .35);
+  const c = cv.getContext('2d'); c.clearRect(0, 0, CX_PX, CX_PX); c.drawImage(cxR.domElement, 0, 0);
+}
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
@@ -200,7 +230,7 @@ function renderHeroPick() {
     return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
   }).join('');
   el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><div class="upBank"><span class="upNum">Lv <b>${HERO.lv}</b></span></div></div>`
-    + `<div class="hpBody"><div class="hpStage">${HERO_FACE}</div><div class="hpInfo"><div class="hpName">The Heir</div>`
+    + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir</div>`
     + `<div class="hpXp">XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}</div>`
     + `<div class="hpStats">${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}</div></div></div>`
     + `<div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}</div>`;
