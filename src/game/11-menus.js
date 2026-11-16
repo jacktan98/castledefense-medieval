@@ -1171,7 +1171,10 @@ function updatePowers() {
   const pn = document.querySelector('.panel').getBoundingClientRect(), bb = $('#bossBar');
   let top = pn.bottom + 8;
   if (bb && !bb.hidden) { const r = bb.getBoundingClientRect(); if (r.height && r.left < pn.left + 110) top = Math.max(top, r.bottom + 8); }
-  el.classList.remove('col'); el.style.bottom = 'auto'; el.style.top = top + 'px'; el.style.left = pn.left + 'px';
+  // to the right of the Heir's portrait while it shows: worked out here, not after it, so a call from a button (Rally) never
+  // drops the powers back under the portrait for a moment (Jack saw the two buttons become one)
+  const hb = $('#heroBar'), hx = hb && !hb.hidden && hb.offsetWidth ? hb.offsetWidth * uiZ(hb) + 8 : 0;
+  el.classList.remove('col'); el.style.bottom = 'auto'; el.style.top = top + 'px'; el.style.left = (pn.left + hx) + 'px';
 }
 // the screen's top inset (the notch or Dynamic Island in the app held upright; 0 in Safari and sideways), read off a probe
 const safeProbe = (() => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;top:0;left:0;width:0;height:var(--safeT);visibility:hidden;pointer-events:none'; document.body.appendChild(d); return d; })();

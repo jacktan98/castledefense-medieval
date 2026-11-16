@@ -196,14 +196,15 @@ function heroUI() {
     const st = card.querySelector('.hStats'); if (st) st.innerHTML = hero ? STAT('hp', `${Math.ceil(hero.hp)}/${hero.maxHp}`, hpf < .35 ? 'bad' : '') + STAT('sword', `${heroDmg()}`) + STAT('speed', `×${heroSpeed()}`) : STAT('', `Back in ${Math.ceil(heroDownT)} s`, 'warn');
   }
   // the night powers sit to the right of the Heir's buttons
-  const pw = $('#powers'); if (!pw.hidden) { const pn = document.querySelector('.panel').getBoundingClientRect(); pw.style.left = (pn.left + bar.offsetWidth * uiZ(bar) + 8) + 'px'; bar.style.top = pw.style.top; }
+  const pw = $('#powers'); if (!pw.hidden) { updatePowers(); bar.style.top = pw.style.top; }
   else { const pn = document.querySelector('.panel').getBoundingClientRect(); bar.style.top = (pn.bottom + 8) + 'px'; }
   bar.style.left = document.querySelector('.panel').getBoundingClientRect().left + 'px';
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-hact]'); if (!b || !heroOn()) return;
   const a = b.dataset.hact;
-  if (a === 'sel') { if (heroSel && hero) { target.set(hero.x, target.y, hero.z); } heroSelect(); }
+  // a tap on the portrait goes straight to moving the Heir (Jack: no need to press Move on the card); a second tap cancels it
+  if (a === 'sel') { const was = heroMove; heroSelect(); heroMove = !!hero && !was; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'close') { heroSel = false; heroMove = false; heroKey = ''; flagFocus = null; }
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
