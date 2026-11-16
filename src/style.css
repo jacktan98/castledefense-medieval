@@ -1071,8 +1071,11 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
-.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none}
+.campBadge .skp{width:.92em;height:.92em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none;flex:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
-#campHeroN{font-family:var(--body);font-style:normal;display:inline-flex;align-items:center}
+#campHeroN{font-family:var(--body);font-style:normal}
+/* both badges: star and number side by side, each centred on its own (Jack: the numbers sat off the middle) */
+#campHeroN,#campUpN{display:inline-flex;align-items:center}
+#campHeroN .bN{transform:translateY(-.7px)} #campUpN .bN{transform:translateY(.2px)}
 
-.campBadge .bStar{font-style:normal;margin-right:2px;position:relative;top:1px}
+.campBadge .bStar{font-style:normal;margin-right:2px;transform:translateY(1.45px)}

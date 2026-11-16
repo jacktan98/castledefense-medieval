@@ -1088,11 +1088,14 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
-.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none}
+.campBadge .skp{width:.92em;height:.92em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none;flex:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
-#campHeroN{font-family:var(--body);font-style:normal;display:inline-flex;align-items:center}
+#campHeroN{font-family:var(--body);font-style:normal}
+/* both badges: star and number side by side, each centred on its own (Jack: the numbers sat off the middle) */
+#campHeroN,#campUpN{display:inline-flex;align-items:center}
+#campHeroN .bN{transform:translateY(-.7px)} #campUpN .bN{transform:translateY(.2px)}
 
-.campBadge .bStar{font-style:normal;margin-right:2px;position:relative;top:1px}
+.campBadge .bStar{font-style:normal;margin-right:2px;transform:translateY(1.45px)}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -9155,7 +9158,7 @@ document.addEventListener('click', ev => {
 function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
 $('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
 // the campaign button's badge, like the Upgrades' "★30": the skill-point star and the points to spend
-function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : ''; n.hidden = !HERO.pts; } }
+function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}<span class="bN">${HERO.pts}</span>` : ''; n.hidden = !HERO.pts; } }
 function openHeroPick() {
   sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
   codexRenderer(); cancelAnimationFrame(hpRaf); hpT0 = hpLast = performance.now(); hpRaf = requestAnimationFrame(heroLoop);
@@ -10036,7 +10039,7 @@ function openCampaign(i) {
   buildDeck(); $('#mapPick').hidden = true; $('#campaign').hidden = false;
   { const st = MAIN, won = st.filter(c => STARS[c.map] > 0).length, stars = campStarsN(), max = st.length * 3;
     $('#campStars').innerHTML = `<span><b>${won}</b> / ${st.length} stages</span><span class="sep">·</span><span><b>★ ${stars}</b> / ${max}</span>`;
-    $('#campUpN').hidden = !upLeft(); $('#campUpN').innerHTML = '<i class="bStar">★</i>' + upLeft(); }
+    $('#campUpN').hidden = !upLeft(); $('#campUpN').innerHTML = '<i class="bStar">★</i><span class="bN">' + upLeft() + '</span>'; }
   achCheck();
   // opens on the given stage (Restart / Play again) or where the player is
   cSel = i !== undefined ? i : cCur; cDrag = 0; layoutDeck(false); openStage(cSel);
@@ -11324,7 +11327,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '75bb2f03dd'; var updateWait = false, updateT = 0;
+const BUILD = '2282afadf0'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

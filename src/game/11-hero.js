@@ -218,7 +218,7 @@ document.addEventListener('click', ev => {
 function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
 $('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
 // the campaign button's badge, like the Upgrades' "★30": the skill-point star and the points to spend
-function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : ''; n.hidden = !HERO.pts; } }
+function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}<span class="bN">${HERO.pts}</span>` : ''; n.hidden = !HERO.pts; } }
 function openHeroPick() {
   sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
   codexRenderer(); cancelAnimationFrame(hpRaf); hpT0 = hpLast = performance.now(); hpRaf = requestAnimationFrame(heroLoop);
