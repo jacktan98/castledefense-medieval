@@ -1104,7 +1104,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
         <button class="iconBtn" id="rallyBtn" title="Rally: tap, then a spot" aria-label="Rally"><svg viewBox="0 0 24 24"><path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/></svg></button><button class="iconBtn" id="recallBtn" title="Recall to the barracks" aria-label="Recall"><svg viewBox="0 0 24 24"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 H14 A5.5 5.5 0 0 1 14 20 H9"/></svg></button>
         <button class="iconBtn" id="moveBtn" hidden title="Move: tap, then a tile" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M12 3 V21 M3 12 H21"/><path d="M9 6 L12 3 L15 6 M9 18 L12 21 L15 18 M6 9 L3 12 L6 15 M18 9 L21 12 L18 15"/></svg></button>
         <button class="iconBtn" id="volleyBtn" hidden title="Arrow volley: tap, then a spot" aria-label="Arrow volley"><svg viewBox="0 0 24 24"><path d="M4 4 L13 13 M9 2.5 L18 11.5 M2.5 9 L11.5 18"/><path class="solid" d="M15 15 L11.2 14.2 L14.2 11.2 Z M20 13.5 L16.2 12.7 L19.2 9.7 Z M13.5 20 L12.7 16.2 L9.7 19.2 Z"/></svg><b class="cd"></b></button>
-        <button class="iconBtn" id="summonBtn" hidden title="Riders: two for the night" aria-label="Summon riders"><svg viewBox="0 0 24 24"></svg><b class="cd"></b></button>
+        <button class="iconBtn" id="summonBtn" hidden aria-label="Summon riders"><svg viewBox="0 0 24 24"></svg><b class="cd"></b></button>
         <button class="iconBtn" id="cardRotBtn" hidden aria-label="Rotate" title="Rotate"><svg viewBox="0 0 24 24"><path d="M19 12 a7 7 0 1 1-2.05-4.95"/><path d="M19.2 3.8 V7.5 H15.5"/></svg></button>
         <button class="iconBtn" id="closeCard" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button>
       </div>
@@ -8265,7 +8265,7 @@ function refreshCard() {
     const out = summoned().length > 0, cool = !out && summonCd > 0, day = PH.kind !== 'night';
     const ico = out ? 'rally' : 'horse'; if (sb.dataset.ico !== ico) { sb.dataset.ico = ico; sb.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
     sb.classList.toggle('cool', cool); sb.classList.toggle('off', day && !out && !cool); sb.disabled = cool;
-    sb.title = out ? 'Rally: tap, then a spot' : day ? 'Night only' : 'Riders: two for the night'; sb.setAttribute('aria-pressed', String(out && rallyFor === B));
+    sb.setAttribute('aria-pressed', String(out && rallyFor === B));
     sb.querySelector('.cd').textContent = cool ? Math.ceil(summonCd) : '';
   }
   const vb = $('#volleyBtn'); vb.hidden = true;
@@ -10962,7 +10962,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'd44ca67a1c'; var updateWait = false, updateT = 0;
+const BUILD = '379e76fdfe'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

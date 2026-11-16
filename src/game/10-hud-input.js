@@ -168,7 +168,7 @@ function refreshCard() {
     const out = summoned().length > 0, cool = !out && summonCd > 0, day = PH.kind !== 'night';
     const ico = out ? 'rally' : 'horse'; if (sb.dataset.ico !== ico) { sb.dataset.ico = ico; sb.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
     sb.classList.toggle('cool', cool); sb.classList.toggle('off', day && !out && !cool); sb.disabled = cool;
-    sb.title = out ? 'Rally: tap, then a spot' : day ? 'Night only' : 'Riders: two for the night'; sb.setAttribute('aria-pressed', String(out && rallyFor === B));
+    sb.setAttribute('aria-pressed', String(out && rallyFor === B));
     sb.querySelector('.cd').textContent = cool ? Math.ceil(summonCd) : '';
   }
   const vb = $('#volleyBtn'); vb.hidden = true;
