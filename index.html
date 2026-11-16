@@ -1195,7 +1195,7 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 /* a phone held sideways: the Hero screen's heroes row runs under both columns (Jack: room for more heroes), so the Heir sits
    on top of its column as before and the skills are drawn tighter to fit the height (after the base rules, which they override) */
 @media (max-height:520px){
-  .heroSheet .hpStage{width:76px;height:76px}
+  .heroSheet .hpStage{width:104px;height:104px}   /* bigger: the column has the room (Jack) */
   .heroSheet .hsWrap .hsList{gap:5px} .modal.tome .hsTile{padding:4px 8px!important} .modal.tome .hsTile.sel{padding:4px 8px!important}
   .hsTile .hsIco{width:32px;height:32px}.hsTile .hsIco svg{width:19px;height:19px} .hsTile .hsTx{gap:3px} .hsTile .hsTx b{font-size:14px}
   .heroSheet .hsDet{gap:4px;padding:6px 10px} .hsDh{gap:3px} .hsDh .hsIco{width:38px;height:38px}.hsDh .hsIco svg{width:24px;height:24px}
@@ -10491,7 +10491,7 @@ function tabletScale() {
   // every menu at k; the town picker and the three screens are then fitted to the height below
   document.querySelectorAll('.modal').forEach(m => uiScale(m, k, '0 0', 1));
   const up = $('#upPick'), us = up && up.querySelector('.upSheet'); if (us && !up.hidden && us.classList.contains('upWide') !== upWideOn()) renderUpgrades();
-  fitModal($('#loadPick')); fitModal($('#upPick')); if (typeof renderUpgrades === 'function') { matchUpZoom($('#achPick')); matchUpZoom($('#codexPick')); }
+  fitModal($('#loadPick')); fitModal($('#upPick')); if (typeof renderUpgrades === 'function') { matchUpZoom($('#achPick')); matchUpZoom($('#codexPick')); matchUpZoom($('#heroPick')); }
 }
 // a tall sheet (the town picker, the Upgrades screen) is zoomed to fit the screen's height: on a short phone a little smaller than
 // designed (Jack's iPhone SE had Start below the screen), on a tablet only as far up as fits (sideways the upright layout was cut off)
@@ -11699,7 +11699,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'a561935212'; var updateWait = false, updateT = 0;
+const BUILD = '7978b47e40'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

@@ -905,7 +905,7 @@ function tabletScale() {
   // every menu at k; the town picker and the three screens are then fitted to the height below
   document.querySelectorAll('.modal').forEach(m => uiScale(m, k, '0 0', 1));
   const up = $('#upPick'), us = up && up.querySelector('.upSheet'); if (us && !up.hidden && us.classList.contains('upWide') !== upWideOn()) renderUpgrades();
-  fitModal($('#loadPick')); fitModal($('#upPick')); if (typeof renderUpgrades === 'function') { matchUpZoom($('#achPick')); matchUpZoom($('#codexPick')); }
+  fitModal($('#loadPick')); fitModal($('#upPick')); if (typeof renderUpgrades === 'function') { matchUpZoom($('#achPick')); matchUpZoom($('#codexPick')); matchUpZoom($('#heroPick')); }
 }
 // a tall sheet (the town picker, the Upgrades screen) is zoomed to fit the screen's height: on a short phone a little smaller than
 // designed (Jack's iPhone SE had Start below the screen), on a tablet only as far up as fits (sideways the upright layout was cut off)
