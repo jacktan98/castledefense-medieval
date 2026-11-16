@@ -471,7 +471,7 @@ function renderHeroPick() {
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   el.querySelector('.hpLv').textContent = HERO.lv; el.querySelector('.hpNm').textContent = heroName();
   // the Heroes row: the one in use with a gold edge; the others show their role, each its own level
-  el.querySelectorAll('.hRos').forEach(b => { const id = b.dataset.h, on = id === HERO_ID; b.classList.toggle('on', on); b.querySelector('small').textContent = on ? 'In use' : HERO_DEFS[id].role; b.querySelector('.hrLv').textContent = on ? HERO.lv : loadHero(id).lv; });
+  el.querySelectorAll('.hRos').forEach(b => { const id = b.dataset.h, on = id === HERO_ID; b.classList.toggle('on', on); b.querySelector('small').textContent = on ? 'Deployed' : HERO_DEFS[id].role; b.querySelector('.hrLv').textContent = on ? HERO.lv : loadHero(id).lv; });
   el.querySelector('.hpXp').innerHTML = `XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}`;
   el.querySelector('.hpStats').innerHTML = heroStats(`${heroHp()}`);
   el.querySelector('.hsPts').innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : '';
