@@ -1048,9 +1048,9 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hSkHead .hsRs{width:auto;margin:0 0 0 10px;padding:0;display:block}
 .heroSheet .hpPad{width:44px;flex:none}
 .heroSheet .hpName{display:flex;align-items:center;gap:10px}
-.heroSheet .hpLvP{font:700 16px var(--body);border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95));border-radius:10px}
+.heroSheet .hpLvP{font:700 16px var(--body)}
 /* the boot has speed lines beside it, so it is drawn bigger to stand as tall as the heart and sword */
-.heroSheet .hpStats .stat[data-name="Walk speed"] .ico{width:25px;height:25px;margin:-3px 0}
+.heroSheet .hpStats .stat[data-name="Walk speed"] .ico{width:22px;height:22px;margin:-2px 0}
 .heroSheet .hpXp{font-size:14px}
 .heroSheet .hXpBar{height:7px}
 .heroSheet .hpStats{font-size:16px;gap:16px}
@@ -1071,8 +1071,8 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
-.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:3px;fill:#2a1d0a;stroke:none;filter:none}
+.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
 #campHeroN{font-family:var(--body);font-style:normal;display:inline-flex;align-items:center}
 
-.campBadge .bStar{font-style:normal;margin-right:3px}
+.campBadge .bStar{font-style:normal;margin-right:2px;position:relative;top:1px}
