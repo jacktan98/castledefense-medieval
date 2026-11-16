@@ -1017,7 +1017,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.heroPort .lv{position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.heroPort .lv{z-index:2;position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* health over XP under the portrait (Jack: the health ring round it was dropped) */
 .heroPort .hpb{position:absolute;left:4px;right:4px;bottom:-11px;height:5px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .hpb i{display:block;height:100%;border-radius:2px;background:var(--ok)}

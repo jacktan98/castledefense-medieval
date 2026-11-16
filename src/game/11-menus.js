@@ -1149,7 +1149,8 @@ function ridersAct(K) {
   if (paused) return setHint('Paused', 'bad'); if (!K || K.type !== 'castle') return;
   if (summoned().length) { rallyFor = rallyFor === K ? null : K; if (rallyFor) volleyAim = false; setHint(rallyFor ? 'Tap a spot' : 'Select a building'); refreshCard(); updatePowers(); return; }
   if (summonCd > 0) return; if (PH.kind !== 'night') return setHint('Night only', 'bad');
-  summonRiders(); refreshCard(); updatePowers();
+  // called out, they ride from the castle and the next tap on the map is their rally spot (Jack: as with the Heir's portrait)
+  summonRiders(); if (summoned().length) { rallyFor = K; volleyAim = false; setHint('Tap a spot'); } refreshCard(); updatePowers();
 }
 $('#pwVolley').addEventListener('click', volleyAct);
 $('#pwRiders').addEventListener('click', () => ridersAct(castleB()));
@@ -1162,8 +1163,9 @@ function updatePowers() {
   const v = $('#pwVolley'), r = $('#pwRiders');
   if (!v.innerHTML) { v.innerHTML = VOLLEY_ICO + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
   v.classList.toggle('cool', volleyCd > 0); v.querySelector('.cd').textContent = volleyCd > 0 ? Math.ceil(volleyCd) : ''; v.setAttribute('aria-pressed', String(volleyAim));
-  const out = summoned().length > 0, rc = !out && summonCd > 0, ico = out ? 'rally' : 'horse';
-  if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
+  const out = summoned().length > 0, rc = !out && summonCd > 0, ico = 'horse';
+  // always the horse (Jack: no rally flag icon; a tap while they are out picks their spot again)
+  if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = HORSE_ICO; }
   r.classList.toggle('cool', rc); r.querySelector('.cd').textContent = rc ? Math.ceil(summonCd) : ''; r.setAttribute('aria-pressed', String(out && rallyFor === K));
   r.setAttribute('aria-label', out ? 'Rally riders' : 'Riders');
   // side by side just under the top panel (under the boss bar too while one is out), at its left edge (Jack): always the same spot,

@@ -1034,7 +1034,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.heroPort .lv{position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.heroPort .lv{z-index:2;position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* health over XP under the portrait (Jack: the health ring round it was dropped) */
 .heroPort .hpb{position:absolute;left:4px;right:4px;bottom:-11px;height:5px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .hpb i{display:block;height:100%;border-radius:2px;background:var(--ok)}
@@ -10385,7 +10385,8 @@ function ridersAct(K) {
   if (paused) return setHint('Paused', 'bad'); if (!K || K.type !== 'castle') return;
   if (summoned().length) { rallyFor = rallyFor === K ? null : K; if (rallyFor) volleyAim = false; setHint(rallyFor ? 'Tap a spot' : 'Select a building'); refreshCard(); updatePowers(); return; }
   if (summonCd > 0) return; if (PH.kind !== 'night') return setHint('Night only', 'bad');
-  summonRiders(); refreshCard(); updatePowers();
+  // called out, they ride from the castle and the next tap on the map is their rally spot (Jack: as with the Heir's portrait)
+  summonRiders(); if (summoned().length) { rallyFor = K; volleyAim = false; setHint('Tap a spot'); } refreshCard(); updatePowers();
 }
 $('#pwVolley').addEventListener('click', volleyAct);
 $('#pwRiders').addEventListener('click', () => ridersAct(castleB()));
@@ -10398,8 +10399,9 @@ function updatePowers() {
   const v = $('#pwVolley'), r = $('#pwRiders');
   if (!v.innerHTML) { v.innerHTML = VOLLEY_ICO + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
   v.classList.toggle('cool', volleyCd > 0); v.querySelector('.cd').textContent = volleyCd > 0 ? Math.ceil(volleyCd) : ''; v.setAttribute('aria-pressed', String(volleyAim));
-  const out = summoned().length > 0, rc = !out && summonCd > 0, ico = out ? 'rally' : 'horse';
-  if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
+  const out = summoned().length > 0, rc = !out && summonCd > 0, ico = 'horse';
+  // always the horse (Jack: no rally flag icon; a tap while they are out picks their spot again)
+  if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = HORSE_ICO; }
   r.classList.toggle('cool', rc); r.querySelector('.cd').textContent = rc ? Math.ceil(summonCd) : ''; r.setAttribute('aria-pressed', String(out && rallyFor === K));
   r.setAttribute('aria-label', out ? 'Rally riders' : 'Riders');
   // side by side just under the top panel (under the boss bar too while one is out), at its left edge (Jack): always the same spot,
@@ -11331,7 +11333,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'c65e448905'; var updateWait = false, updateT = 0;
+const BUILD = '38710cf9e1'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
