@@ -1273,13 +1273,16 @@ function updateMoves(dt) {
     (B.manned || []).forEach((on, a) => on && showDefender(B, a));     // the crew walks with it
   }
 }
-// a rally flag comes down once every soldier (or rider) of its building stands at it, not fighting (Jack: as the Heir's); the
-// spot itself is kept, so they still hold it
+// a rally flag shows only while its owner is in focus (Jack): just set, or its building (or the Heir) selected again; it goes
+// once the player taps anything else (select, deselect: flagFocus), and for good once every soldier (or rider) of its building
+// stands at it, not fighting (B.rallyHere); the spot itself is kept, so they still hold it
+var flagFocus = null;
 function rallyFlagsDown() {
   for (const B of buildings) {
-    const f = B.rallyFlag; if (!f || !f.visible || !B.rally) continue;
-    const us = villagers.filter(v => v.soldier && !v.gone && v.post && v.post.B === B && !v.post.fled);
-    if (us.length && us.every(v => !v.foe && Math.hypot(v.x - B.rally.x, v.z - B.rally.z) < 1.7)) f.visible = false;
+    const f = B.rallyFlag; if (!f || !B.rally) continue;
+    if (!B.rallyHere) { const us = villagers.filter(v => v.soldier && !v.gone && v.post && v.post.B === B && !v.post.fled);
+      if (us.length && us.every(v => !v.foe && Math.hypot(v.x - B.rally.x, v.z - B.rally.z) < 1.7)) B.rallyHere = true; }
+    f.visible = flagFocus === B && !B.rallyHere;
   }
 }
 function setRally(B, pt) {
@@ -1287,7 +1290,7 @@ function setRally(B, pt) {
   if (!pt) { B.rally = null; B.rallyFlag = null; return; }
   B.rally = { x: pt.x, z: pt.z };
   const f = new THREE.Group(); f.add(box(.05, 1.5, .05, M.timber, 0, .75, 0)); f.add(flagBox(.46, .3, .03, M.flag, .25, 1.33, 0));
-  f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); B.rallyFlag = f;
+  f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); B.rallyFlag = f; B.rallyHere = false; flagFocus = B;
 }
 function updateDefense(dt) {
   for (const B of buildings) {

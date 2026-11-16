@@ -23,7 +23,7 @@ const saveHero = () => { try { localStorage.setItem('mtd-hero', JSON.stringify(H
 const heroHp = () => 260 + 30 * (HERO.lv - 1), heroDmg = () => 12 + 2 * (HERO.lv - 1);
 const heroNeed = () => 60 + 40 * HERO.lv;
 const heroSpeed = () => HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 1;
-var hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
+var heroHere = false, hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
 var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
@@ -64,7 +64,7 @@ function setHeroFlag(pt) {
   heroAt = pt ? { x: pt.x, z: pt.z } : null; if (!pt) return;
   const f = new THREE.Group(); f.add(box(.05, 1.5, .05, M.timber, 0, .75, 0)); f.add(flagBox(.46, .3, .03, M.flag, .25, 1.33, 0));
   f.add(cyl(.06, .06, .06, 8, heroGold, 0, 1.53, 0));
-  f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f;
+  f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f; heroHere = false; flagFocus = 'hero';
 }
 // Royal cry: troops within 7 m of the Heir, the Heir too, hit harder (updateSoldier and the Heir's own blows)
 const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
@@ -116,7 +116,7 @@ function updateHero(v, dt) {
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
     else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = .8 * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = SWORD_T; hurtEnemy(foe, heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), v); sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
-  else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); if (heroFlag && heroFlag.visible) heroFlag.visible = false; }   // there: the flag comes down (Jack)
+  else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   // mends slowly by day while nobody is fighting
   if (PH.kind === 'day' && !foe && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt);
 }
@@ -125,6 +125,7 @@ function heroTick(dt) {
   if (!heroOn()) { if (hero) removeHero(); return; }
   if (!hero && heroDownT > 0 && (heroDownT -= dt) <= 0) { heroDownT = 0; spawnHero(); log('<b>The Heir</b> returns', 'good'); }
   else if (!hero && !heroDownT && !gameOver) spawnHero();
+  if (heroFlag) heroFlag.visible = flagFocus === 'hero' && !heroHere;
   const night = PH.kind === 'night'; if (heroWasNight && !night && hero && !gameOver) heroXp(20); heroWasNight = night;
 }
 // taps (tap): Move's spot first, then the Heir themself (with nothing being built)
@@ -138,7 +139,7 @@ function heroTap(e) {
   const pt = pick(e); if (pt && Math.hypot(pt.x - hero.x, pt.z - hero.z) < 1.1) { heroSelect(); return true; }
   return false;
 }
-function heroSelect() { if (selected) deselect(); heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
+function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
 // ---- on screen: the portrait (and the Heir's skills at night) under the top panel; the Heir's card in the dock ----
 const HERO_ICO = {
   cry: '<svg viewBox="0 0 24 24"><path d="M3 8 L7.5 12 L12 5 L16.5 12 L21 8 L19 18 H5Z"/><path d="M8 21 H16"/></svg>',
@@ -190,7 +191,7 @@ document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-hact]'); if (!b || !heroOn()) return;
   const a = b.dataset.hact;
   if (a === 'sel') { if (heroSel && hero) { target.set(hero.x, target.y, hero.z); } heroSelect(); }
-  else if (a === 'close') { heroSel = false; heroMove = false; heroKey = ''; }
+  else if (a === 'close') { heroSel = false; heroMove = false; heroKey = ''; flagFocus = null; }
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);

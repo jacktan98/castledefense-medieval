@@ -199,7 +199,7 @@ const shortN = n => n < 1000 ? String(n) : n < 10000 ? (Math.floor(n / 100) / 10
 const CHIP_NAME = { cGold: 'Gold', cWood: 'Wood', cStone: 'Stone', cFood: 'Food', cHouse: 'Housing', cPop: 'Idle' };
 const chipName = id => id === 'cPop' && PH.kind === 'night' ? 'Soldiers' : CHIP_NAME[id];
 for (const id in CHIP_NAME) $('#' + id).addEventListener('pointerdown', e => showTip(e.currentTarget, chipName(id), true));
-function select(B) { selected = B; drape(selLine, B.ev.x0 - .1, B.ev.z0 - .1, B.ev.x1 + .1, B.ev.z1 + .1); refreshCard(); }
+function select(B) { selected = B; flagFocus = B; drape(selLine, B.ev.x0 - .1, B.ev.z0 - .1, B.ev.x1 + .1, B.ev.z1 + .1); refreshCard(); }
 // archers' reach round a selected castle or archer tower; redrawn when the tier changes
 let rangeKey = '';
 function syncRange() {
@@ -210,7 +210,7 @@ function syncRange() {
   const r = T.decor ? BOOST_R : T.range ? rangeOf(B) : T.reach;
   drapeCircle(rangeLine, c.x, c.z, r); drapeDisc(selDisc, c.x, c.z, r);
 }
-function deselect() { selected = null; volleyAim = false; moveFor = null; selLine.visible = false; $('#statTip').hidden = true; refreshCard(); }
+function deselect() { selected = null; flagFocus = null; volleyAim = false; moveFor = null; selLine.visible = false; $('#statTip').hidden = true; refreshCard(); }
 $('#upBtn').addEventListener('click', () => { if (paused) return setHint('Paused', 'bad'); selected && upgrade(selected); });
 $('#rotBtn').addEventListener('click', rotatePlacement);
 $('#cardRotBtn').addEventListener('click', () => { if (paused) return setHint('Paused', 'bad'); rotateBuilding(selected); });
