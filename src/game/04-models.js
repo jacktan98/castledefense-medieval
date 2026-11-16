@@ -995,8 +995,10 @@ function stallHorse(hc) {
   const head = box(.16, .17, .4, hc, 0, .27, .34); head.rotation.x = .35; hg.add(head);
   const mane = box(.05, .42, .1, mm, 0, .15, .02); mane.rotation.x = .55; hg.add(mane);
   for (const sx of [-1, 1]) hg.add(box(.04, .08, .05, hc, sx * .05, .39, .24));               // ears
-  const tg = new THREE.Group(); tg.position.set(0, .96, -.46); tg.userData.horseTail = true; h.add(tg);
-  const tail = box(.07, .45, .07, mm, 0, -.2, -.04); tail.rotation.x = -.35; tg.add(tail);
+  // the tail hangs from the rump: its top end on the pivot at the barrel's back, the rest falling back and down (Jack: it slanted
+  // the other way and its top floated behind the horse)
+  const tg = new THREE.Group(); tg.position.set(0, .92, -.44); tg.userData.horseTail = true; h.add(tg);
+  const tail = box(.07, .45, .07, mm, 0, -.205, -.077); tail.rotation.x = .35; tg.add(tail);
   for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { h.add(box(.09, .58, .09, hc, sx * .12, .33, sz * .36)); h.add(box(.1, .06, .1, hoofM, sx * .12, .03, sz * .36)); }
   return h;
 }

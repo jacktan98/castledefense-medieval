@@ -14,8 +14,10 @@ function mountHorse(p, cloth = blanketM) {
   const head = box(.16, .17, .4, horseM, 0, .02, .17); head.rotation.x = .35; hp.add(head);
   const mane = box(.05, .42, .1, maneM, 0, 1.1, .4); mane.rotation.x = .55; h.add(mane);
   for (const sx of [-1, 1]) hp.add(box(.04, .08, .05, horseM, sx * .05, .14, .07));  // ears
-  const tp = new THREE.Group(); tp.position.set(0, .97, -.43); tp.userData.horseTail = true; h.add(tp);
-  const tail = box(.07, .45, .07, maneM, 0, -.21, -.07); tail.rotation.x = -.35; tp.add(tail);
+  // the tail hangs from the rump: its top end on the pivot at the barrel's back, the rest falling back and down (Jack: it slanted
+  // the other way and its top floated behind the horse)
+  const tp = new THREE.Group(); tp.position.set(0, .92, -.44); tp.userData.horseTail = true; h.add(tp);
+  const tail = box(.07, .45, .07, maneM, 0, -.205, -.077); tail.rotation.x = .35; tp.add(tail);
   p.horseHead = hp; p.horseTail = tp;
   h.add(box(.38, .06, .4, cloth, 0, .97, -.02)); h.add(box(.3, .08, .3, saddleM, 0, 1.01, -.02));
   p.horseLegs = [[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sz]) => {
