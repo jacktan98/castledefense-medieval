@@ -447,7 +447,7 @@ function volleyPose(f, draw) {
 // people (housing, idle, food), never respawned, and they hold the castle's rally flag
 const SUMMON = { n: 1, cd: 20 }, HORSE_ICO = '<g transform="translate(12 0) scale(-1.3 1) translate(-12.6 0)"><path d="M10.6 4.3 L12 1.2 L12.4 4.2"/><path d="M14 4 L15.8 1.6 L15.4 5.7"/><path d="M10.6 4.3 C7.6 6.4 6.2 10 6.3 14.3 C6.4 18.4 9.2 21.4 12.6 22.9"/><path d="M15.4 5.7 C16.6 7.5 17.6 10.4 18 13.1 C18.3 14.2 19.3 14.6 18.9 15.8 C18.4 17.1 16.8 17.4 15.1 16.6"/><path d="M10 9.7 C10.8 12.6 12.6 15.2 15.1 16.6"/><path d="M12.9 14.9 C13.4 17.6 13.2 20.4 12.6 22.9"/></g>';
 var summonCd = 0, summonOut = false;
-const summoned = () => villagers.filter(v => v.summoned && !v.gone);
+const summoned = () => villagers.filter(v => v.summoned && !v.hero && !v.gone);
 // the way the castle's door looks out; the riders' places either side in front of it
 const faceAngle = B => { const [fx, fz] = faceRot(B.face || 0, 0, 1); return Math.atan2(fx, fz); };
 // the keep's own door inside the courtyard (tiers 2-3); at tier 1 the hall door is the castle's inner door already
@@ -527,6 +527,7 @@ function hurtEnemy(e, d, by) {
   if (e.hp > 0 && by && by.soldier) tryBlock(e);
   if (e.hp <= 0) {
     e.dead = true; e.bar.grp.visible = false; stats.slain++; const y = walkY(e.x, e.z);
+    heroKill(e, by);
     // achievements (campaign only): every raider slain, burning ones, those a rider struck down, engines and the two bosses
     achAdd('kills'); if (e.burnT > 0) achAdd('burns'); if (by && by.horse) achAdd('riders'); if (ENEMY[e.kind].engine) achAdd('engines'); if (e.kind === 'chief' || e.kind === 'warlord') achFlag(e.kind);
     // a bounty for every raider slain (Kingdom Rush style): its tier in gold, a rider one more, an engine 4; bosses none (Jack)
@@ -945,7 +946,7 @@ function assignPosts(pool) {
   const order = buildings.filter(B => (DEF[B.type].archers || DEF[B.type].soldiers || DEF[B.type].crew) && B.built).sort((a, b) => rank(a) - rank(b));
   for (const B of order) { const T = DEF[B.type]; B.manned = B.manned || []; for (let a = 0; a < (T.archers || T.soldiers || T.crew)[B.tier - 1]; a++) if (!villagers.some(v => v.post && !v.post.fled && !v.post.summon && v.post.B === B && v.post.a === a)) slots.push({ B, a }); }
   let posted = 0;
-  const cand = pool || villagers, free = () => cand.filter(v => !v.post && !v.sleeping).length;
+  const cand = (pool || villagers).filter(v => !v.hero), free = () => cand.filter(v => !v.post && !v.sleeping).length;
   for (const S of slots) {
     // a siege engine is no use half-crewed: its crew is posted as a pair or not at all
     if (DEF[S.B.type].crew && S.a === 0 && free() < 2 && !villagers.some(v => v.post && v.post.B === S.B)) continue;
@@ -1040,7 +1041,7 @@ function updateSoldier(v, dt) {
     // their first blow on it hits twice as hard, with a burst of dust
     const charge = v.cav && v.charged !== foe && (v.summoned || UPK.lance);
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride * (charge ? 1.35 : 1)); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }    // can't reach that one
-    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = S.rate * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = v.toolKind === 'spear' ? SPEAR_T : SWORD_T; hurtEnemy(foe, S.dmg[k] * (1 + decorFx(v.x, v.z, 'troopDmg')) * (charge ? 2 : 1), v);
+    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = S.rate * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = v.toolKind === 'spear' ? SPEAR_T : SWORD_T; hurtEnemy(foe, S.dmg[k] * (1 + decorFx(v.x, v.z, 'troopDmg')) * (charge ? 2 : 1) * heroBuff(v), v);
       if (charge) { const y = walkY(foe.x, foe.z); for (let n = 0; n < 3; n++) dustAt(foe.x + (Math.random() - .5) * .6, y, foe.z + (Math.random() - .5) * .6); shake(.03, foe, 'charge', .8); }
       v.charged = foe; sfx('clash', v); } }
   } else if (Math.hypot(hx - v.x, hz - v.z) > .35) { if (!gateWait(v, hx, hz)) walkTo(v, hx, hz, dt, 1, .3, 1.3 * ride); }
@@ -1084,9 +1085,11 @@ function updateUnkit(v, dt) {
 }
 function hurtSoldier(v, d) {
   if (!v.soldier) return;
+  if (v.hero) d = heroTake(d);
   v.hp -= d; v.hitAt = performance.now(); if (!(v.hitAt - (v.flinchAt || 0) < 1200)) v.flinchAt = v.hitAt;
   if (v.hp > 0) { tryBlock(v); return; }
   // fallen: out of the town's count; a villager comes back to the same home after 60 s of daylight
+  if (v.hero) { heroFall(v); return; }
   if (v.summoned) { v.gone = true; v.soldier = false; release(v); villagers.splice(villagers.indexOf(v), 1); if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 }); return; }
   log(`<b>${(v.cav ? RIDER : SOLDIER).names[v.kitTier - 1]}</b> fallen`, 'warn'); stats.fallen++;
   if (v.post && !v.post.fled && v.post.B.manned) v.post.B.manned[v.post.a] = false;

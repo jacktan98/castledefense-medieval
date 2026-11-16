@@ -403,7 +403,7 @@ function assignBuilders() {
     const reach = new Set(ringCells(S.ev).map(n => R[n]).filter(Boolean));   // only someone who can walk there
     let best = null, bd = 1e9;
     for (const v of villagers) {
-      if (v.build || v.post || v.hungry || v.unkit) continue;
+      if (v.build || v.post || v.hero || v.hungry || v.unkit) continue;
       if (!reach.has(villagerRegion(v, R)) || (v.noBuild && v.noBuild.S === S && v.noBuild.t > now)) continue;
       const own = repair && v.job === S;
       const dressed = v.toolKind === 'hammer';   // still in the builder's clothes: no change needed
@@ -918,6 +918,7 @@ function updateVillagers(dt, now) {
     if (v.climb) updateClimb(v, dt);
     else if (v.ladderKit > 0) updateLadderKit(v, dt);
     else if (v.doorWalk && doorStep(v, dt)) { /* walking through a door */ }
+    else if (v.hero) updateHero(v, dt);
     else if (night) {
       if (v.sleeping) continue;
       if (!v.post && v.crewStrip > 0) { updateCrewStrip(v, dt); continue; }   // a lost tower's defender changing back before they shelter

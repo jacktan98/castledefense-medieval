@@ -131,7 +131,7 @@ function startGame() {
   applyLoadout(); cat = 'eco'; renderTools(); dockMini = false; document.body.classList.remove('dockMini'); setTool('select');
   // the Goals panel shows this game's goals at once (it only redrew on the HUD tick, which waits behind the new-building cards,
   // so an open panel kept the last stage's goals: Jack)
-  goalsKey = ''; renderGoals(); weatherReset(); sweepGeo(); cellOpen = fieldCache = pass3 = null; regionDirty = true;
+  goalsKey = ''; renderGoals(); weatherReset(); heroStart(); sweepGeo(); cellOpen = fieldCache = pass3 = null; regionDirty = true;
 }
 
 // ---------- loop ----------
@@ -890,7 +890,7 @@ function tick(dt, now) {
     const C = endDawn && castleB(); if (C) { const c = center(C), k = 1 - Math.exp(-gdt * .6); target.x += (c.x - target.x) * k; target.z += (c.z - target.z) * k; updateCam(); }
   }   // the town's cheer before the summary
   if (!gameOver) { updatePhase(gdt); updateVillagers(gdt, now); updateEco(gdt); updateMoves(gdt); updateEnemies(gdt); updateDefense(gdt); separateUnits(gdt); updateDoors(gdt); updateFallen(gdt); updateChips(gdt); updateSplashes(gdt); }
-  updateArrows(gdt); updateAmbience(dt); updateVolley(gdt); updateTrees(now); emitSmoke(gdt); updateBirds(gdt); if (holdRiders.length) { animHoldRiders(now / 1000, gdt); updateHoldTrebs(gdt); }
+  updateArrows(gdt); updateAmbience(dt); updateVolley(gdt); heroTick(gdt); updateTrees(now); emitSmoke(gdt); updateBirds(gdt); if (holdRiders.length) { animHoldRiders(now / 1000, gdt); updateHoldTrebs(gdt); }
   if (anims.length) {
     for (let n = anims.length - 1; n >= 0; n--) { const a = anims[n], t = clamp((now - a.t0) / a.dur, 0, 1); applyPlan(a.plan, easeOut(t)); if (t >= 1) anims.splice(n, 1); }
     syncTerrain();
@@ -940,7 +940,7 @@ function frame(now) {
   let fresh = false; if (renderer.getPixelRatio() !== pr) { renderer.setPixelRatio(pr); resize(); fresh = true; }
   if (paused || menuOn()) { if (!lite || fresh || (liteN = (liteN + 1) % 2) === 0) renderer.render(scene, camera); requestAnimationFrame(frame); if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); } return; }
   tick(dt, now);
-  if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); guideTick(); goalTick(); updatePowers(); updateBossBar(); }
+  if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); guideTick(); goalTick(); updatePowers(); heroUI(); updateBossBar(); }
   updateDebris(dt); updateCollapse(dt); updateOpenDoors(dt); updateRaidMarks(dt); updateHitMarks(dt, now); updateTips(dt); updateGuideSpot(now);
   const sh = shakeOffset(dt); camera.position.add(sh);
   renderer.render(scene, camera);

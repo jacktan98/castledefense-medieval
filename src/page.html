@@ -27,6 +27,7 @@
   <button class="hitMark" hidden aria-label="Under attack"></button><button class="hitMark" hidden aria-label="Under attack"></button><button class="hitMark" hidden aria-label="Under attack"></button>
   <div class="tipPill" id="tipPill" hidden></div>
   <div class="powers" id="powers" hidden><button class="pw" id="pwVolley" aria-label="Arrow volley"></button><button class="pw" id="pwRiders" aria-label="Riders"></button></div>
+  <div class="heroBar" id="heroBar" hidden></div>
   <div class="bossBar" id="bossBar" hidden><b id="bossName"></b><span><i id="bossFill"></i></span></div>
   <div class="panel">
     <div class="phase">
@@ -63,6 +64,8 @@
       <div class="adminRow"><button id="adPop">+5 villagers</button><button id="adDay">Skip to night</button></div>
       <div class="adminRow"><button id="adRaid">Raiders</button><button id="adGallery">Gallery</button></div>
       <div class="adminRow"><button id="adWin">Win this stage</button></div>
+      <div class="adminRow"><button id="adHero">Heroes: Off</button></div>
+      <div class="adminRow" id="adHeroRow" hidden><button id="adHeroLv">Hero level +1</button><button id="adHeroReset">Reset hero</button></div>
       <div class="adminRow"><button id="adReset" class="campReset">Reset campaign</button></div>
     </div>
     <div class="admin" id="raidDash" hidden>
@@ -79,6 +82,7 @@
   <div class="pausedTag" id="pausedTag" hidden><div class="pauseCard"><div class="pauseT">Paused</div><div class="pauseBtns"><button class="primary pIco" id="resumeBtn" title="Resume" aria-label="Resume"></button><button class="pIco" id="menuBtn" title="Main menu" aria-label="Main menu"></button><button class="danger pIco" id="reset" title="Restart stage" aria-label="Restart stage"></button></div><div class="audioRows"><label class="volRow"><span>Music</span><input type="range" id="musicVol" min="0" max="100" step="1" aria-label="Music loudness"></label><label class="volRow"><span>Sounds</span><input type="range" id="sfxVol" min="0" max="100" step="1" aria-label="Sound loudness"></label><div class="volRow"><span>Graphics</span><span class="gfxSeg"><button class="seg" data-gfx="low">Low</button><button class="seg" data-gfx="high">High</button></span></div></div><div class="pCols"><div class="colRow"><span>Castle</span><div class="colSw" data-side="town"></div></div><div class="colRow"><span>Raiders</span><div class="colSw" data-side="foe"></div></div></div></div></div>
   <div class="dock">
     <div class="statTip" id="statTip" hidden></div>
+    <div class="card heroCard" id="heroCard" hidden></div>
     <div class="card" id="card" hidden>
       <div class="cardHead">
         <span class="cardIco" id="cardIco"></span>

@@ -357,6 +357,7 @@ canvas.addEventListener('pointercancel', endPtr);
 canvas.addEventListener('wheel', e => { e.preventDefault(); dist = clamp(dist * Math.exp(e.deltaY * .001), CAM_LIM.near, 95); updateCam(); }, { passive: false });
 function tap(e) {
   if (galleryOn) { galleryTap(e); return; }
+  if (heroTap(e)) return;
   if (moveFor) {                                      // moving a catapult: tap the tile it should roll to
     const pt = pick(e), B = moveFor; moveFor = null;
     if (pt && !B.dead) startMove(B, Math.floor(pt.x / CELL), Math.floor(pt.z / CELL));
