@@ -900,7 +900,7 @@ function tabletScale() {
   document.body.classList.toggle('tablet', tab); document.documentElement.style.setProperty('--uiK', k.toFixed(3)); uiK = k;
   // the HUD's panels and the paused overlay grow by k with a CSS scale (uiScale), each from the corner or edge it is pinned to
   for (const [sel, o, full] of [['.panel', '0 0'], ['.dock', '0 100%'], ['.corner', '100% 100%'], ['#pauseBtn', '100% 0'], ['#pausedTag', '0 0', 1], ['#tipPill', '0 100%'], ['#offerWrap', '0 0', 1], ['#fullWrap', '0 0', 1],
-    ['#banner', '0 0'], ['#achToast', '0 0'], ['#wavePop', '0 0'], ['#statTip', '0 0'], ['#powers', '0 0'], ['#bossBar', '0 0']])
+    ['#banner', '0 0'], ['#achToast', '0 0'], ['#wavePop', '0 0'], ['#statTip', '0 0'], ['#powers', '0 0'], ['#heroBar', '0 0'], ['#bossBar', '0 0']])
     document.querySelectorAll(sel).forEach(el => uiScale(el, k, o, full));
   // every menu at k; the town picker and the three screens are then fitted to the height below
   document.querySelectorAll('.modal').forEach(m => uiScale(m, k, '0 0', 1));
