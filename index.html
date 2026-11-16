@@ -10502,8 +10502,10 @@ function buildGallery() {
   }));
   row('Decor', 2, zc => ['well', 'torch', 'flowers', 'statue', 'banner', 'campfire', 'rack', 'butts', 'stores'].forEach((t, i) => { add(makeModel(t, 1, true, 0, 0), 4 + i * 4.6, zc, true); galLabel(DEF[t].name, '#fff', 4 + i * 4.6, zc + 2.1); }));
   const people = (title, list) => (row(title, 1.2, zc => list.forEach((P, i) => {
-    const x = 6 + i * 3.3, p = P.raider ? makeRaider(P.raider, P.rt) : P.guard ? makePerson({ tool: P.xbow ? 'crossbow' : 'bow' }) : makePerson({});
-    if (P.kit) soldierKit(p, P.kit, P.cav);
+    const x = 6 + i * 3.3, p = P.hero ? makePerson({ hair: hairs[HERO_DEFS[P.hero].hair % hairs.length] }) : P.raider ? makeRaider(P.raider, P.rt) : P.guard ? makePerson({ tool: P.xbow ? 'crossbow' : 'bow' }) : makePerson({});
+    // a hero in their own kit (the Heir mounted too, as with Royal horse)
+    if (P.hero) { const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = P.cav ? 1 : 0; heroKit(p, P.hero, !P.cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = P.hero; }
+    else if (P.kit) soldierKit(p, P.kit, P.cav);
     else if (P.guard) armour(p, P.guard);
     else if (!P.raider) { p.plainHat = !P.tool; p.outfitTier = P.tier || 3; addLoads(p); giveTool(p, P.tool || null); dress(p, P.tool || null); if (P.carry === 'log') p.carryLog.visible = true; if (P.carry === 'stone') p.carryStone.visible = true; }
     p.g.position.set(x, 0, zc); p.g.rotation.y = .5; gScene.add(p.g); Object.assign(p, P, { seed: i * .7 }); gPeople.push(p);
@@ -10516,6 +10518,8 @@ function buildGallery() {
   people('Soldiers', [{ name: 'Archer 1', guard: 1 }, { name: 'Archer 2', guard: 2 }, { name: 'Archer 3', guard: 3 },
     { name: 'Crossbow 1', guard: 1, xbow: 1 }, { name: 'Crossbow 2', guard: 2, xbow: 1 }, { name: 'Crossbow 3', guard: 3, xbow: 1 }, { name: 'Militia', kit: 1 }, { name: 'Guard', kit: 2 }, { name: 'Man-at-arms', kit: 3 },
     { name: 'Rider', kit: 1, cav: 1 }, { name: 'Lancer', kit: 2, cav: 1 }, { name: 'Knight', kit: 3, cav: 1 }]);
+  // the three heroes (Jack: to look at their models up close)
+  people('Heroes', [{ name: 'The Heir', hero: 'heir' }, { name: 'Heir, mounted', hero: 'heir', cav: 1 }, { name: 'The Ranger', hero: 'ranger' }, { name: 'The Captain', hero: 'captain' }]);
   // raiders by tier: the same look for every kind (plain red shirt; red gambeson and iron helm; mail, red surcoat, great helm)
   for (const rt of [1, 2, 3]) people(`Raiders ${rt}`, ['spear', 'sword', 'archer', 'xbow', 'lancer', 'rider'].map(k => ({ name: `${RAIDER_NAME[k]} ${rt}`, raider: k, rt })));
   // the bosses, drawn at their own size
@@ -10570,6 +10574,10 @@ function galPose(p, t, dt) {
   else { p.legs[0].rotation.x = sw; p.legs[1].rotation.x = -sw; }
   p.body.position.y = p.horseLegs ? SADDLE : walking ? Math.abs(Math.sin(ph)) * .05 : 0;   // a rider stays in the saddle
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
+  if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
+    if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
+    p.arms[0].rotation.x = -.55 - sw * .2; swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - (t + p.seed) % 1.6), sw); return;
+  }
   if (p.xbow || p.raider === 'xbow') { xbowPose(p, (t + p.seed) % 1.4 > .7); return; }   // crossbowmen: level and shoot, then down to reload
   if (p.guard || p.raider === 'archer') {                        // loose a shot every 1.8 s: idle, draw with both hands, loose
     const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, p.guard ? -.9 : -.35, p.guard ? -.6 : 0); return;
@@ -11585,7 +11593,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'a9bd35ec76'; var updateWait = false, updateT = 0;
+const BUILD = 'e7c1b594dd'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
