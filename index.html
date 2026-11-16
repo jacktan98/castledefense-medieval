@@ -9159,6 +9159,8 @@ function captainHelm() {
     const brow = add(box(.17, .03, .02, capSteelM, sx * .066, 1.103, .13)); brow.rotation.y = sx * .62;
     for (const x of [-.045, -.015, .015]) add(box(.014, .07, .012, M.dark, x * sx, -.005, .008), vis);
   }
+  // drawn a little smaller (Jack), kept centred on the head
+  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88);
   return g;
 }
 function heroHome() { const K = castleB(); if (!K) return null; const dp = doorPoint(K), [ox, oz] = faceRot(K.face || 0, 0, 1.6); return { x: dp.x + ox, z: dp.z + oz }; }
@@ -11581,7 +11583,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '49f810ff0e'; var updateWait = false, updateT = 0;
+const BUILD = '9e55a60339'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

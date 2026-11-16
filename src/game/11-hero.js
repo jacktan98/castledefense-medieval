@@ -132,6 +132,8 @@ function captainHelm() {
     const brow = add(box(.17, .03, .02, capSteelM, sx * .066, 1.103, .13)); brow.rotation.y = sx * .62;
     for (const x of [-.045, -.015, .015]) add(box(.014, .07, .012, M.dark, x * sx, -.005, .008), vis);
   }
+  // drawn a little smaller (Jack), kept centred on the head
+  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88);
   return g;
 }
 function heroHome() { const K = castleB(); if (!K) return null; const dp = doorPoint(K), [ox, oz] = faceRot(K.face || 0, 0, 1.6); return { x: dp.x + ox, z: dp.z + oz }; }
