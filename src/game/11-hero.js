@@ -13,9 +13,18 @@ const HERO_SK = {
   firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
 const HERO_ORDER = ['cry', 'horse', 'firm'];
+// points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
+// (6 a skill, 18 for all three), so a level-10 Heir has every rank
+const lvPts = lv => lv <= 4 ? 1 : lv <= 8 ? 2 : 3;
+const rankCost = r => r + 1;
+const ptsEarned = lv => { let n = 0; for (let i = 1; i <= lv; i++) n += lvPts(i); return n; };
+const ptsSpent = sk => HERO_ORDER.reduce((t, k) => t + sk[k] * (sk[k] + 1) / 2, 0);
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
 function loadHero() {
-  try { const h = JSON.parse(localStorage.getItem('mtd-hero')); if (h && h.lv) return { lv: h.lv, xp: h.xp || 0, pts: h.pts || 0, sk: Object.assign({ cry: 0, horse: 0, firm: 0 }, h.sk) }; } catch (e) {}
+  try {
+    const h = JSON.parse(localStorage.getItem('mtd-hero'));
+    if (h && h.lv) { const sk = Object.assign({ cry: 0, horse: 0, firm: 0 }, h.sk), lv = Math.min(HERO_MAX, h.lv); let pts = ptsEarned(lv) - ptsSpent(sk); if (pts < 0) { HERO_ORDER.forEach(k => { sk[k] = 0; }); pts = ptsEarned(lv); } return { lv, xp: h.xp || 0, pts, sk }; }
+  } catch (e) {}
   return heroBlank();
 }
 var HERO = loadHero();
@@ -78,9 +87,9 @@ function heroFall(v) {
 function heroXp(n) {
   if (!heroOn() || HERO.lv >= HERO_MAX) return;
   HERO.xp += n; let up = false;
-  while (HERO.lv < HERO_MAX && HERO.xp >= heroNeed()) { HERO.xp -= heroNeed(); HERO.lv++; HERO.pts++; up = true; }
+  while (HERO.lv < HERO_MAX && HERO.xp >= heroNeed()) { HERO.xp -= heroNeed(); HERO.lv++; HERO.pts += lvPts(HERO.lv); up = true; }
   if (HERO.lv >= HERO_MAX) HERO.xp = 0;
-  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`The Heir · Lv ${HERO.lv}`, 'Skill point'); log(`<b>The Heir</b> · Lv ${HERO.lv}`, 'good'); sfx('star'); }
+  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } const g = lvPts(HERO.lv); banner(`The Heir · Lv ${HERO.lv}`, g > 1 ? `${g} skill points` : 'Skill point'); log(`<b>The Heir</b> · Lv ${HERO.lv}`, 'good'); sfx('star'); }
   saveHero(); heroKey = '';
 }
 // XP (hurtEnemy): the Heir's own kills count most, any raider slain while they stand a little
@@ -91,15 +100,15 @@ function heroKill(e, by) {
 }
 // the Hero screen's Reset (Jack): every point spent comes back, the skills start again from nothing
 function heroReset() {
-  const n = HERO_ORDER.reduce((t, k) => t + HERO.sk[k], 0); if (!n) return;
+  const n = ptsSpent(HERO.sk); if (!n) return;
   HERO.pts += n; HERO_ORDER.forEach(k => { HERO.sk[k] = 0; }); saveHero(); sfx('click'); heroKey = '';
   if (hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; }
   renderHeroPick();
 }
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
-  if (HERO.pts < 1 || r >= 3 || HERO.lv < S.req[r]) { sfx('nope'); return; }
-  HERO.pts--; HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
+  if (r >= 3 || HERO.pts < rankCost(r) || HERO.lv < S.req[r]) { sfx('nope'); return; }
+  HERO.pts -= rankCost(r); HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
   if (k === 'horse' && hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; if (HERO.sk.horse === 1) sfx('neigh', hero); }
 }
 // the Heir's own step, day and night (updateVillagers): hold the spot, go for raiders within 7 m of it, give up on any that lead 10 m off
@@ -247,20 +256,25 @@ function heroPortraitTick(now) {
   const cvs = document.querySelectorAll('#heroBar .heroCv, #heroCard:not([hidden]) .heroCv'); if (!cvs.length || $('#heroBar').hidden) return;
   hpDrawn = now; const src = heroBust(now); cvs.forEach(cv => heroCopy(src, cv));
 }
+// the sheet is made once and only its parts refilled (Jack: a new sheet on every + replayed the menus' rise animation, so the page
+// seemed to reload, and the portrait's canvas was made again)
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
+  if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><div class="upBank"><span class="upNum">Lv <b class="hpLv"></b></span></div></div>`
+    + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir</div><div class="hpXp"></div><div class="hpStats"></div></div></div>`
+    + `<div class="hSkHead">Skills<span class="hsPts"></span><button class="hsReset" data-hact="reset">Reset</button></div><div class="hsList"></div></div>`;
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
-  const sk = HERO_ORDER.map(k => {
-    const S = HERO_SK[k], r = HERO.sk[k], can = HERO.pts > 0 && r < 3 && HERO.lv >= S.req[r];
-    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+</button>` : `<span class="hsReq">Lv ${S.req[r]}</span>`;
+  el.querySelector('.hpLv').textContent = HERO.lv;
+  el.querySelector('.hpXp').innerHTML = `XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}`;
+  el.querySelector('.hpStats').innerHTML = `${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}`;
+  el.querySelector('.hsPts').textContent = HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : '';
+  el.querySelector('.hsReset').hidden = !HERO_ORDER.some(k => HERO.sk[k]);
+  el.querySelector('.hsList').innerHTML = HERO_ORDER.map(k => {
+    const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
+    // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
+    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq">${lvOk ? `${c} pts` : `Lv ${S.req[r]}`}</span>`;
     return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
   }).join('');
-  el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><div class="upBank"><span class="upNum">Lv <b>${HERO.lv}</b></span></div></div>`
-    + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir</div>`
-    + `<div class="hpXp">XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}</div>`
-    + `<div class="hpStats">${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}</div></div></div>`
-    + `<div class="hSkHead">Skills<span class="hsPts">${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span>`
-    + `${HERO_ORDER.some(k => HERO.sk[k]) ? '<button class="hsReset" data-hact="reset">Reset</button>' : ''}</div>${sk}</div>`;
   syncHeroBadge();
 }
 document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });

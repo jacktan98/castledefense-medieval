@@ -1052,8 +1052,9 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsTx small.hsNext{color:#9fd1ff}
 .hpSk .hsPips i{width:10px;height:10px}
 .modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
+.modal.tome .hpSk .hsPlus{position:relative}.hpSk .hsPlus .hsCost{position:absolute;right:-5px;bottom:-5px;min-width:15px;height:15px;border-radius:8px;background:#2a1c08;border:1px solid #f3d27a;color:#ffe2a0;font:700 10px/13px var(--body);font-style:normal;box-sizing:border-box;text-align:center}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 #adHero.on{border-color:#9fd1ff;color:#dff0ff}
-.heroSheet .hpBody,.heroSheet .hSkHead,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
+.heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
 body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
