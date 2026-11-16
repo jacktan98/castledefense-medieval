@@ -1085,7 +1085,7 @@ function updateUnkit(v, dt) {
 }
 function hurtSoldier(v, d) {
   if (!v.soldier) return;
-  if (v.hero) d = heroTake(d);
+  d = heroTake(d, v);
   v.hp -= d; v.hitAt = performance.now(); if (!(v.hitAt - (v.flinchAt || 0) < 1200)) v.flinchAt = v.hitAt;
   if (v.hp > 0) { tryBlock(v); return; }
   // fallen: out of the town's count; a villager comes back to the same home after 60 s of daylight

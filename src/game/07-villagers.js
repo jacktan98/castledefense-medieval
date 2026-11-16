@@ -1039,7 +1039,7 @@ function updateVillagers(dt, now) {
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .28 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
-    if (v.soldier) (v.toolKind === 'spear' ? spearPose : swordPose)(v, v.attackT || 0, swing);   // exact: eased, the strikes go soft
+    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : swordPose)(v, v.attackT || 0, swing); }   // exact: eased, the strikes go soft
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
     if (v.job && v.job.type === 'market' && occB[cellAt(v.rx, v.rz)] === v.job) { const pt = plinthTop('market', v.job.tier); if (pt != null) v.g.position.y = Math.max(v.g.position.y, v.job.group.position.y + pt); }

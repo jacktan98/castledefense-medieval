@@ -1099,6 +1099,7 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 .hRos .hrPic{overflow:visible}.hRos .hrCv{border-radius:50%}
 .hRos .hrLock{position:absolute;right:-5px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1a140b;border:1.5px solid #8a7444;display:flex;align-items:center;justify-content:center}
 .hRos .hrLock .lockIco{width:12px;height:12px}
+.hRos .hrLv{position:absolute;right:-6px;bottom:-4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:#1a140b;border:1.5px solid #d9b04e;font:700 11px/17px var(--body);color:#ffe2a0;text-align:center}
 .hRos b{font:400 14px var(--display);color:#ffe2a0;white-space:nowrap}
 .hRos.soon b{color:#b39c6c}
 .hRos small{font:600 11px var(--body);color:var(--muted)}
