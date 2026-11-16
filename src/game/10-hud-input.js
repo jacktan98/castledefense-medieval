@@ -105,7 +105,7 @@ function refreshCard() {
   $('#cardHp').parentElement.hidden = !!selected.path;
   if (selected.path) {                                 // a path tile: just a name and Demolish (no refund)
     card.hidden = false; $('#cardIco').innerHTML = TOOL_ICON.road; $('#cardTitle').textContent = 'Path'; $('#cardSub').textContent = ''; $('#cardPips').innerHTML = '';
-    $('#cardStats').innerHTML = STAT('speed', `×${PATH_SPEED}`) + STAT('charm', `+${Math.round(PATH_CHARM * 100)}%`); $('#moveBtn').hidden = $('#cardRotBtn').hidden = $('#upBtn').hidden = $('#rallyBtn').hidden = $('#recallBtn').hidden = $('#volleyBtn').hidden = $('#cancelBtn').hidden = $('#cardTrade').hidden = true;   // nothing left over from the last card
+    $('#cardStats').innerHTML = STAT('speed', `×${PATH_SPEED}`) + STAT('charm', `+${Math.round(PATH_CHARM * 100)}%`); $('#moveBtn').hidden = $('#cardRotBtn').hidden = $('#upBtn').hidden = $('#rallyBtn').hidden = $('#recallBtn').hidden = $('#cancelBtn').hidden = $('#cardTrade').hidden = true;   // nothing left over from the last card
     const dem = $('#demBtn'), armed = demArmed.B === selected && performance.now() - demArmed.t < 3000;
     dem.hidden = false; $('#cardActs').hidden = false; dem.classList.toggle('armed', armed); if (!armed) dem.style.minWidth = ''; dem.innerHTML = armed ? PICO.tick.replace('<svg ', '<svg class="bIco" ') : DEM_ICO; dem.title = 'Remove path'; return;
   }
@@ -162,17 +162,6 @@ function refreshCard() {
   $('#rallyBtn').hidden = $('#recallBtn').hidden = !T.soldiers || !B.built;
   $('#rallyBtn').setAttribute('aria-pressed', String(rallyFor === B)); $('#recallBtn').disabled = !B.rally;
   $('#moveBtn').hidden = !T.movable || !B.built || !!B.site; $('#moveBtn').setAttribute('aria-pressed', String(moveFor === B));
-  // the arrow volley and the riders live only on the night powers' round buttons now (Jack had them taken off the castle's card)
-  const sb = $('#summonBtn'); sb.hidden = true;
-  if (!sb.hidden) {
-    const out = summoned().length > 0, cool = !out && summonCd > 0, day = PH.kind !== 'night';
-    const ico = out ? 'rally' : 'horse'; if (sb.dataset.ico !== ico) { sb.dataset.ico = ico; sb.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
-    sb.classList.toggle('cool', cool); sb.classList.toggle('off', day && !out && !cool); sb.disabled = cool;
-    sb.setAttribute('aria-pressed', String(out && rallyFor === B));
-    sb.querySelector('.cd').textContent = cool ? Math.ceil(summonCd) : '';
-  }
-  const vb = $('#volleyBtn'); vb.hidden = true;
-  if (!vb.hidden) { const cool = volleyCd > 0, day = PH.kind !== 'night'; vb.classList.toggle('cool', cool); vb.classList.toggle('off', day && !cool); vb.disabled = cool; vb.title = day ? 'Night only' : 'Arrow volley: tap, then a spot'; vb.querySelector('.cd').textContent = cool ? Math.ceil(volleyCd) : ''; vb.setAttribute('aria-pressed', String(volleyAim)); }
   const up = $('#upBtn');
   if (!T.up) up.hidden = true;
   else if (B.tier >= 3 || B.tier >= tierCap() || B.site) up.hidden = true;

@@ -246,8 +246,8 @@ var guideDone = false, goalsMet = {};
 const made = t => (stats.made && stats.made[t]) || 0;
 const upTo = (t, n) => buildings.some(B => B.type === t && !B.dead && B.tier >= n);
 // how many of a type stand finished with a decor boost on them (the target range for crossbows, siege stores for catapults)
-// each campaign stage's two goals (Jack): a win is one star, each goal met one more. [text, check, end]: a goal marked end is
-// only judged when the game ends (no buildings lost); the others are met for good the moment they come true (goalTick)
+// each campaign stage's two goals (Jack): a win is one star, each goal met one more. [text, check, unused, progress, label]:
+// a goal is met for good the moment it comes true (goalTick)
 // measured: two tier-1 foresters fell about 12 trees a minute, two tier-1 mines dig about 11.5 stone (Dunewell has ~13 min of daylight, Ironwood ~15)
 // boosted kills, measured in a simulated stage: 4 boosted crossbows about 49 kills by Riverbend's night 4, 2 about 35; 4 boosted catapults about 45 by Siegeford's night 3
 const GOAL_N = { felled: 100, mined: 120, folk: 40, xbowKills: 40, cataKills: 50 };
@@ -283,7 +283,7 @@ function goalTick() {
   if (gameOver) return;
   achMax('vill', townsfolk().length);
   // hard mode has no goals: no tick, log line or star sound (Jack)
-  if (!hardOn) for (const [t, ok, end] of stageGoals(MAP)) if (!end && !goalsMet[t] && ok()) { goalsMet[t] = true; log(`<b>Goal</b> · ${t} ✓`, 'good'); sfx('star'); }
+  if (!hardOn) for (const [t, ok] of stageGoals(MAP)) if (!goalsMet[t] && ok()) { goalsMet[t] = true; log(`<b>Goal</b> · ${t} ✓`, 'good'); sfx('star'); }
   renderGoals();
 }
 // the top panel's Goals (Jack; it was the town log): "Goals" and a gold tick per goal met, Show opens the three goals (Survive and

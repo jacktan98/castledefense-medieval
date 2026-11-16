@@ -490,7 +490,6 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 .card{border-radius:10px;border-color:#6b5a2e;padding:7px 8px;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,.35);width:fit-content;max-width:min(400px,100%);align-self:flex-end}   /* as narrow as its content (a path's is tiny), on the right */
 .cardHead{display:flex;align-items:center;gap:6px}
 .cardHead .iconBtn{width:30px;min-width:30px;height:30px;min-height:30px}
-#volleyBtn,#summonBtn{position:relative}
 /* the castle's night powers, also as two big round buttons in a corner at night (Kingdom Rush style): no need to find the castle's card */
 .powers{position:absolute;left:12px;z-index:5;display:flex;gap:8px}
 .powers.col{flex-direction:column-reverse}
@@ -510,10 +509,6 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 .bossBar b{font-family:var(--display);font-weight:400;font-size:16px;color:#ff9a80;text-shadow:0 1px 3px #000}
 .bossBar span{display:block;width:100%;height:10px;border-radius:6px;background:rgba(20,8,6,.8);border:1px solid #c9a03e;overflow:hidden}
 .bossBar i{display:block;height:100%;width:100%;background:linear-gradient(180deg,#e0533e,#8f1d14);transition:width .2s}
-#volleyBtn .cd,#summonBtn .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font:700 11px/1 system-ui,sans-serif;color:#e8e2cc}
-#volleyBtn.cool svg,#summonBtn.cool svg{opacity:.25}
-#volleyBtn.off svg,#summonBtn.off svg{opacity:.4}
-#volleyBtn.cool .cd,#summonBtn.cool .cd{display:flex}
 .cardIco{width:30px;height:30px;border-radius:7px;background:#24261f;border:1px solid #4a4838;display:inline-flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
 .cardIco svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .cardName{flex:1;min-width:0}
@@ -1103,8 +1098,6 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
         <div class="cardName"><h4 id="cardTitle"></h4><div class="cardSub"><span id="cardSub"></span><span class="pips" id="cardPips"></span></div></div>
         <button class="iconBtn" id="rallyBtn" title="Rally: tap, then a spot" aria-label="Rally"><svg viewBox="0 0 24 24"><path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/></svg></button><button class="iconBtn" id="recallBtn" title="Recall to the barracks" aria-label="Recall"><svg viewBox="0 0 24 24"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 H14 A5.5 5.5 0 0 1 14 20 H9"/></svg></button>
         <button class="iconBtn" id="moveBtn" hidden title="Move: tap, then a tile" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M12 3 V21 M3 12 H21"/><path d="M9 6 L12 3 L15 6 M9 18 L12 21 L15 18 M6 9 L3 12 L6 15 M18 9 L21 12 L18 15"/></svg></button>
-        <button class="iconBtn" id="volleyBtn" hidden title="Arrow volley: tap, then a spot" aria-label="Arrow volley"><svg viewBox="0 0 24 24"><path d="M4 4 L13 13 M9 2.5 L18 11.5 M2.5 9 L11.5 18"/><path class="solid" d="M15 15 L11.2 14.2 L14.2 11.2 Z M20 13.5 L16.2 12.7 L19.2 9.7 Z M13.5 20 L12.7 16.2 L9.7 19.2 Z"/></svg><b class="cd"></b></button>
-        <button class="iconBtn" id="summonBtn" hidden aria-label="Summon riders"><svg viewBox="0 0 24 24"></svg><b class="cd"></b></button>
         <button class="iconBtn" id="cardRotBtn" hidden aria-label="Rotate" title="Rotate"><svg viewBox="0 0 24 24"><path d="M19 12 a7 7 0 1 1-2.05-4.95"/><path d="M19.2 3.8 V7.5 H15.5"/></svg></button>
         <button class="iconBtn" id="closeCard" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button>
       </div>
@@ -1496,8 +1489,8 @@ var guideDone = false, goalsMet = {};
 const made = t => (stats.made && stats.made[t]) || 0;
 const upTo = (t, n) => buildings.some(B => B.type === t && !B.dead && B.tier >= n);
 // how many of a type stand finished with a decor boost on them (the target range for crossbows, siege stores for catapults)
-// each campaign stage's two goals (Jack): a win is one star, each goal met one more. [text, check, end]: a goal marked end is
-// only judged when the game ends (no buildings lost); the others are met for good the moment they come true (goalTick)
+// each campaign stage's two goals (Jack): a win is one star, each goal met one more. [text, check, unused, progress, label]:
+// a goal is met for good the moment it comes true (goalTick)
 // measured: two tier-1 foresters fell about 12 trees a minute, two tier-1 mines dig about 11.5 stone (Dunewell has ~13 min of daylight, Ironwood ~15)
 // boosted kills, measured in a simulated stage: 4 boosted crossbows about 49 kills by Riverbend's night 4, 2 about 35; 4 boosted catapults about 45 by Siegeford's night 3
 const GOAL_N = { felled: 100, mined: 120, folk: 40, xbowKills: 40, cataKills: 50 };
@@ -1533,7 +1526,7 @@ function goalTick() {
   if (gameOver) return;
   achMax('vill', townsfolk().length);
   // hard mode has no goals: no tick, log line or star sound (Jack)
-  if (!hardOn) for (const [t, ok, end] of stageGoals(MAP)) if (!end && !goalsMet[t] && ok()) { goalsMet[t] = true; log(`<b>Goal</b> · ${t} ✓`, 'good'); sfx('star'); }
+  if (!hardOn) for (const [t, ok] of stageGoals(MAP)) if (!goalsMet[t] && ok()) { goalsMet[t] = true; log(`<b>Goal</b> · ${t} ✓`, 'good'); sfx('star'); }
   renderGoals();
 }
 // the top panel's Goals (Jack; it was the town log): "Goals" and a gold tick per goal met, Show opens the three goals (Survive and
@@ -8202,7 +8195,7 @@ function refreshCard() {
   $('#cardHp').parentElement.hidden = !!selected.path;
   if (selected.path) {                                 // a path tile: just a name and Demolish (no refund)
     card.hidden = false; $('#cardIco').innerHTML = TOOL_ICON.road; $('#cardTitle').textContent = 'Path'; $('#cardSub').textContent = ''; $('#cardPips').innerHTML = '';
-    $('#cardStats').innerHTML = STAT('speed', `×${PATH_SPEED}`) + STAT('charm', `+${Math.round(PATH_CHARM * 100)}%`); $('#moveBtn').hidden = $('#cardRotBtn').hidden = $('#upBtn').hidden = $('#rallyBtn').hidden = $('#recallBtn').hidden = $('#volleyBtn').hidden = $('#cancelBtn').hidden = $('#cardTrade').hidden = true;   // nothing left over from the last card
+    $('#cardStats').innerHTML = STAT('speed', `×${PATH_SPEED}`) + STAT('charm', `+${Math.round(PATH_CHARM * 100)}%`); $('#moveBtn').hidden = $('#cardRotBtn').hidden = $('#upBtn').hidden = $('#rallyBtn').hidden = $('#recallBtn').hidden = $('#cancelBtn').hidden = $('#cardTrade').hidden = true;   // nothing left over from the last card
     const dem = $('#demBtn'), armed = demArmed.B === selected && performance.now() - demArmed.t < 3000;
     dem.hidden = false; $('#cardActs').hidden = false; dem.classList.toggle('armed', armed); if (!armed) dem.style.minWidth = ''; dem.innerHTML = armed ? PICO.tick.replace('<svg ', '<svg class="bIco" ') : DEM_ICO; dem.title = 'Remove path'; return;
   }
@@ -8259,17 +8252,6 @@ function refreshCard() {
   $('#rallyBtn').hidden = $('#recallBtn').hidden = !T.soldiers || !B.built;
   $('#rallyBtn').setAttribute('aria-pressed', String(rallyFor === B)); $('#recallBtn').disabled = !B.rally;
   $('#moveBtn').hidden = !T.movable || !B.built || !!B.site; $('#moveBtn').setAttribute('aria-pressed', String(moveFor === B));
-  // the arrow volley and the riders live only on the night powers' round buttons now (Jack had them taken off the castle's card)
-  const sb = $('#summonBtn'); sb.hidden = true;
-  if (!sb.hidden) {
-    const out = summoned().length > 0, cool = !out && summonCd > 0, day = PH.kind !== 'night';
-    const ico = out ? 'rally' : 'horse'; if (sb.dataset.ico !== ico) { sb.dataset.ico = ico; sb.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
-    sb.classList.toggle('cool', cool); sb.classList.toggle('off', day && !out && !cool); sb.disabled = cool;
-    sb.setAttribute('aria-pressed', String(out && rallyFor === B));
-    sb.querySelector('.cd').textContent = cool ? Math.ceil(summonCd) : '';
-  }
-  const vb = $('#volleyBtn'); vb.hidden = true;
-  if (!vb.hidden) { const cool = volleyCd > 0, day = PH.kind !== 'night'; vb.classList.toggle('cool', cool); vb.classList.toggle('off', day && !cool); vb.disabled = cool; vb.title = day ? 'Night only' : 'Arrow volley: tap, then a spot'; vb.querySelector('.cd').textContent = cool ? Math.ceil(volleyCd) : ''; vb.setAttribute('aria-pressed', String(volleyAim)); }
   const up = $('#upBtn');
   if (!T.up) up.hidden = true;
   else if (B.tier >= 3 || B.tier >= tierCap() || B.site) up.hidden = true;
@@ -10021,16 +10003,16 @@ function ridersAct(K) {
   if (summonCd > 0) return; if (PH.kind !== 'night') return setHint('Night only', 'bad');
   summonRiders(); refreshCard(); updatePowers();
 }
-$('#volleyBtn').addEventListener('click', volleyAct);
-$('#summonBtn').addEventListener('click', () => ridersAct(selected));
 $('#pwVolley').addEventListener('click', volleyAct);
 $('#pwRiders').addEventListener('click', () => ridersAct(castleB()));
+// the arrow volley's icon: three arrows falling
+const VOLLEY_ICO = '<svg viewBox="0 0 24 24"><path d="M4 4 L13 13 M9 2.5 L18 11.5 M2.5 9 L11.5 18"/><path class="solid" d="M15 15 L11.2 14.2 L14.2 11.2 Z M20 13.5 L16.2 12.7 L19.2 9.7 Z M13.5 20 L12.7 16.2 L9.7 19.2 Z"/></svg>';
 // the night powers' corner buttons: shown at night while the castle stands, mirroring the card's buttons (cooldowns, rally flag)
 function updatePowers() {
   const K = castleB(), el = $('#powers'), on = PH.kind === 'night' && !gameOver && K && K.built && !menuOn() && !galleryOn && !showcaseBuilt;
   el.hidden = !on; if (!on) return;
   const v = $('#pwVolley'), r = $('#pwRiders');
-  if (!v.innerHTML) { v.innerHTML = $('#volleyBtn').querySelector('svg').outerHTML + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
+  if (!v.innerHTML) { v.innerHTML = VOLLEY_ICO + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
   v.classList.toggle('cool', volleyCd > 0); v.querySelector('.cd').textContent = volleyCd > 0 ? Math.ceil(volleyCd) : ''; v.setAttribute('aria-pressed', String(volleyAim));
   const out = summoned().length > 0, rc = !out && summonCd > 0, ico = out ? 'rally' : 'horse';
   if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
@@ -10962,7 +10944,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '379e76fdfe'; var updateWait = false, updateT = 0;
+const BUILD = '30db01fc2b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

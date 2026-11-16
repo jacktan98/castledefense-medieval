@@ -1151,16 +1151,16 @@ function ridersAct(K) {
   if (summonCd > 0) return; if (PH.kind !== 'night') return setHint('Night only', 'bad');
   summonRiders(); refreshCard(); updatePowers();
 }
-$('#volleyBtn').addEventListener('click', volleyAct);
-$('#summonBtn').addEventListener('click', () => ridersAct(selected));
 $('#pwVolley').addEventListener('click', volleyAct);
 $('#pwRiders').addEventListener('click', () => ridersAct(castleB()));
+// the arrow volley's icon: three arrows falling
+const VOLLEY_ICO = '<svg viewBox="0 0 24 24"><path d="M4 4 L13 13 M9 2.5 L18 11.5 M2.5 9 L11.5 18"/><path class="solid" d="M15 15 L11.2 14.2 L14.2 11.2 Z M20 13.5 L16.2 12.7 L19.2 9.7 Z M13.5 20 L12.7 16.2 L9.7 19.2 Z"/></svg>';
 // the night powers' corner buttons: shown at night while the castle stands, mirroring the card's buttons (cooldowns, rally flag)
 function updatePowers() {
   const K = castleB(), el = $('#powers'), on = PH.kind === 'night' && !gameOver && K && K.built && !menuOn() && !galleryOn && !showcaseBuilt;
   el.hidden = !on; if (!on) return;
   const v = $('#pwVolley'), r = $('#pwRiders');
-  if (!v.innerHTML) { v.innerHTML = $('#volleyBtn').querySelector('svg').outerHTML + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
+  if (!v.innerHTML) { v.innerHTML = VOLLEY_ICO + '<b class="cd"></b>'; r.innerHTML = '<svg viewBox="0 0 24 24"></svg><b class="cd"></b>'; }
   v.classList.toggle('cool', volleyCd > 0); v.querySelector('.cd').textContent = volleyCd > 0 ? Math.ceil(volleyCd) : ''; v.setAttribute('aria-pressed', String(volleyAim));
   const out = summoned().length > 0, rc = !out && summonCd > 0, ico = out ? 'rally' : 'horse';
   if (r.dataset.ico !== ico) { r.dataset.ico = ico; r.querySelector('svg').innerHTML = out ? '<path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/>' : HORSE_ICO; }
