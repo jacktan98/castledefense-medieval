@@ -1,7 +1,9 @@
 // ---------- villagers ----------
 // colour code: plain villagers brown, workers yellows, soldiers blue, raiders red
 const tunics = ['#7a5434', '#8a6240', '#6b4a2e', '#956b44', '#7f5a3a', '#5f4229'].map(mat);   // plain villagers: homespun browns
-const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(mat);
+// hair is a thin open shell round the head: drawn on both sides, so its inside shows where it stands off the low-poly head (Jack saw a
+// gap between hair and head, the shell's inside being culled)
+const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(c => { const m = mat(c); m.side = THREE.DoubleSide; return m; });
 const skin = mat('#d6a982'), hatM = mat('#6b5236'), legM = mat('#3a2e22');
 // solid things inside a walkable plot (farm: hut, hay, scarecrow, barn, stooks; forester: hut; farmhouse: house, coop, sty, byre):
 // [x, z, half-width, half-depth] from the plot centre, by tier
@@ -105,7 +107,7 @@ function makeHelm(kind) {
     add(box(.028, .12, .022, steelM, 0, 1.0, .148));
   } else if (kind === 'greathelm') {         // tier-3 raider: a closed dark iron helm, flat-topped, an eye slit and breaths, a cross on the face
     add(cyl(.158, .162, .27, 12, ironM, 0, 1.04, 0));
-    const t = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 12, 5, 0, Math.PI * 2, 0, Math.PI * .3), ironM)); t.position.y = 1.15; t.scale.y = .7;
+    const t = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 12, 5, 0, Math.PI * 2, 0, Math.PI * .3), ironM)); t.position.y = 1.11; t.scale.y = .7;   // its rim on the helm's top (at 1.15 it floated above it)
     add(box(.2, .026, .03, M.dark, 0, 1.07, .152));
     add(box(.03, .17, .02, darkIronM, 0, 1.01, .162)); add(box(.2, .03, .02, darkIronM, 0, 1.105, .158));
     for (const sx of [-1, 1]) for (const y of [.97, 1.0]) add(box(.03, .012, .02, M.dark, sx * .07, y, .152));

@@ -5209,7 +5209,9 @@ function paintWall(a, b) {
 // ---------- villagers ----------
 // colour code: plain villagers brown, workers yellows, soldiers blue, raiders red
 const tunics = ['#7a5434', '#8a6240', '#6b4a2e', '#956b44', '#7f5a3a', '#5f4229'].map(mat);   // plain villagers: homespun browns
-const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(mat);
+// hair is a thin open shell round the head: drawn on both sides, so its inside shows where it stands off the low-poly head (Jack saw a
+// gap between hair and head, the shell's inside being culled)
+const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(c => { const m = mat(c); m.side = THREE.DoubleSide; return m; });
 const skin = mat('#d6a982'), hatM = mat('#6b5236'), legM = mat('#3a2e22');
 // solid things inside a walkable plot (farm: hut, hay, scarecrow, barn, stooks; forester: hut; farmhouse: house, coop, sty, byre):
 // [x, z, half-width, half-depth] from the plot centre, by tier
@@ -5313,7 +5315,7 @@ function makeHelm(kind) {
     add(box(.028, .12, .022, steelM, 0, 1.0, .148));
   } else if (kind === 'greathelm') {         // tier-3 raider: a closed dark iron helm, flat-topped, an eye slit and breaths, a cross on the face
     add(cyl(.158, .162, .27, 12, ironM, 0, 1.04, 0));
-    const t = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 12, 5, 0, Math.PI * 2, 0, Math.PI * .3), ironM)); t.position.y = 1.15; t.scale.y = .7;
+    const t = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 12, 5, 0, Math.PI * 2, 0, Math.PI * .3), ironM)); t.position.y = 1.11; t.scale.y = .7;   // its rim on the helm's top (at 1.15 it floated above it)
     add(box(.2, .026, .03, M.dark, 0, 1.07, .152));
     add(box(.03, .17, .02, darkIronM, 0, 1.01, .162)); add(box(.2, .03, .02, darkIronM, 0, 1.105, .158));
     for (const sx of [-1, 1]) for (const y of [.97, 1.0]) add(box(.03, .012, .02, M.dark, sx * .07, y, .152));
@@ -6363,10 +6365,10 @@ function raiderArmour(p, tier) {
   const put = o => { o.castShadow = true; p.body.add(o); return o; };
   const tun = tier === 3 ? mailM : tier === 2 ? raiderQuiltM : raiderRed;
   p.torso.material = tun; p.arms.forEach(a => a.userData.sleeve.material = tun); p.baseTunic = tun;
-  if (tier === 1) put(cyl(.197, .197, .04, 10, ropeBeltM, 0, .47, 0));
-  if (tier === 2) { put(cyl(.205, .228, .13, 10, raiderQuiltM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('raider')); }
+  if (tier === 1) put(cyl(.2, .2, .04, 6, ropeBeltM, 0, .47, 0));
+  if (tier === 2) { put(cyl(.205, .228, .13, 10, raiderQuiltM, 0, .37, 0)); put(cyl(.196, .196, .045, 6, leatherM, 0, .5, 0)); put(makeHelm('raider')); }
   if (tier === 3) {
-    put(cyl(.15, .214, .42, 8, raiderRed, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('greathelm'));
+    put(cyl(.158, .218, .42, 6, raiderRed, 0, .62, 0)); put(cyl(.2, .2, .05, 6, leatherM, 0, .55, 0)); put(makeHelm('greathelm'));
     for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), darkIronM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .8, 1.15); }
   }
 }
@@ -7242,10 +7244,12 @@ function armour(p, tier) {
   const tun = tier === 3 ? mailM : tier === 2 ? gambesonM : p.baseTunic;
   p.torso.material = tun; p.arms.forEach(a => a.userData.sleeve.material = tun);
   if (p.hatG) p.hatG.visible = false; if (p.apron) p.apron.visible = false;
-  if (tier === 1) put(cyl(.197, .197, .05, 10, kiteM, 0, .47, 0));
-  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
+  // belts and surcoats are six-sided like the torso, corners lined up, and a little wider than it (Jack: with eight or ten sides the
+  // torso's corners showed through them as stripes of the shirt or mail)
+  if (tier === 1) put(cyl(.2, .2, .05, 6, kiteM, 0, .47, 0));
+  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.196, .196, .045, 6, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
   if (tier === 3) {
-    put(cyl(.15, .214, .42, 8, kiteM, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
+    put(cyl(.158, .218, .42, 6, kiteM, 0, .62, 0)); put(cyl(.2, .2, .05, 6, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
     for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), steelM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .75, 1.1); }
   }
   return p.armour;
@@ -9100,7 +9104,7 @@ var heroHere = false, hero = null, heroDownT = 0, heroAt = null, heroFlag = null
 var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
-// the Ranger: a hooded green cloak over a leather jerkin, a quiver and a bow; the Captain: the man-at-arms' kit under a closed great
+// the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
 const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
@@ -9121,7 +9125,6 @@ function heroKit(v, id = HERO_ID, foot) {
     const hood = new THREE.Mesh(new THREE.SphereGeometry(.16, 14, 8, Math.PI / 2 + .85, Math.PI * 2 - 1.7, 0, Math.PI * .64), rangerCloakM);
     cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
-    put(box(.42, .05, .1, rangerCloakM, 0, .88, -.13)); put(box(.36, .5, .03, rangerCloakM, 0, .6, -.19));
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
     for (let i = 0; i < 3; i++) qv.add(box(.02, .1, .02, arrowMat, (i - 1) * .022, .2, 0));
     if (v.pivot) v.pivot.parent.remove(v.pivot);
@@ -11593,7 +11596,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'e7c1b594dd'; var updateWait = false, updateT = 0;
+const BUILD = '6aa4a86227'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

@@ -73,7 +73,7 @@ var heroHere = false, hero = null, heroDownT = 0, heroAt = null, heroFlag = null
 var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
-// the Ranger: a hooded green cloak over a leather jerkin, a quiver and a bow; the Captain: the man-at-arms' kit under a closed great
+// the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
 const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
@@ -94,7 +94,6 @@ function heroKit(v, id = HERO_ID, foot) {
     const hood = new THREE.Mesh(new THREE.SphereGeometry(.16, 14, 8, Math.PI / 2 + .85, Math.PI * 2 - 1.7, 0, Math.PI * .64), rangerCloakM);
     cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
-    put(box(.42, .05, .1, rangerCloakM, 0, .88, -.13)); put(box(.36, .5, .03, rangerCloakM, 0, .6, -.19));
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
     for (let i = 0; i < 3; i++) qv.add(box(.02, .1, .02, arrowMat, (i - 1) * .022, .2, 0));
     if (v.pivot) v.pivot.parent.remove(v.pivot);

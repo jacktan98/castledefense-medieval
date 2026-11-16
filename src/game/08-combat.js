@@ -97,10 +97,10 @@ function raiderArmour(p, tier) {
   const put = o => { o.castShadow = true; p.body.add(o); return o; };
   const tun = tier === 3 ? mailM : tier === 2 ? raiderQuiltM : raiderRed;
   p.torso.material = tun; p.arms.forEach(a => a.userData.sleeve.material = tun); p.baseTunic = tun;
-  if (tier === 1) put(cyl(.197, .197, .04, 10, ropeBeltM, 0, .47, 0));
-  if (tier === 2) { put(cyl(.205, .228, .13, 10, raiderQuiltM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('raider')); }
+  if (tier === 1) put(cyl(.2, .2, .04, 6, ropeBeltM, 0, .47, 0));
+  if (tier === 2) { put(cyl(.205, .228, .13, 10, raiderQuiltM, 0, .37, 0)); put(cyl(.196, .196, .045, 6, leatherM, 0, .5, 0)); put(makeHelm('raider')); }
   if (tier === 3) {
-    put(cyl(.15, .214, .42, 8, raiderRed, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('greathelm'));
+    put(cyl(.158, .218, .42, 6, raiderRed, 0, .62, 0)); put(cyl(.2, .2, .05, 6, leatherM, 0, .55, 0)); put(makeHelm('greathelm'));
     for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), darkIronM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .8, 1.15); }
   }
 }
@@ -976,10 +976,12 @@ function armour(p, tier) {
   const tun = tier === 3 ? mailM : tier === 2 ? gambesonM : p.baseTunic;
   p.torso.material = tun; p.arms.forEach(a => a.userData.sleeve.material = tun);
   if (p.hatG) p.hatG.visible = false; if (p.apron) p.apron.visible = false;
-  if (tier === 1) put(cyl(.197, .197, .05, 10, kiteM, 0, .47, 0));
-  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.197, .197, .045, 10, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
+  // belts and surcoats are six-sided like the torso, corners lined up, and a little wider than it (Jack: with eight or ten sides the
+  // torso's corners showed through them as stripes of the shirt or mail)
+  if (tier === 1) put(cyl(.2, .2, .05, 6, kiteM, 0, .47, 0));
+  if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.196, .196, .045, 6, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
   if (tier === 3) {
-    put(cyl(.15, .214, .42, 8, kiteM, 0, .62, 0)); put(cyl(.17, .17, .05, 8, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
+    put(cyl(.158, .218, .42, 6, kiteM, 0, .62, 0)); put(cyl(.2, .2, .05, 6, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
     for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), steelM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .75, 1.1); }
   }
   return p.armour;
