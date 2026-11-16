@@ -51,7 +51,7 @@ function markTools() {
     const t = b.dataset.tool, T = DEF[t], lim = !!T && atLimit(t);
     b.classList.toggle('cant', t === 'road' ? !canAfford(PATH_COST) : !!T && (lim || !canAfford(T.cost)));
     // the one market built (or going up): its tile reads Built instead of its cost
-    if (T && ONE_ONLY.has(t) && b.dataset.lim !== String(lim)) { b.dataset.lim = String(lim); const sm = b.querySelector('small'); if (sm) sm.innerHTML = lim ? 'Built' : costHTML(T.cost); }
+    if (T && ONE_ONLY.has(t) && b.dataset.lim !== String(lim)) { b.dataset.lim = String(lim); const sm = b.querySelector('small'); if (sm) { sm.innerHTML = lim ? 'Built' : costHTML(T.cost); sm.classList.toggle('built', lim); } }
   });
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { cat = b.dataset.cat; renderTools(); }));

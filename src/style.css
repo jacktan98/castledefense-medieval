@@ -99,7 +99,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 button b{font-family:var(--display);font-weight:400;font-size:16px;line-height:1.1}
 button small{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:2px}
 button[aria-pressed="true"]{border-color:var(--gold);background:rgba(212,168,78,.14);color:var(--gold)}
-button.cant small{color:var(--bad)}
+button.cant small{color:var(--bad)} button.cant small.built{color:var(--muted)}
 button.primary{border-color:var(--gold);color:var(--gold)}
 button.danger{border-color:#6b3a33;color:var(--bad)}
 .tab{min-height:28px;font-family:var(--display);font-size:14px;padding:1px 9px;border-color:transparent}
