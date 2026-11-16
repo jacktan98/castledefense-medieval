@@ -91,6 +91,30 @@ function swordPose(p, at, sw) {
   const cut = t > .4 && t < .85 ? Math.sin(Math.PI * (t - .4) / .45) : 0;
   p.body.position.z = .1 * cut; if (cut > 0) p.body.rotation.x = .08 * cut;
 }
+// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): the sword drawn back out to the right
+// with the body turned that way, then a level cut across the body, the body turning through it, and back
+function slashPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
+  const t = 1 - at / SWORD_T, up = sstep(0, .35, t), cut = sstep(.35, .6, t), back = sstep(.6, 1, t);
+  p.arms[1].rotation.x = -.45 - 1.05 * up + 1.05 * back;
+  p.arms[1].rotation.z = 1.1 * up - 1.8 * cut + .7 * back;
+  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
+  p.body.rotation.y = .5 * up - 1 * cut + .5 * back;
+  const c = t > .35 && t < .75 ? Math.sin(Math.PI * (t - .35) / .4) : 0;
+  p.body.position.z = .08 * c;
+}
+// the Captain's Sweeping blow (Jack: its own strike): the sword held out to the side, a wind-up, then a full turn on the spot with the
+// blade sweeping round, and back to guard; `at` runs over SWORD_T like the others (the hero step plays it slower, `v.atkK`)
+function sweepPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
+  const t = 1 - at / SWORD_T, up = sstep(0, .3, t), spin = sstep(.3, .8, t), back = sstep(.8, 1, t);
+  p.arms[1].rotation.x = -.45 - .95 * up + .95 * back;
+  p.arms[1].rotation.z = 1.25 * up - 1.25 * back;
+  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
+  const r = .9 * up * (1 - back) - Math.PI * 2 * spin;
+  p.body.rotation.y = r - Math.PI * 2 * Math.round(r / (Math.PI * 2));
+  p.body.position.z = 0;
+}
 // raiders dress by tier, the same for every kind (only the weapon differs): 1 a plain red shirt and a rope belt, bare-headed;
 // 2 a red quilted gambeson with a short skirt, a leather belt and an iron helm with nose and cheek guards; 3 mail under a red
 // surcoat, a closed iron great helm and iron shoulder plates

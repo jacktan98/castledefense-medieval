@@ -30,7 +30,7 @@ const HERO_SK = {
 // the three heroes (Jack: the Ranger and the Captain unlocked): one takes the field at a time, picked on the Hero screen; each keeps
 // its own level, XP and skills (mtd-hero for the Heir, as before; mtd-hero-ranger, mtd-hero-captain), the pick in mtd-hero-pick
 const HERO_DEFS = {
-  heir: { name: 'The Heir', role: 'Royal blade', order: ['cry', 'flurry', 'horse'], hp: [260, 30], dmg: [12, 2], rate: .8, hair: 1 },
+  heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [260, 30], dmg: [12, 2], rate: .8, hair: 1 },
   ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'eye', 'quick'], hp: [170, 20], dmg: [8, 2], rate: 1.1, range: 8, hair: 0 },
   captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [340, 35], dmg: [9, 2], rate: 1, hair: 3 },
 };
@@ -245,7 +245,7 @@ function updateHero(v, dt) {
   if (foe) {
     const reach = .9 + (foe.horse ? .3 : 0) + (foe.engine ? ENEMY[foe.kind].r : 0) + (v.cav ? .35 : 0), d = Math.hypot(foe.x - v.x, foe.z - v.z);
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
-    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { heroBurst(v, 'flurry', 5, .3, SWORD_T); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
+    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { heroBurst(v, 'flurry', 5, .3, SWORD_T); heroStrike(v, foe); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
       // Sweeping blow: the Captain's blow also lands on every other raider within 1.6 m of the one he strikes
       if (HERO.sk.sweep) { const k = HERO_SK.sweep.k[HERO.sk.sweep - 1]; for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) hurtEnemy(e, dm * k, v); }
       hurtEnemy(foe, dm, v); sfx('clash', v); } }
@@ -277,6 +277,16 @@ function rangerStep(v, dt, home) {
   if (HERO.sk.twin) {
     let two = null, bd = R; for (const e of enemies) if (e !== foe && !e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; two = e; } }
     if (two) shoot(two, dm * HERO_SK.twin.k[HERO.sk.twin - 1]);
+  }
+}
+// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a level slash (Flurry's
+// quick blows too); the Captain swings round on the spot whenever his Sweeping blow catches a raider beside his foe
+const SWEEP_T = .75;
+function heroStrike(v, foe) {
+  v.strike = 'chop';
+  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'slash' : 'chop';
+  else if (HERO.sk.sweep && enemies.some(e => e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6)) {
+    v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
   }
 }
 // Flurry and Quick draw: every n-th blow or arrow (`v.hitN`) sets off a burst of quick ones (`v.burst`), each `quick` s apart, the

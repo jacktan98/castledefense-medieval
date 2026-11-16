@@ -6254,7 +6254,7 @@ function updateVillagers(dt, now) {
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .47 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
-    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'slash' ? slashPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
@@ -6364,6 +6364,30 @@ function swordPose(p, at, sw) {
   p.pivot.rotation.x = -.4 - .55 * up + .75 * down - .2 * back;            // wrist cocked back, then snapped through
   const cut = t > .4 && t < .85 ? Math.sin(Math.PI * (t - .4) / .45) : 0;
   p.body.position.z = .1 * cut; if (cut > 0) p.body.rotation.x = .08 * cut;
+}
+// the Heir's second strike (Jack: more animated; the Heir alternates it with the overhead chop): the sword drawn back out to the right
+// with the body turned that way, then a level cut across the body, the body turning through it, and back
+function slashPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
+  const t = 1 - at / SWORD_T, up = sstep(0, .35, t), cut = sstep(.35, .6, t), back = sstep(.6, 1, t);
+  p.arms[1].rotation.x = -.45 - 1.05 * up + 1.05 * back;
+  p.arms[1].rotation.z = 1.1 * up - 1.8 * cut + .7 * back;
+  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
+  p.body.rotation.y = .5 * up - 1 * cut + .5 * back;
+  const c = t > .35 && t < .75 ? Math.sin(Math.PI * (t - .35) / .4) : 0;
+  p.body.position.z = .08 * c;
+}
+// the Captain's Sweeping blow (Jack: its own strike): the sword held out to the side, a wind-up, then a full turn on the spot with the
+// blade sweeping round, and back to guard; `at` runs over SWORD_T like the others (the hero step plays it slower, `v.atkK`)
+function sweepPose(p, at, sw) {
+  if (!(at > 0)) { swordPose(p, 0, sw); p.arms[1].rotation.z = 0; p.body.rotation.y = 0; return; }
+  const t = 1 - at / SWORD_T, up = sstep(0, .3, t), spin = sstep(.3, .8, t), back = sstep(.8, 1, t);
+  p.arms[1].rotation.x = -.45 - .95 * up + .95 * back;
+  p.arms[1].rotation.z = 1.25 * up - 1.25 * back;
+  p.pivot.rotation.x = -.4 + .3 * up - .3 * back;   // the blade on in line with the arm, level
+  const r = .9 * up * (1 - back) - Math.PI * 2 * spin;
+  p.body.rotation.y = r - Math.PI * 2 * Math.round(r / (Math.PI * 2));
+  p.body.position.z = 0;
 }
 // raiders dress by tier, the same for every kind (only the weapon differs): 1 a plain red shirt and a rope belt, bare-headed;
 // 2 a red quilted gambeson with a short skirt, a leather belt and an iron helm with nose and cheek guards; 3 mail under a red
@@ -9071,7 +9095,7 @@ const HERO_SK = {
 // the three heroes (Jack: the Ranger and the Captain unlocked): one takes the field at a time, picked on the Hero screen; each keeps
 // its own level, XP and skills (mtd-hero for the Heir, as before; mtd-hero-ranger, mtd-hero-captain), the pick in mtd-hero-pick
 const HERO_DEFS = {
-  heir: { name: 'The Heir', role: 'Royal blade', order: ['cry', 'flurry', 'horse'], hp: [260, 30], dmg: [12, 2], rate: .8, hair: 1 },
+  heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [260, 30], dmg: [12, 2], rate: .8, hair: 1 },
   ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'eye', 'quick'], hp: [170, 20], dmg: [8, 2], rate: 1.1, range: 8, hair: 0 },
   captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [340, 35], dmg: [9, 2], rate: 1, hair: 3 },
 };
@@ -9286,7 +9310,7 @@ function updateHero(v, dt) {
   if (foe) {
     const reach = .9 + (foe.horse ? .3 : 0) + (foe.engine ? ENEMY[foe.kind].r : 0) + (v.cav ? .35 : 0), d = Math.hypot(foe.x - v.x, foe.z - v.z);
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
-    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { heroBurst(v, 'flurry', 5, .3, SWORD_T); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
+    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { heroBurst(v, 'flurry', 5, .3, SWORD_T); heroStrike(v, foe); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
       // Sweeping blow: the Captain's blow also lands on every other raider within 1.6 m of the one he strikes
       if (HERO.sk.sweep) { const k = HERO_SK.sweep.k[HERO.sk.sweep - 1]; for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) hurtEnemy(e, dm * k, v); }
       hurtEnemy(foe, dm, v); sfx('clash', v); } }
@@ -9318,6 +9342,16 @@ function rangerStep(v, dt, home) {
   if (HERO.sk.twin) {
     let two = null, bd = R; for (const e of enemies) if (e !== foe && !e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; two = e; } }
     if (two) shoot(two, dm * HERO_SK.twin.k[HERO.sk.twin - 1]);
+  }
+}
+// which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a level slash (Flurry's
+// quick blows too); the Captain swings round on the spot whenever his Sweeping blow catches a raider beside his foe
+const SWEEP_T = .75;
+function heroStrike(v, foe) {
+  v.strike = 'chop';
+  if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'slash' : 'chop';
+  else if (HERO.sk.sweep && enemies.some(e => e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6)) {
+    v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
   }
 }
 // Flurry and Quick draw: every n-th blow or arrow (`v.hitN`) sets off a burst of quick ones (`v.burst`), each `quick` s apart, the
@@ -10624,7 +10658,12 @@ function galPose(p, t, dt) {
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
-    p.arms[0].rotation.x = -.55 - sw * .2; swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - (t + p.seed) % 1.6), sw); return;
+    // every other blow is the hero's second strike: the Heir's level slash, the Captain's sweep
+    p.arms[0].rotation.x = -.55 - sw * .2; const c = (t + p.seed) % 1.6, n = !gWalk && Math.floor((t + p.seed) / 1.6) % 2;
+    if (n && p.heroId === 'heir') slashPose(p, Math.max(0, SWORD_T - c), sw);
+    else if (n && p.heroId === 'captain') sweepPose(p, Math.max(0, SWEEP_T - c) * SWORD_T / SWEEP_T, sw);
+    else { slashPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
+    return;
   }
   if (p.xbow || p.raider === 'xbow') { xbowPose(p, (t + p.seed) % 1.4 > .7); return; }   // crossbowmen: level and shoot, then down to reload
   if (p.guard || p.raider === 'archer') {                        // loose a shot every 1.8 s: idle, draw with both hands, loose
@@ -11643,7 +11682,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '0597e4633f'; var updateWait = false, updateT = 0;
+const BUILD = '502b65ae20'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
