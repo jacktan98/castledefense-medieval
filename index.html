@@ -301,7 +301,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1096,6 +1096,41 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 #campHeroN .bN{transform:translateY(-.7px)} #campUpN .bN{transform:translateY(.2px)}
 
 .campBadge .bStar{font-style:normal;margin-right:2px;transform:translateY(1.45px)}
+/* Hero screen (Jack): every skill row the same height, its figures as three steps instead of a line and a "Next" line */
+.hpSk{min-height:58px}
+.hpSk .hsSteps{display:flex;gap:4px;flex:none}
+.hpSk .hsSteps i{min-width:40px;padding:3px 0;border-radius:6px;border:1px solid rgba(159,209,255,.25);color:rgba(159,209,255,.45);font:700 12px/1 var(--body);font-style:normal;text-align:center;box-sizing:border-box}
+.hpSk .hsSteps i.on{background:#9fd1ff;border-color:#9fd1ff;color:#13233d}
+.hpSk .hsSteps i.nx{border-color:#9fd1ff;color:#cfe8ff}
+.hpSk .hsPlus,.hpSk .hsReq{flex:none}
+.hpSk .hsReq{min-width:32px}
+/* the heroes row (a try-out): the Heir in use, the Ranger and the Captain locked */
+.heroSheet .hRosHead{margin-top:10px}
+.hRoster{display:flex;gap:10px;justify-content:center;width:100%}
+.modal.tome .hRos{flex:1 1 0;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px 8px!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.55)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;min-height:0!important;box-shadow:none!important}
+.modal.tome .hRos.on{border:2px solid #f0c95a!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important}
+.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%)}
+.hRos.soon .hrPic{border-color:#6d5a34}
+.hRos .hrCv{width:100%;height:100%;display:block}
+.hRos.soon .hrCv{filter:grayscale(.7) brightness(.72)}
+.hRos .hrPic{overflow:visible}.hRos .hrCv{border-radius:50%}
+.hRos .hrLock{position:absolute;right:-5px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1a140b;border:1.5px solid #8a7444;display:flex;align-items:center;justify-content:center}
+.hRos .hrLock .lockIco{width:12px;height:12px}
+.hRos b{font:400 14px var(--display);color:#ffe2a0;white-space:nowrap}
+.hRos.soon b{color:#b39c6c}
+.hRos small{font:600 11px var(--body);color:var(--muted)}
+.hRos.on small{color:#f0c95a}
+/* on a tablet the Hero screen is a compact column in the middle of the screen (Jack: it ran the full width) */
+body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!important;margin:auto}
+#heroPick{display:flex;justify-content:center;align-items:flex-start;overflow:auto} #heroPick .heroSheet{margin:auto}
+@media (max-width:440px){ .hpSk{gap:7px;padding:7px 8px} .hpSk .hsSteps{gap:3px} .hpSk .hsSteps i{min-width:33px;font-size:11px;padding:3px 0} .hpSk .hsTx small{font-size:11.5px} }
+/* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
+@media (max-height:520px){
+  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
+  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
+  .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
+  .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
+}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -8949,9 +8984,11 @@ const heroOn = () => true;
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
-  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
-  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
-  firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
+  // desc: one line that never changes; vals: each rank's figure, shown as three steps on the Hero screen (Jack: the line and a
+  // "Next" line repeated each other and the rows grew uneven)
+  cry: { name: 'Inspire', desc: 'Troops nearby hit harder', vals: ['+10%', '+20%', '+30%'], req: [1, 3, 5], k: [.1, .2, .3] },
+  horse: { name: 'Royal horse', desc: 'Rides a horse, faster', vals: ['×2', '×2.3', '×2.6'], req: [2, 4, 6], k: [2, 2.3, 2.6] },
+  firm: { name: 'Stand firm', desc: 'Takes less damage', vals: ['−15%', '−25%', '−35%'], req: [5, 7, 9], k: [.15, .25, .35] },
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
 const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
@@ -9157,7 +9194,10 @@ document.addEventListener('click', ev => {
 // Back has its own listener on the screen, like the Upgrades screen's, and runs before anything else (Jack: on his phone Back
 // sometimes did nothing)
 function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
-$('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
+$('#heroPick').addEventListener('click', e => {
+  if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); return; }
+  const r = e.target.closest('[data-hact=ros]'); if (r && r.classList.contains('soon')) { e.stopPropagation(); sfx('nope'); }
+});
 // the campaign button's badge, like the Upgrades' "★30": the skill-point star and the points to spend
 function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}<span class="bN">${HERO.pts}</span>` : ''; n.hidden = !HERO.pts; } }
 function openHeroPick() {
@@ -9205,13 +9245,54 @@ function heroPortraitTick(now) {
   const cvs = document.querySelectorAll('#heroBar .heroCv, #heroCard:not([hidden]) .heroCv'); if (!cvs.length || $('#heroBar').hidden) return;
   hpDrawn = now; const src = heroBust(now); cvs.forEach(cv => heroCopy(src, cv));
 }
+// ---- more heroes (a try-out, Jack): the Ranger and the Captain from the earlier drafts, shown locked under the skills ----
+const HEROES = [
+  { id: 'heir', name: 'The Heir', role: 'In use' },
+  { id: 'ranger', name: 'The Ranger', soon: true },
+  { id: 'captain', name: 'The Captain', soon: true },
+];
+function rosterModel(id) {
+  if (id === 'heir') return heroModel().p;
+  const blue = kiteM, dblue = mat('#1f3d73'), green = mat('#3f5a2e'), gold = heroGold;
+  const put = (p, o) => { o.traverse(m => { if (m.isMesh) m.castShadow = true; }); p.body.add(o); return o; };
+  const cloak = (p, m, w) => put(p, box(w + .04, .05, .1, m, 0, .88, -.13));
+  let p;
+  if (id === 'ranger') {
+    p = makePerson({ tunic: mat('#5b4630'), tool: 'bow', hair: hairs[0] });
+    const hd = put(p, new THREE.Mesh(new THREE.SphereGeometry(.158, 14, 8, 0, Math.PI * 2, 0, Math.PI * .62), green)); hd.position.set(0, 1.05, -.015); hd.rotation.x = -.25;
+    const tip = put(p, new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), green)); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9;
+    cloak(p, green, .38);
+    const qv = new THREE.Group(); qv.position.set(.1, .72, -.17); qv.rotation.z = -.35; p.body.add(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
+  } else {
+    p = makePerson({ tunic: blue, tool: 'hammer' }); armour(p, 3);
+    p.armour.forEach(o => { if (o.type === 'Group' && new THREE.Box3().setFromObject(o).min.y > .95) o.visible = false; });
+    put(p, makeHelm('greathelm'));
+    const pl = put(p, new THREE.Mesh(new THREE.ConeGeometry(.055, .36, 6), blue)); pl.position.set(0, 1.33, -.04); pl.rotation.x = -.35;
+    cloak(p, dblue, .44); put(p, cyl(.1, .1, .02, 8, gold, 0, .86, .12));
+  }
+  p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
+  return p;
+}
+// each portrait drawn once, a still bust like the Heir's, by the Archive's small renderer
+function rosterSnaps(el) {
+  codexRenderer();
+  el.querySelectorAll('.hrCv').forEach(cv => {
+    const p = rosterModel(cv.dataset.h), g = p.g; cxScene.add(g); g.updateMatrixWorld(true);
+    const hd = p.headParts[0].getWorldPosition(new THREE.Vector3());
+    codexStage({ r: .01, k: 1.2, c: hd.clone() });
+    cxCam.position.set(hd.x + .22, hd.y + .1, hd.z + 1.2); cxCam.lookAt(hd.x, hd.y - .06, hd.z);
+    cxR.render(cxScene, cxCam); cxScene.remove(g); heroCopy(cxR.domElement, cv); cv.dataset.done = 1;
+  });
+}
 // the sheet is made once and only its parts refilled (Jack: a new sheet on every + replayed the menus' rise animation, so the page
 // seemed to reload, and the portrait's canvas was made again)
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
     + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir<span class="upBank hpLvP"><span class="upNum">Lv <b class="hpLv"></b></span></span></div><div class="hpXp"></div><div class="hpStats"></div></div></div>`
-    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div></div>`;
+    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div>`
+    + `<div class="hSkHead hRosHead">Heroes</div><div class="hRoster">${HEROES.map(h => `<button class="hRos${h.soon ? ' soon' : ' on'}" data-hact="ros" data-h="${h.id}"><span class="hrPic"><canvas class="hrCv" data-h="${h.id}" width="128" height="128"></canvas>${h.soon ? `<span class="hrLock">${LOCK_ICO}</span>` : ''}</span><b>${h.name}</b><small>${h.soon ? 'Coming soon' : h.role}</small></button>`).join('')}</div></div>`;
+  if (!el.querySelector('.hrCv[data-done]')) rosterSnaps(el);
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   el.querySelector('.hpLv').textContent = HERO.lv;
   el.querySelector('.hpXp').innerHTML = `XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}`;
@@ -9222,7 +9303,9 @@ function renderHeroPick() {
     const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
     // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
     const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq${lvOk ? ' hsShort' : ''}">${lvOk ? `${SKP_ICO}${c}` : `Lv ${S.req[r]}`}</span>`;
-    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
+    // three steps: learnt ones lit, the next one outlined in blue, the rest dim
+    const steps = S.vals.map((v, i) => `<i class="${i < r ? 'on' : i === r ? 'nx' : ''}">${v}</i>`).join('');
+    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.desc}</small></span><span class="hsSteps">${steps}</span>${btn}</div>`;
   }).join('');
   syncHeroBadge();
 }
@@ -11333,7 +11416,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '88587a455b'; var updateWait = false, updateT = 0;
+const BUILD = '3ddb0b7697'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

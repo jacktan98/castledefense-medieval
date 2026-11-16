@@ -9,9 +9,11 @@ const heroOn = () => true;
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
-  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
-  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
-  firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
+  // desc: one line that never changes; vals: each rank's figure, shown as three steps on the Hero screen (Jack: the line and a
+  // "Next" line repeated each other and the rows grew uneven)
+  cry: { name: 'Inspire', desc: 'Troops nearby hit harder', vals: ['+10%', '+20%', '+30%'], req: [1, 3, 5], k: [.1, .2, .3] },
+  horse: { name: 'Royal horse', desc: 'Rides a horse, faster', vals: ['×2', '×2.3', '×2.6'], req: [2, 4, 6], k: [2, 2.3, 2.6] },
+  firm: { name: 'Stand firm', desc: 'Takes less damage', vals: ['−15%', '−25%', '−35%'], req: [5, 7, 9], k: [.15, .25, .35] },
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
 const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
@@ -217,7 +219,10 @@ document.addEventListener('click', ev => {
 // Back has its own listener on the screen, like the Upgrades screen's, and runs before anything else (Jack: on his phone Back
 // sometimes did nothing)
 function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
-$('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
+$('#heroPick').addEventListener('click', e => {
+  if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); return; }
+  const r = e.target.closest('[data-hact=ros]'); if (r && r.classList.contains('soon')) { e.stopPropagation(); sfx('nope'); }
+});
 // the campaign button's badge, like the Upgrades' "★30": the skill-point star and the points to spend
 function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}<span class="bN">${HERO.pts}</span>` : ''; n.hidden = !HERO.pts; } }
 function openHeroPick() {
@@ -265,13 +270,54 @@ function heroPortraitTick(now) {
   const cvs = document.querySelectorAll('#heroBar .heroCv, #heroCard:not([hidden]) .heroCv'); if (!cvs.length || $('#heroBar').hidden) return;
   hpDrawn = now; const src = heroBust(now); cvs.forEach(cv => heroCopy(src, cv));
 }
+// ---- more heroes (a try-out, Jack): the Ranger and the Captain from the earlier drafts, shown locked under the skills ----
+const HEROES = [
+  { id: 'heir', name: 'The Heir', role: 'In use' },
+  { id: 'ranger', name: 'The Ranger', soon: true },
+  { id: 'captain', name: 'The Captain', soon: true },
+];
+function rosterModel(id) {
+  if (id === 'heir') return heroModel().p;
+  const blue = kiteM, dblue = mat('#1f3d73'), green = mat('#3f5a2e'), gold = heroGold;
+  const put = (p, o) => { o.traverse(m => { if (m.isMesh) m.castShadow = true; }); p.body.add(o); return o; };
+  const cloak = (p, m, w) => put(p, box(w + .04, .05, .1, m, 0, .88, -.13));
+  let p;
+  if (id === 'ranger') {
+    p = makePerson({ tunic: mat('#5b4630'), tool: 'bow', hair: hairs[0] });
+    const hd = put(p, new THREE.Mesh(new THREE.SphereGeometry(.158, 14, 8, 0, Math.PI * 2, 0, Math.PI * .62), green)); hd.position.set(0, 1.05, -.015); hd.rotation.x = -.25;
+    const tip = put(p, new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), green)); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9;
+    cloak(p, green, .38);
+    const qv = new THREE.Group(); qv.position.set(.1, .72, -.17); qv.rotation.z = -.35; p.body.add(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
+  } else {
+    p = makePerson({ tunic: blue, tool: 'hammer' }); armour(p, 3);
+    p.armour.forEach(o => { if (o.type === 'Group' && new THREE.Box3().setFromObject(o).min.y > .95) o.visible = false; });
+    put(p, makeHelm('greathelm'));
+    const pl = put(p, new THREE.Mesh(new THREE.ConeGeometry(.055, .36, 6), blue)); pl.position.set(0, 1.33, -.04); pl.rotation.x = -.35;
+    cloak(p, dblue, .44); put(p, cyl(.1, .1, .02, 8, gold, 0, .86, .12));
+  }
+  p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
+  return p;
+}
+// each portrait drawn once, a still bust like the Heir's, by the Archive's small renderer
+function rosterSnaps(el) {
+  codexRenderer();
+  el.querySelectorAll('.hrCv').forEach(cv => {
+    const p = rosterModel(cv.dataset.h), g = p.g; cxScene.add(g); g.updateMatrixWorld(true);
+    const hd = p.headParts[0].getWorldPosition(new THREE.Vector3());
+    codexStage({ r: .01, k: 1.2, c: hd.clone() });
+    cxCam.position.set(hd.x + .22, hd.y + .1, hd.z + 1.2); cxCam.lookAt(hd.x, hd.y - .06, hd.z);
+    cxR.render(cxScene, cxCam); cxScene.remove(g); heroCopy(cxR.domElement, cv); cv.dataset.done = 1;
+  });
+}
 // the sheet is made once and only its parts refilled (Jack: a new sheet on every + replayed the menus' rise animation, so the page
 // seemed to reload, and the portrait's canvas was made again)
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
     + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir<span class="upBank hpLvP"><span class="upNum">Lv <b class="hpLv"></b></span></span></div><div class="hpXp"></div><div class="hpStats"></div></div></div>`
-    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div></div>`;
+    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div>`
+    + `<div class="hSkHead hRosHead">Heroes</div><div class="hRoster">${HEROES.map(h => `<button class="hRos${h.soon ? ' soon' : ' on'}" data-hact="ros" data-h="${h.id}"><span class="hrPic"><canvas class="hrCv" data-h="${h.id}" width="128" height="128"></canvas>${h.soon ? `<span class="hrLock">${LOCK_ICO}</span>` : ''}</span><b>${h.name}</b><small>${h.soon ? 'Coming soon' : h.role}</small></button>`).join('')}</div></div>`;
+  if (!el.querySelector('.hrCv[data-done]')) rosterSnaps(el);
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   el.querySelector('.hpLv').textContent = HERO.lv;
   el.querySelector('.hpXp').innerHTML = `XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}`;
@@ -282,7 +328,9 @@ function renderHeroPick() {
     const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
     // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
     const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq${lvOk ? ' hsShort' : ''}">${lvOk ? `${SKP_ICO}${c}` : `Lv ${S.req[r]}`}</span>`;
-    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
+    // three steps: learnt ones lit, the next one outlined in blue, the rest dim
+    const steps = S.vals.map((v, i) => `<i class="${i < r ? 'on' : i === r ? 'nx' : ''}">${v}</i>`).join('');
+    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.desc}</small></span><span class="hsSteps">${steps}</span>${btn}</div>`;
   }).join('');
   syncHeroBadge();
 }

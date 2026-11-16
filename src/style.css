@@ -284,7 +284,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1079,3 +1079,38 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 #campHeroN .bN{transform:translateY(-.7px)} #campUpN .bN{transform:translateY(.2px)}
 
 .campBadge .bStar{font-style:normal;margin-right:2px;transform:translateY(1.45px)}
+/* Hero screen (Jack): every skill row the same height, its figures as three steps instead of a line and a "Next" line */
+.hpSk{min-height:58px}
+.hpSk .hsSteps{display:flex;gap:4px;flex:none}
+.hpSk .hsSteps i{min-width:40px;padding:3px 0;border-radius:6px;border:1px solid rgba(159,209,255,.25);color:rgba(159,209,255,.45);font:700 12px/1 var(--body);font-style:normal;text-align:center;box-sizing:border-box}
+.hpSk .hsSteps i.on{background:#9fd1ff;border-color:#9fd1ff;color:#13233d}
+.hpSk .hsSteps i.nx{border-color:#9fd1ff;color:#cfe8ff}
+.hpSk .hsPlus,.hpSk .hsReq{flex:none}
+.hpSk .hsReq{min-width:32px}
+/* the heroes row (a try-out): the Heir in use, the Ranger and the Captain locked */
+.heroSheet .hRosHead{margin-top:10px}
+.hRoster{display:flex;gap:10px;justify-content:center;width:100%}
+.modal.tome .hRos{flex:1 1 0;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px 8px!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.55)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;min-height:0!important;box-shadow:none!important}
+.modal.tome .hRos.on{border:2px solid #f0c95a!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important}
+.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%)}
+.hRos.soon .hrPic{border-color:#6d5a34}
+.hRos .hrCv{width:100%;height:100%;display:block}
+.hRos.soon .hrCv{filter:grayscale(.7) brightness(.72)}
+.hRos .hrPic{overflow:visible}.hRos .hrCv{border-radius:50%}
+.hRos .hrLock{position:absolute;right:-5px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1a140b;border:1.5px solid #8a7444;display:flex;align-items:center;justify-content:center}
+.hRos .hrLock .lockIco{width:12px;height:12px}
+.hRos b{font:400 14px var(--display);color:#ffe2a0;white-space:nowrap}
+.hRos.soon b{color:#b39c6c}
+.hRos small{font:600 11px var(--body);color:var(--muted)}
+.hRos.on small{color:#f0c95a}
+/* on a tablet the Hero screen is a compact column in the middle of the screen (Jack: it ran the full width) */
+body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!important;margin:auto}
+#heroPick{display:flex;justify-content:center;align-items:flex-start;overflow:auto} #heroPick .heroSheet{margin:auto}
+@media (max-width:440px){ .hpSk{gap:7px;padding:7px 8px} .hpSk .hsSteps{gap:3px} .hpSk .hsSteps i{min-width:33px;font-size:11px;padding:3px 0} .hpSk .hsTx small{font-size:11.5px} }
+/* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
+@media (max-height:520px){
+  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
+  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
+  .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
+  .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
+}
