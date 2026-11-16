@@ -613,7 +613,7 @@ function engineShot(e, B, c) {
 // back by the pulley rope (the catapult's arm is winched down by its rope), and the reload only runs while he winds; the gunner
 // holds the trigger line and yanks it to loose. The ram's pair drive the whole ram at the wall: they haul it back, run it in,
 // it is knocked back by the blow, and they push it up again
-const _cv = new THREE.Vector3(), _cw = new THREE.Vector3();
+const _cv = new THREE.Vector3(), _cw = new THREE.Vector3(), _ch = new THREE.Vector3();
 const ENG_LOAD = { ballista: .8, catapult: .75 };   // the winding takes this share of the engine's rate
 function crewGo(c, x, z, dt) {
   const p = c.g.position, dx = x - p.x, dz = z - p.z, d = Math.hypot(dx, dz), st = Math.min(d, dt * 1.3);
@@ -666,7 +666,9 @@ function animEngine(e, dt, sw) {
       c.g.position.set(sx, 0, cz); c.g.rotation.y = 0; kneel(c, 0);
       legs(c, Math.abs(v) > .3, t * (v > 1.5 ? 14 : 9) + i * Math.PI);           // stepping with the log
       c.body.rotation.x += ((p < .35 && e.attackT > 0 ? -.1 : p < .55 && e.attackT > 0 ? .3 : p < .75 && e.attackT > 0 ? .1 : .2) - c.body.rotation.x) * Math.min(1, dt * 10);
-      c.g.updateMatrixWorld(true); const h = e.g.localToWorld(_cv.set(sx * .35, endY, endZ));   // both hands on the log's end
+      // both hands on the log's end (its own vector: crewAim writes _cv, so with h in _cv the second arm aimed at the first's
+      // shoulder and swung backwards, Jack)
+      c.g.updateMatrixWorld(true); const h = e.g.localToWorld(_ch.set(sx * .35, endY, endZ));
       crewAim(e, c, c.arms[0], h); crewAim(e, c, c.arms[1], h);
     });
     return;

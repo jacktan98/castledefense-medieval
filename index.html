@@ -6250,6 +6250,7 @@ function updateVillagers(dt, now) {
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
     if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : swordPose)(v, v.attackT || 0, swing); }   // exact: eased, the strikes go soft
+    if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
     if (v.job && v.job.type === 'market' && occB[cellAt(v.rx, v.rz)] === v.job) { const pt = plinthTop('market', v.job.tier); if (pt != null) v.g.position.y = Math.max(v.g.position.y, v.job.group.position.y + pt); }
@@ -6881,7 +6882,7 @@ function engineShot(e, B, c) {
 // back by the pulley rope (the catapult's arm is winched down by its rope), and the reload only runs while he winds; the gunner
 // holds the trigger line and yanks it to loose. The ram's pair drive the whole ram at the wall: they haul it back, run it in,
 // it is knocked back by the blow, and they push it up again
-const _cv = new THREE.Vector3(), _cw = new THREE.Vector3();
+const _cv = new THREE.Vector3(), _cw = new THREE.Vector3(), _ch = new THREE.Vector3();
 const ENG_LOAD = { ballista: .8, catapult: .75 };   // the winding takes this share of the engine's rate
 function crewGo(c, x, z, dt) {
   const p = c.g.position, dx = x - p.x, dz = z - p.z, d = Math.hypot(dx, dz), st = Math.min(d, dt * 1.3);
@@ -6934,7 +6935,9 @@ function animEngine(e, dt, sw) {
       c.g.position.set(sx, 0, cz); c.g.rotation.y = 0; kneel(c, 0);
       legs(c, Math.abs(v) > .3, t * (v > 1.5 ? 14 : 9) + i * Math.PI);           // stepping with the log
       c.body.rotation.x += ((p < .35 && e.attackT > 0 ? -.1 : p < .55 && e.attackT > 0 ? .3 : p < .75 && e.attackT > 0 ? .1 : .2) - c.body.rotation.x) * Math.min(1, dt * 10);
-      c.g.updateMatrixWorld(true); const h = e.g.localToWorld(_cv.set(sx * .35, endY, endZ));   // both hands on the log's end
+      // both hands on the log's end (its own vector: crewAim writes _cv, so with h in _cv the second arm aimed at the first's
+      // shoulder and swung backwards, Jack)
+      c.g.updateMatrixWorld(true); const h = e.g.localToWorld(_ch.set(sx * .35, endY, endZ));
       crewAim(e, c, c.arms[0], h); crewAim(e, c, c.arms[1], h);
     });
     return;
@@ -9107,9 +9110,11 @@ const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .
 // the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
+const fletchM = mat('#efe6d2'), fletchRedM = mat('#b8452c'), arrowWoodM = mat('#9a6b3c');
 const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
 function heroKit(v, id = HERO_ID, foot) {
   if (v.horse) stripKit(v);
+  v.cape = null;
   const D = HERO_DEFS[id], hc = hairs[D.hair % hairs.length];
   // the hero's own hair (as on the portrait), whoever the villager was
   if (v.heroHair !== hc && v.headParts) { const old = v.headParts[2], h = makeHair(hc); old.parent.add(h); old.parent.remove(old); v.headParts[2] = h; v.hairC = hc; v.heroHair = hc; }
@@ -9126,7 +9131,13 @@ function heroKit(v, id = HERO_ID, foot) {
     cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
-    for (let i = 0; i < 3; i++) qv.add(box(.02, .1, .02, arrowMat, (i - 1) * .022, .2, 0));
+    // arrows standing up out of it (Jack: make them read as arrows): shafts well clear of the rim, each with a white fletching
+    // of two crossed vanes, one red
+    for (let i = 0; i < 4; i++) {
+      const a = i / 4 * Math.PI * 2 + .4, ax = Math.cos(a) * .022, az = Math.sin(a) * .022, fm = i === 1 ? fletchRedM : fletchM;
+      qv.add(box(.014, .26, .014, arrowWoodM, ax, .2, az));
+      const f1 = box(.05, .08, .006, fm, ax, .3, az), f2 = box(.006, .08, .05, fm, ax, .3, az); qv.add(f1, f2);
+    }
     if (v.pivot) v.pivot.parent.remove(v.pivot);
     v.toolKind = 'bow'; v.pivot = makeTool('bow'); v.arms[0].add(v.pivot);
     v.soldier = true; v.cav = false;
@@ -9137,9 +9148,16 @@ function heroKit(v, id = HERO_ID, foot) {
       const c = head(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .118, .055, Math.cos(a) * .118); c.add(p); }
       c.position.y = 1.12; put(c);
+      // the Heir fights with the sword alone (Jack: no shield)
+      for (const o of v.kit.slice()) if (o.userData && o.userData.shield) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
     } else {
       put(captainHelm());
-      put(box(.48, .05, .1, capCloakM, 0, .88, -.13)); put(box(.42, .56, .03, capCloakM, 0, .58, -.2));
+      // the cloak (Jack: make it move): four strips hinged one under the other from the shoulders, rippling like the bosses'
+      // (capeWave, from the pose loop and the gallery)
+      put(box(.48, .05, .1, capCloakM, 0, .88, -.13));
+      let hinge = new THREE.Group(); hinge.position.set(0, .88, -.19); put(hinge); v.cape = [];
+      for (let i = 0; i < 4; i++) { if (i) { const h2 = new THREE.Group(); h2.position.y = -.14; hinge.add(h2); hinge = h2; }
+        const s = box(.42 + i * .02, .145, .03, capCloakM, 0, -.07, 0); s.castShadow = true; hinge.add(s); v.cape.push(hinge); }
     }
   }
   if (v.hatG) v.hatG.visible = false;
@@ -11596,7 +11614,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '6aa4a86227'; var updateWait = false, updateT = 0;
+const BUILD = '4a4cc537b8'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

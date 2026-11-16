@@ -76,9 +76,11 @@ const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .
 // the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
+const fletchM = mat('#efe6d2'), fletchRedM = mat('#b8452c'), arrowWoodM = mat('#9a6b3c');
 const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
 function heroKit(v, id = HERO_ID, foot) {
   if (v.horse) stripKit(v);
+  v.cape = null;
   const D = HERO_DEFS[id], hc = hairs[D.hair % hairs.length];
   // the hero's own hair (as on the portrait), whoever the villager was
   if (v.heroHair !== hc && v.headParts) { const old = v.headParts[2], h = makeHair(hc); old.parent.add(h); old.parent.remove(old); v.headParts[2] = h; v.hairC = hc; v.heroHair = hc; }
@@ -95,7 +97,13 @@ function heroKit(v, id = HERO_ID, foot) {
     cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
-    for (let i = 0; i < 3; i++) qv.add(box(.02, .1, .02, arrowMat, (i - 1) * .022, .2, 0));
+    // arrows standing up out of it (Jack: make them read as arrows): shafts well clear of the rim, each with a white fletching
+    // of two crossed vanes, one red
+    for (let i = 0; i < 4; i++) {
+      const a = i / 4 * Math.PI * 2 + .4, ax = Math.cos(a) * .022, az = Math.sin(a) * .022, fm = i === 1 ? fletchRedM : fletchM;
+      qv.add(box(.014, .26, .014, arrowWoodM, ax, .2, az));
+      const f1 = box(.05, .08, .006, fm, ax, .3, az), f2 = box(.006, .08, .05, fm, ax, .3, az); qv.add(f1, f2);
+    }
     if (v.pivot) v.pivot.parent.remove(v.pivot);
     v.toolKind = 'bow'; v.pivot = makeTool('bow'); v.arms[0].add(v.pivot);
     v.soldier = true; v.cav = false;
@@ -106,9 +114,16 @@ function heroKit(v, id = HERO_ID, foot) {
       const c = head(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .118, .055, Math.cos(a) * .118); c.add(p); }
       c.position.y = 1.12; put(c);
+      // the Heir fights with the sword alone (Jack: no shield)
+      for (const o of v.kit.slice()) if (o.userData && o.userData.shield) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
     } else {
       put(captainHelm());
-      put(box(.48, .05, .1, capCloakM, 0, .88, -.13)); put(box(.42, .56, .03, capCloakM, 0, .58, -.2));
+      // the cloak (Jack: make it move): four strips hinged one under the other from the shoulders, rippling like the bosses'
+      // (capeWave, from the pose loop and the gallery)
+      put(box(.48, .05, .1, capCloakM, 0, .88, -.13));
+      let hinge = new THREE.Group(); hinge.position.set(0, .88, -.19); put(hinge); v.cape = [];
+      for (let i = 0; i < 4; i++) { if (i) { const h2 = new THREE.Group(); h2.position.y = -.14; hinge.add(h2); hinge = h2; }
+        const s = box(.42 + i * .02, .145, .03, capCloakM, 0, -.07, 0); s.castShadow = true; hinge.add(s); v.cape.push(hinge); }
     }
   }
   if (v.hatG) v.hatG.visible = false;
