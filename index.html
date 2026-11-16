@@ -1051,7 +1051,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
-.heroSheet .hpStage{width:140px;height:140px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
 .heroSheet .hpView{width:100%;height:100%;display:block}
 .heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
@@ -1082,6 +1082,9 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
 body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
+
+.skp{width:1.3em;height:1.3em;vertical-align:-.25em;margin-right:3px;fill:#f3d27a;stroke:#5a3a0c;stroke-width:1.2;stroke-linejoin:round}
+.heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -9080,7 +9083,7 @@ function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = 
 const HERO_ICO = {
   cry: '<svg viewBox="0 0 24 24"><path d="M3 8 L7.5 12 L12 5 L16.5 12 L21 8 L19 18 H5Z"/><path d="M8 21 H16"/></svg>',
   // the riders' horse with speed lines kept clear of it (Jack: Royal horse's own picture, not the Riders button's)
-  horse: `<svg viewBox="0 0 24 24"><g transform="translate(4.6 1) scale(.9)">${HORSE_ICO}</g><path d="M5.2 9 H8.2 M2.4 12.5 H5.6 M2.6 16 H5.4"/></svg>`,
+  horse: `<svg viewBox="0 0 24 24"><g transform="translate(4.6 1) scale(.9)">${HORSE_ICO}</g><path d="M4.6 9 H7.6 M2.4 12.5 H5.6 M2.6 16 H5.4"/></svg>`,
   firm: '<svg viewBox="0 0 24 24"><path d="M12 3 L19 6 V11 C19 16 15.5 19 12 21 C8.5 19 5 16 5 11 V6Z"/><path d="M12 7 V17 M8 11 H16"/></svg>',
 };
 const heroShown = () => heroOn() && !gameOver && !menuOn() && !galleryOn && !showcaseBuilt && !!castleB();
@@ -9189,6 +9192,8 @@ function heroPortraitTick(now) {
 }
 // the sheet is made once and only its parts refilled (Jack: a new sheet on every + replayed the menus' rise animation, so the page
 // seemed to reload, and the portrait's canvas was made again)
+// a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
+const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 1.5 C13 9 15 11 22.5 12 C15 13 13 15 12 22.5 C11 15 9 13 1.5 12 C9 11 11 9 12 1.5 Z"/></svg>';
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
@@ -9198,12 +9203,12 @@ function renderHeroPick() {
   el.querySelector('.hpLv').textContent = HERO.lv;
   el.querySelector('.hpXp').innerHTML = `XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}`;
   el.querySelector('.hpStats').innerHTML = `${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}`;
-  el.querySelector('.hsPts').textContent = HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : '';
+  el.querySelector('.hsPts').innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : '';
   el.querySelector('.hsReset').disabled = !HERO_ORDER.some(k => HERO.sk[k]);
   el.querySelector('.hsList').innerHTML = HERO_ORDER.map(k => {
     const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
     // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
-    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq">${lvOk ? `${c} pts` : `Lv ${S.req[r]}`}</span>`;
+    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq${lvOk ? ' hsShort' : ''}">${lvOk ? `${SKP_ICO}${c}` : `Lv ${S.req[r]}`}</span>`;
     return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
   }).join('');
   syncHeroBadge();
@@ -11315,7 +11320,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'ae3806f6bd'; var updateWait = false, updateT = 0;
+const BUILD = 'c92abfb380'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

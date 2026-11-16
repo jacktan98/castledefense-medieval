@@ -1034,7 +1034,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
-.heroSheet .hpStage{width:140px;height:140px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
 .heroSheet .hpView{width:100%;height:100%;display:block}
 .heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
@@ -1065,3 +1065,6 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
 body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
+
+.skp{width:1.3em;height:1.3em;vertical-align:-.25em;margin-right:3px;fill:#f3d27a;stroke:#5a3a0c;stroke-width:1.2;stroke-linejoin:round}
+.heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
