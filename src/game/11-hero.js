@@ -2,14 +2,15 @@
 // One switch (mtd-dev-hero, the admin's Heroes button) turns everything here on; off, every hook below returns at once and the
 // game plays exactly as before. The Heir fights on foot (on a horse once Royal horse is learnt), holds a spot in front of the castle
 // (or where Move sends them), earns XP by fighting and keeps their level from stage to stage (mtd-hero); a fallen Heir comes
-// back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point.
+// back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point. The skills are passive (Jack: no
+// abilities in the game, like the later Kingdom Rush games) and are learnt only on the campaign's Hero screen (#heroPick).
 const heroOn = () => { try { return localStorage.getItem('mtd-dev-hero') === '1'; } catch (e) { return false; } };
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
-  cry: { name: 'Royal cry', line: 'Troops nearby hit harder', req: [1, 3, 5], k: [.15, .25, .35], t: 8, cd: 30 },
-  horse: { name: 'Royal horse', line: 'Rides a horse, faster', req: [2, 4, 6], k: [2, 2.3, 2.6] },
-  firm: { name: 'Stand firm', line: 'Takes half damage', req: [5, 7, 9], t: [4, 6, 8], cd: 40 },
+  cry: { name: 'Royal cry', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
+  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
+  firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
 const HERO_ORDER = ['cry', 'horse', 'firm'];
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -23,7 +24,7 @@ const heroHp = () => 260 + 30 * (HERO.lv - 1), heroDmg = () => 12 + 2 * (HERO.lv
 const heroNeed = () => 60 + 40 * HERO.lv;
 const heroSpeed = () => HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 1;
 var hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
-var cryT = 0, cryCd = 0, firmT = 0, firmCd = 0, heroRing = null, heroKey = '';
+var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
 function heroKit(v) {
@@ -50,8 +51,7 @@ function removeHero() {
 }
 // a new game (startGame): a fresh Heir in front of the castle, timers and the Move flag cleared
 function heroStart() {
-  hero = null; heroDownT = 0; heroMove = false; heroSel = false; cryT = cryCd = firmT = firmCd = 0; heroWasNight = false; setHeroFlag(null);
-  if (heroRing) heroRing.visible = false;
+  hero = null; heroDownT = 0; heroMove = false; heroSel = false; heroWasNight = false; setHeroFlag(null);
   if (heroOn()) spawnHero();
   heroKey = ''; heroUI();
 }
@@ -62,14 +62,14 @@ function setHeroFlag(pt) {
   f.add(cyl(.06, .06, .06, 8, heroGold, 0, 1.53, 0));
   f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f;
 }
-// Royal cry: troops within 7 m of the Heir hit harder while it lasts (updateSoldier and the Heir's own blows)
-const heroBuff = v => hero && cryT > 0 && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
-// Stand firm halves what the Heir takes (hurtSoldier)
-const heroTake = d => firmT > 0 ? d / 2 : d;
+// Royal cry: troops within 7 m of the Heir, the Heir too, hit harder (updateSoldier and the Heir's own blows)
+const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
+// Stand firm: the Heir takes less (hurtSoldier)
+const heroTake = d => HERO.sk.firm ? d * (1 - HERO_SK.firm.k[HERO.sk.firm - 1]) : d;
 function heroFall(v) {
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
   if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 });
-  hero = null; heroDownT = HERO_CD; cryT = firmT = 0; heroMove = false; log('<b>The Heir</b> has fallen', 'warn'); heroKey = '';
+  hero = null; heroDownT = HERO_CD; heroMove = false; log('<b>The Heir</b> has fallen', 'warn'); heroKey = '';
 }
 function heroXp(n) {
   if (!heroOn() || HERO.lv >= HERO_MAX) return;
@@ -88,30 +88,8 @@ function heroKill(e, by) {
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
   if (HERO.pts < 1 || r >= 3 || HERO.lv < S.req[r]) { sfx('nope'); return; }
-  HERO.pts--; HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = '';
+  HERO.pts--; HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
   if (k === 'horse' && hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; if (HERO.sk.horse === 1) sfx('neigh', hero); }
-}
-function heroCast(k) {
-  if (!hero || !HERO.sk[k]) return;
-  if (PH.kind !== 'night') { setHint('Night only', 'bad'); return; }
-  if (k === 'cry') { if (cryCd > 0) return; cryT = HERO_SK.cry.t; cryCd = HERO_SK.cry.cd; heroPulse(); sfx('horn', hero, .35); setHint('Royal cry'); }
-  if (k === 'firm') { if (firmCd > 0) return; firmT = HERO_SK.firm.t[HERO.sk.firm - 1]; firmCd = HERO_SK.firm.cd; sfx('clash', hero); setHint('Stand firm'); }
-  heroKey = '';
-}
-// a gold ring that spreads out from the Heir as they cry out; a blue one round their feet while Stand firm lasts
-var heroPulseT = 0;
-function heroPulse() { heroPulseT = .8; }
-function heroRings(dt) {
-  if (!heroRing) {
-    heroRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 40), new THREE.MeshBasicMaterial({ color: '#f0c95a', transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-    heroRing.rotation.x = -Math.PI / 2; heroRing.renderOrder = 3; scene.add(heroRing);
-  }
-  if (heroRing.parent !== scene) scene.add(heroRing);
-  if (!hero) { heroRing.visible = false; return; }
-  const y = walkY(hero.rx ?? hero.x, hero.rz ?? hero.z) + .06; heroRing.position.set(hero.rx ?? hero.x, y, hero.rz ?? hero.z);
-  if (heroPulseT > 0) { heroPulseT -= dt; const t = 1 - heroPulseT / .8, s = .6 + t * 6.4; heroRing.visible = true; heroRing.scale.set(s, s, s); heroRing.material.color.set('#f0c95a'); heroRing.material.opacity = .9 * (1 - t); }
-  else if (firmT > 0) { heroRing.visible = true; heroRing.scale.set(.7, .7, .7); heroRing.material.color.set('#9fd1ff'); heroRing.material.opacity = .55 + .25 * Math.sin(performance.now() / 160); }
-  else heroRing.visible = false;
 }
 // the Heir's own step, day and night (updateVillagers): hold the spot, go for raiders within 7 m of it, give up on any that lead 10 m off
 function updateHero(v, dt) {
@@ -133,13 +111,10 @@ function updateHero(v, dt) {
 }
 // one step of the game (tick): timers, the comeback, a night survived
 function heroTick(dt) {
-  if (!heroOn()) { if (hero) removeHero(); if (heroRing) heroRing.visible = false; return; }
-  if (cryT > 0) cryT -= dt; if (cryCd > 0) cryCd = Math.max(0, cryCd - dt);
-  if (firmT > 0) firmT -= dt; if (firmCd > 0) firmCd = Math.max(0, firmCd - dt);
+  if (!heroOn()) { if (hero) removeHero(); return; }
   if (!hero && heroDownT > 0 && (heroDownT -= dt) <= 0) { heroDownT = 0; spawnHero(); log('<b>The Heir</b> returns', 'good'); }
   else if (!hero && !heroDownT && !gameOver) spawnHero();
   const night = PH.kind === 'night'; if (heroWasNight && !night && hero && !gameOver) heroXp(20); heroWasNight = night;
-  heroRings(dt);
 }
 // taps (tap): Move's spot first, then the Heir themself (with nothing being built)
 function heroTap(e) {
@@ -171,21 +146,17 @@ function heroUI() {
   if (key !== heroKey) {
     heroKey = key;
     let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><i class="hpRing"></i><span class="face">${HERO_FACE}</span><b class="lv">${HERO.lv}</b><span class="xp"><i></i></span><b class="cd"></b></button>`;
-    if (night && hero) for (const k of ['cry', 'firm']) if (HERO.sk[k]) h += `<button class="pw heroPw" data-hact="${k}" aria-label="${HERO_SK[k].name}">${HERO_ICO[k]}<b class="cd"></b></button>`;
     bar.innerHTML = h;
     // the card: name and level, Move and Recall, health, XP, stats and the three skills with a + while points are left
     if (heroSel) {
-      const sk = HERO_ORDER.map(k => {
-        const S = HERO_SK[k], r = HERO.sk[k], can = HERO.pts > 0 && r < 3 && HERO.lv >= S.req[r];
-        const btn = r >= 3 ? '' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+</button>` : `<span class="hsReq">Lv ${S.req[r]}</span>`;
-        return `<div class="hSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line}</small></span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
-      }).join('');
+      // the skills, read only: learnt on the campaign's Hero screen
+      const sk = HERO_ORDER.filter(k => HERO.sk[k]).map(k => `<span class="hSkMini" title="${HERO_SK[k].name}">${HERO_ICO[k]}<span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < HERO.sk[k] ? 'on' : ''}"></i>`).join('')}</span></span>`).join('');
       card.innerHTML = `<div class="cardHead"><span class="cardIco heroIco">${HERO_FACE}</span><div class="cardName"><h4>The Heir</h4><div class="cardSub"><span>Hero · Lv ${HERO.lv}</span></div></div>`
         + (hero ? `<button class="iconBtn" data-hact="move" aria-pressed="${heroMove}" title="Move: tap, then a spot" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/></svg></button>` : '')
         + (heroAt ? `<button class="iconBtn" data-hact="recall" title="Back to the castle" aria-label="Recall"><svg viewBox="0 0 24 24"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 H14 A5.5 5.5 0 0 1 14 20 H9"/></svg></button>` : '')
         + `<button class="iconBtn" data-hact="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button></div>`
         + `<div class="hpbar"><i class="hHp"></i></div><div class="hXp">XP<span class="hXpBar"><i></i></span><span class="hXpN"></span></div>`
-        + `<div class="stats hStats"></div><div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}`;
+        + `<div class="stats hStats"></div>${sk ? `<div class="hSkRow">${sk}</div>` : ''}`;
     }
   }
   const p = bar.querySelector('.heroPort');
@@ -193,7 +164,6 @@ function heroUI() {
     p.style.setProperty('--p', `${(hero ? hpf : 0) * 100}%`); p.style.setProperty('--hc', hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)');
     p.querySelector('.xp i').style.width = `${xpf * 100}%`; p.querySelector('.cd').textContent = hero ? '' : Math.ceil(heroDownT);
   }
-  for (const b of bar.querySelectorAll('.heroPw')) { const k = b.dataset.hact, cd = k === 'cry' ? cryCd : firmCd, act = k === 'cry' ? cryT > 0 : firmT > 0; b.classList.toggle('cool', cd > 0 && !act); b.setAttribute('aria-pressed', String(act)); b.querySelector('.cd').textContent = cd > 0 && !act ? Math.ceil(cd) : ''; }
   card.hidden = !heroSel || !!selected;
   if (!card.hidden) {
     const hp = card.querySelector('.hHp'); if (hp) { hp.style.width = `${hpf * 100}%`; hp.style.background = hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)'; }
@@ -214,18 +184,38 @@ document.addEventListener('click', ev => {
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
-  else if (a === 'cry' || a === 'firm') heroCast(a);
+  else if (a === 'back') { sfx('click'); $('#heroPick').hidden = true; openCampaign(cSel); return; }
   heroUI();
 });
+// ---- the Hero screen (from the campaign's round Hero button, shown only with heroes on): the Heir, level, XP, stats and the
+// three passive skills, each with its ranks and a gold + while a point can be spent (laid out like the Upgrades screen) ----
+function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.textContent = HERO.pts; n.hidden = !HERO.pts; } }
+function openHeroPick() { sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick')); }
+function renderHeroPick() {
+  const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
+  const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
+  const sk = HERO_ORDER.map(k => {
+    const S = HERO_SK[k], r = HERO.sk[k], can = HERO.pts > 0 && r < 3 && HERO.lv >= S.req[r];
+    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+</button>` : `<span class="hsReq">Lv ${S.req[r]}</span>`;
+    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><div class="upBank"><span class="upNum">Lv <b>${HERO.lv}</b></span></div></div>`
+    + `<div class="hpBody"><div class="hpStage">${HERO_FACE}</div><div class="hpInfo"><div class="hpName">The Heir</div>`
+    + `<div class="hpXp">XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}</div>`
+    + `<div class="hpStats">${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}</div></div></div>`
+    + `<div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}</div>`;
+  syncHeroBadge();
+}
+document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's switch and its helpers (testing)
-function syncHeroAdmin() { const b = $('#adHero'); if (b) { b.textContent = heroOn() ? 'Heroes: On' : 'Heroes: Off'; b.classList.toggle('on', heroOn()); } const r = $('#adHeroRow'); if (r) r.hidden = !heroOn(); }
+function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !heroOn(); syncHeroBadge(); } const b = $('#adHero'); if (b) { b.textContent = heroOn() ? 'Heroes: On' : 'Heroes: Off'; b.classList.toggle('on', heroOn()); } const r = $('#adHeroRow'); if (r) r.hidden = !heroOn(); }
 $('#adHero').addEventListener('click', () => {
   try { localStorage.setItem('mtd-dev-hero', heroOn() ? '0' : '1'); } catch (e) {}
   if (heroOn()) spawnHero(); else removeHero();
   syncHeroAdmin(); heroKey = ''; heroUI();
 });
-$('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); heroUI(); });
+$('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
-  HERO = heroBlank(); saveHero(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
+  HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
 });
 syncHeroAdmin();

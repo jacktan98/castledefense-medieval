@@ -876,7 +876,7 @@ function adaptResolution(raw) {
 }
 // a title screen, map or town picker, campaign or stage preview, or the new-building cards is up: the game underneath stands still
 // (setPaused(false) at startup used to set it running under the title screen, paying out gold)
-const MENUS = ['#mapPick', '#loadPick', '#campaign', '#newCards', '#upPick', '#achPick', '#codexPick'].map(q => $(q));
+const MENUS = ['#mapPick', '#loadPick', '#campaign', '#newCards', '#upPick', '#achPick', '#codexPick', '#heroPick'].map(q => $(q));
 const menuOn = () => MENUS.some(m => !m.hidden);
 const mapPickEl = $('#mapPick'), campEl = $('#campaign'), loadEl = $('#loadPick'), upEl = $('#upPick'), achEl = $('#achPick'), cxEl = $('#codexPick'); let liteN = 0;
 mapPickEl.addEventListener('click', e => { if (showcaseBuilt && !e.target.closest('button') && !e.target.closest('#colCard') && !e.target.closest('#credCard')) nextShowcase(); });   // a tap off the cards and buttons: the next scene (Jack)

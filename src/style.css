@@ -284,7 +284,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1012,7 +1012,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 @media (max-width:700px) and (min-height:521px){
   body.dockMini:not(.tablet) .dock>#hint{position:absolute;left:auto;right:calc(var(--barW,130px) + 8px);transform:none;bottom:var(--hintB,7px);margin:0;max-width:calc(100% - var(--barW,130px) - 10px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
-/* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's skills at night, the Heir's card */
+/* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's card, the campaign's Hero screen */
 .heroBar{position:absolute;z-index:5;display:flex;gap:8px;align-items:center}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .hpRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--hc,var(--ok)) 0 var(--p,100%),rgba(0,0,0,.6) var(--p,100%) 100%);box-shadow:0 3px 10px rgba(0,0,0,.55)}
@@ -1024,23 +1024,34 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort .cd{position:absolute;inset:4px;display:none;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.55);font:700 15px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
 .heroPort.down .cd{display:flex} .heroPort.down .face{filter:grayscale(1) brightness(.7)}
 .heroPort.sel .face{border-color:#fff1c4;box-shadow:0 0 0 3px rgba(240,201,90,.55)}
-.pw.heroPw{border-color:#9fd1ff!important;color:#dff0ff;background:radial-gradient(circle at 50% 35%,#34507e,#121c33)!important;box-shadow:0 0 12px rgba(159,209,255,.5),0 3px 10px rgba(0,0,0,.55)}
-.pw.heroPw .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font:700 13px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
-.pw.heroPw.cool svg{opacity:.25} .pw.heroPw.cool .cd{display:flex}
-.pw.heroPw[aria-pressed="true"]{border-color:#fff1c4!important;box-shadow:0 0 0 3px rgba(159,209,255,.6),0 3px 10px rgba(0,0,0,.55)}
-.heroCard{width:min(290px,100%)!important}
+.heroCard{width:min(270px,100%)!important}
 .heroCard .heroIco{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:1.5px solid #d9b04e;position:relative}
 .heroCard .heroIco svg{width:100%;height:100%}
-.heroCard .hXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
-.heroCard .hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.heroCard .hXpBar i{display:block;height:100%;background:#9fd1ff}
-.heroCard .hSkHead{display:flex;justify-content:space-between;font:400 14px var(--display);color:var(--gold);margin-top:2px}
-.heroCard .hSkHead span{font:700 12px var(--body);color:#ffe2a0}
-.heroCard .hSk{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:8px;border:1px solid rgba(212,168,78,.45);background:rgba(10,8,4,.45)}
-.heroCard .hSk.off .hsIco,.heroCard .hSk.off .hsTx{opacity:.55}
-.heroCard .hsIco{width:28px;height:28px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:1.5px solid #9fd1ff;position:relative}
-.heroCard .hsIco svg{position:absolute;left:50%;top:50%;width:17px;height:17px;transform:translate(-50%,-50%);fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.heroCard .hsTx{flex:1;line-height:1.1}.heroCard .hsTx b{display:block;font:400 14px var(--display);color:#ffe2a0}.heroCard .hsTx small{font-size:11px;color:var(--muted)}
-.heroCard .hsPips{display:flex;gap:3px}.heroCard .hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.heroCard .hsPips i.on{background:#9fd1ff}
-.heroCard .hsPlus{width:28px;height:28px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 18px/1 var(--body)!important;border:1.5px solid #fff1c4!important}
-.heroCard .hsReq{font-size:11px;color:var(--muted);min-width:28px;text-align:center}
+.hXp,.hpXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
+.hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.hXpBar i{display:block;height:100%;background:#9fd1ff}
+.hSkRow{display:flex;gap:10px}
+.hSkMini{display:flex;align-items:center;gap:4px}
+.hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
+.campCirc .heroBtnFace{width:38px;height:38px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);display:block}
+.campCirc .heroBtnFace svg{width:100%;height:100%;display:block}
+.heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 70%,#2e5f22,#16300f 70%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage svg{width:100%;height:100%;display:block}
+.heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
+.heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
+.heroSheet .hpXp{font-size:12px}
+.heroSheet .hpStats{display:flex;gap:12px;font-weight:700}
+.heroSheet .hSkHead{display:flex;justify-content:space-between;align-items:baseline;font:400 17px var(--display);color:var(--gold);margin:4px 0 6px}
+.heroSheet .hSkHead span{font:700 13px var(--body);color:#ffe2a0}
+.hpSk{display:flex;align-items:center;gap:9px;padding:7px 9px;margin-bottom:7px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))}
+.hpSk.off .hsIco,.hpSk.off .hsTx{opacity:.6}
+.hpSk .hsIco{width:38px;height:38px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:2px solid #9fd1ff;position:relative}
+.hpSk .hsIco svg{position:absolute;left:50%;top:50%;width:21px;height:21px;transform:translate(-50%,-50%);fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hpSk .hsTx{flex:1;line-height:1.15;text-align:left}.hpSk .hsTx b{display:block;font:400 16px var(--display);color:#ffe2a0}.hpSk .hsTx small{display:block;font-size:12px;color:var(--muted)}
+.hpSk .hsTx small.hsNext{color:#9fd1ff}
+.hpSk .hsPips i{width:10px;height:10px}
+.modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
+.hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 #adHero.on{border-color:#9fd1ff;color:#dff0ff}
+.heroSheet .hpBody,.heroSheet .hSkHead,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}

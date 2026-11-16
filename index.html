@@ -301,7 +301,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1029,7 +1029,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 @media (max-width:700px) and (min-height:521px){
   body.dockMini:not(.tablet) .dock>#hint{position:absolute;left:auto;right:calc(var(--barW,130px) + 8px);transform:none;bottom:var(--hintB,7px);margin:0;max-width:calc(100% - var(--barW,130px) - 10px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
-/* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's skills at night, the Heir's card */
+/* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's card, the campaign's Hero screen */
 .heroBar{position:absolute;z-index:5;display:flex;gap:8px;align-items:center}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .hpRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--hc,var(--ok)) 0 var(--p,100%),rgba(0,0,0,.6) var(--p,100%) 100%);box-shadow:0 3px 10px rgba(0,0,0,.55)}
@@ -1041,26 +1041,37 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort .cd{position:absolute;inset:4px;display:none;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.55);font:700 15px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
 .heroPort.down .cd{display:flex} .heroPort.down .face{filter:grayscale(1) brightness(.7)}
 .heroPort.sel .face{border-color:#fff1c4;box-shadow:0 0 0 3px rgba(240,201,90,.55)}
-.pw.heroPw{border-color:#9fd1ff!important;color:#dff0ff;background:radial-gradient(circle at 50% 35%,#34507e,#121c33)!important;box-shadow:0 0 12px rgba(159,209,255,.5),0 3px 10px rgba(0,0,0,.55)}
-.pw.heroPw .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font:700 13px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
-.pw.heroPw.cool svg{opacity:.25} .pw.heroPw.cool .cd{display:flex}
-.pw.heroPw[aria-pressed="true"]{border-color:#fff1c4!important;box-shadow:0 0 0 3px rgba(159,209,255,.6),0 3px 10px rgba(0,0,0,.55)}
-.heroCard{width:min(290px,100%)!important}
+.heroCard{width:min(270px,100%)!important}
 .heroCard .heroIco{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:1.5px solid #d9b04e;position:relative}
 .heroCard .heroIco svg{width:100%;height:100%}
-.heroCard .hXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
-.heroCard .hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.heroCard .hXpBar i{display:block;height:100%;background:#9fd1ff}
-.heroCard .hSkHead{display:flex;justify-content:space-between;font:400 14px var(--display);color:var(--gold);margin-top:2px}
-.heroCard .hSkHead span{font:700 12px var(--body);color:#ffe2a0}
-.heroCard .hSk{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:8px;border:1px solid rgba(212,168,78,.45);background:rgba(10,8,4,.45)}
-.heroCard .hSk.off .hsIco,.heroCard .hSk.off .hsTx{opacity:.55}
-.heroCard .hsIco{width:28px;height:28px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:1.5px solid #9fd1ff;position:relative}
-.heroCard .hsIco svg{position:absolute;left:50%;top:50%;width:17px;height:17px;transform:translate(-50%,-50%);fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.heroCard .hsTx{flex:1;line-height:1.1}.heroCard .hsTx b{display:block;font:400 14px var(--display);color:#ffe2a0}.heroCard .hsTx small{font-size:11px;color:var(--muted)}
-.heroCard .hsPips{display:flex;gap:3px}.heroCard .hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.heroCard .hsPips i.on{background:#9fd1ff}
-.heroCard .hsPlus{width:28px;height:28px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 18px/1 var(--body)!important;border:1.5px solid #fff1c4!important}
-.heroCard .hsReq{font-size:11px;color:var(--muted);min-width:28px;text-align:center}
+.hXp,.hpXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
+.hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.hXpBar i{display:block;height:100%;background:#9fd1ff}
+.hSkRow{display:flex;gap:10px}
+.hSkMini{display:flex;align-items:center;gap:4px}
+.hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
+.campCirc .heroBtnFace{width:38px;height:38px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);display:block}
+.campCirc .heroBtnFace svg{width:100%;height:100%;display:block}
+.heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 70%,#2e5f22,#16300f 70%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage svg{width:100%;height:100%;display:block}
+.heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
+.heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
+.heroSheet .hpXp{font-size:12px}
+.heroSheet .hpStats{display:flex;gap:12px;font-weight:700}
+.heroSheet .hSkHead{display:flex;justify-content:space-between;align-items:baseline;font:400 17px var(--display);color:var(--gold);margin:4px 0 6px}
+.heroSheet .hSkHead span{font:700 13px var(--body);color:#ffe2a0}
+.hpSk{display:flex;align-items:center;gap:9px;padding:7px 9px;margin-bottom:7px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))}
+.hpSk.off .hsIco,.hpSk.off .hsTx{opacity:.6}
+.hpSk .hsIco{width:38px;height:38px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:2px solid #9fd1ff;position:relative}
+.hpSk .hsIco svg{position:absolute;left:50%;top:50%;width:21px;height:21px;transform:translate(-50%,-50%);fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hpSk .hsTx{flex:1;line-height:1.15;text-align:left}.hpSk .hsTx b{display:block;font:400 16px var(--display);color:#ffe2a0}.hpSk .hsTx small{display:block;font-size:12px;color:var(--muted)}
+.hpSk .hsTx small.hsNext{color:#9fd1ff}
+.hpSk .hsPips i{width:10px;height:10px}
+.modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
+.hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 #adHero.on{border-color:#9fd1ff;color:#dff0ff}
+.heroSheet .hpBody,.heroSheet .hSkHead,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -1201,6 +1212,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
   <div class="modal tome" id="upPick" hidden></div>
   <div class="modal tome" id="achPick" hidden></div>
   <div class="modal tome" id="codexPick" hidden></div>
+  <div class="modal tome" id="heroPick" hidden></div>
   <div id="achToast" hidden></div>
   <div class="modal tome" id="campaign" hidden>
     <!-- back to the title, a round button in the top-left corner like the Upgrades screen's (Jack: Back on each stage's details made no sense) -->
@@ -1211,7 +1223,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
         <div class="cLeft">
           <div class="cDeckWrap"><div class="cDeck" id="campMap"><div class="cCards" id="cCards"></div></div><button class="cArrow l" id="cPrev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19"/></svg></button><button class="cArrow r" id="cNext" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5 L16 12 L9 19"/></svg></button></div>
           <!-- round buttons just above the progress bar on its left (Jack): Upgrades (a hammer), Achievements to come beside it -->
-      <div class="cDotsWrap"><div class="campSide"><button class="campCirc" id="campUpBtn" aria-label="Upgrades" title="Upgrades"><svg viewBox="-12 14 512 512"><defs><linearGradient id="hmg39" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a46a"/><stop offset="1" stop-color="#8a5a30"/></linearGradient></defs><g fill="url(#hmg39)" stroke="#140d05" stroke-width="34" paint-order="stroke" stroke-linejoin="round"><path d="M215.97 27.813c-2.218.04-4.35.177-6.407.375l-.532.062c-2.774.266-5.796 1.01-9.124 1.844c-4.418 1.11-8.096 2.607-11.125 4.406l77.782 59.313l7.375 5.656l-5.593 7.405l-13.72 18.156l67.595 51.626l14.217-18.812l9.47-12.53l6.5 14.342l19.656 43.47l60.593-80.095l-47.187-7.124l-15.533-2.312l9.47-12.563l14.28-18.843l-67.593-51.624L310.78 50.78l-5.03 6.657l-7.188-4.25c-28.635-16.917-58.02-25.157-80.343-25.374a77 77 0 0 0-2.25 0zM453 127.124l-71.47 94.438l34.564 26.187c44.24-20.22 64.01-52.594 71.312-94.625zm-193.688 25.03c-27.17 33.09-55.308 64.706-82.812 96.22l47.406 39.875c23.11-35.343 46.336-71.61 71.938-108.22l-36.53-27.874zM164.25 262.47c-11.355 13.115-22.564 26.254-33.5 39.5l48.375 52.717c11.707-16.6 23.107-33.515 34.438-50.687zm-45.438 54.124a1112 1112 0 0 0-23.093 29.72l33.468 73.842c13.586-16.22 26.434-32.893 38.843-49.937zm-35.75 47.03c-12.108 16.978-23.57 34.335-34.124 52.282L98.53 454.47a688 688 0 0 0 17.22-18.72zm-43.437 68.688a546 546 0 0 0-14.75 29l37.375 28.313a611 611 0 0 0 23.125-21.72z"/></g><defs><linearGradient id="hmo39_0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2f6"/><stop offset="1" stop-color="#8c96a3"/></linearGradient></defs><g fill="url(#hmo39_0)"><path d="M215.97 27.813 c-2.218 0.04 -4.35 0.177 -6.407 0.375 l-0.532 0.062 c-2.774 0.266 -5.796 1.01 -9.124 1.844 c-4.418 1.11 -8.096 2.607 -11.125 4.406 l77.782 59.313 l7.375 5.656 l-5.593 7.405 l-13.72 18.156 l67.595 51.626 l14.217 -18.812 l9.47 -12.53 l6.5 14.342 l19.656 43.47 l60.593 -80.095 l-47.187 -7.124 l-15.533 -2.312 l9.47 -12.563 l14.28 -18.843 l-67.593 -51.624 L310.78 50.78 l-5.03 6.657 l-7.188 -4.25 c-28.635 -16.917 -58.02 -25.157 -80.343 -25.374 a77 77 0 0 0 -2.25 0 Z"/><path d="M453 127.124 l-71.47 94.438 l34.564 26.187 c44.24 -20.22 64.01 -52.594 71.312 -94.625 Z"/></g></svg><span class="campBadge" id="campUpN" hidden></span></button><button class="campCirc" id="campAchBtn" aria-label="Achievements" title="Achievements"><svg viewBox="8 8 496 496"><defs><linearGradient id="achg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="1" stop-color="#d9a12e"/></linearGradient><linearGradient id="achw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703f"/><stop offset="1" stop-color="#5a3518"/></linearGradient></defs><g fill="url(#achg)" stroke="#140d05" stroke-width="34" paint-order="stroke" stroke-linejoin="round"><path  d="M98.398 21.146a17 17 0 0 0-4.636.521c-20.49 5.262-33.163 20.63-36.116 38.649c-2.952 18.019 2.168 38.346 12.676 58.193c20.695 39.086 63.262 77.08 117.852 85.85c-5.61-6.72-11.05-14.246-16.274-22.375c-39.008-12.57-70.021-42.344-85.67-71.899c-9.206-17.387-12.846-34.491-10.82-46.857C77.437 50.862 83.482 42.89 98.238 39.1c.065-.017.068-.034.092-.053c-.065-.143.105-.08 0 0a.7.7 0 0 0 .176.217c.527.493 1.689 2.24 2.207 5.14c1.036 5.804-.413 15.593-8.135 25.68l14.293 10.942c10.418-13.61 13.65-28.086 11.56-39.785c-1.044-5.85-3.396-11.165-7.628-15.124c-3.174-2.969-7.747-4.868-12.405-4.972zm315.204 0c-4.658.104-9.23 2.003-12.405 4.972c-4.232 3.96-6.584 9.274-7.629 15.124c-2.089 11.699 1.143 26.174 11.56 39.785l14.294-10.942c-7.722-10.087-9.171-19.876-8.135-25.68c.518-2.9 1.68-4.647 2.207-5.14a.7.7 0 0 0 .176-.217c-.105-.08.065-.143 0 0c.024.019.027.036.092.053c14.756 3.79 20.801 11.76 22.828 24.127c2.026 12.366-1.614 29.47-10.82 46.857c-15.649 29.555-46.662 59.33-85.67 71.899c-5.223 8.129-10.665 15.655-16.274 22.375c54.59-8.77 97.157-46.764 117.852-85.85c10.508-19.847 15.628-40.174 12.676-58.193c-2.953-18.02-15.626-33.387-36.116-38.649a17 17 0 0 0-4.636-.521m-276.166 7.713c2.146 36.533 16.76 83.07 36.537 120.824c10.707 20.442 22.876 38.334 34.761 50.685C220.62 212.72 232 218.858 240 218.858h32c8 0 19.38-6.138 31.266-18.49s24.054-30.243 34.761-50.685c19.777-37.755 34.39-84.29 36.537-120.824zm95.564 208v16h46v-16zm6.445 34c-2.458 25.967-12.796 57.873-24.437 76h81.984c-11.64-18.127-21.979-50.033-24.437-76zm-38.445 94v14h110v-14zm-32 32v94h174v-94zm23 23h128v48H192z"/></g><g fill="url(#achw)"><path d="M168.99999999999986 396.85900000000004 v94 h174 v-94 Z"/></g><g fill="url(#achg)"><path d="M191.99999999999986 419.85900000000004 h128 v48 H192 Z"/></g></svg></button><button class="campCirc" id="campCxBtn" aria-label="Archive" title="Archive"><svg viewBox="0 0 512 512"><g stroke="#140d05" stroke-width="30" stroke-linejoin="round" paint-order="stroke"><path d="M36 156 L36 424 Q148 392 256 444 Q364 392 476 424 L476 156 Z" fill="#8a5428"/><path d="M66 104 Q164 84 246 138 L246 414 Q164 364 66 386 Z" fill="#f4e8c6"/><path d="M446 104 Q348 84 266 138 L266 414 Q348 364 446 386 Z" fill="#f4e8c6"/></g><g fill="none" stroke="#a88a58" stroke-width="12" stroke-linecap="round"><path d="M104 166 Q160 156 212 186 M104 220 Q160 210 212 240 M104 274 Q160 264 212 294 M300 186 Q352 156 408 166 M300 240 Q352 210 408 220 M300 294 Q352 264 408 274"/></g><path d="M330 380 L330 470 L352 446 L374 470 L374 372" fill="#c23a2c" stroke="#140d05" stroke-width="22" stroke-linejoin="round" paint-order="stroke"/></svg></button></div>
+      <div class="cDotsWrap"><div class="campSide"><button class="campCirc" id="campUpBtn" aria-label="Upgrades" title="Upgrades"><svg viewBox="-12 14 512 512"><defs><linearGradient id="hmg39" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a46a"/><stop offset="1" stop-color="#8a5a30"/></linearGradient></defs><g fill="url(#hmg39)" stroke="#140d05" stroke-width="34" paint-order="stroke" stroke-linejoin="round"><path d="M215.97 27.813c-2.218.04-4.35.177-6.407.375l-.532.062c-2.774.266-5.796 1.01-9.124 1.844c-4.418 1.11-8.096 2.607-11.125 4.406l77.782 59.313l7.375 5.656l-5.593 7.405l-13.72 18.156l67.595 51.626l14.217-18.812l9.47-12.53l6.5 14.342l19.656 43.47l60.593-80.095l-47.187-7.124l-15.533-2.312l9.47-12.563l14.28-18.843l-67.593-51.624L310.78 50.78l-5.03 6.657l-7.188-4.25c-28.635-16.917-58.02-25.157-80.343-25.374a77 77 0 0 0-2.25 0zM453 127.124l-71.47 94.438l34.564 26.187c44.24-20.22 64.01-52.594 71.312-94.625zm-193.688 25.03c-27.17 33.09-55.308 64.706-82.812 96.22l47.406 39.875c23.11-35.343 46.336-71.61 71.938-108.22l-36.53-27.874zM164.25 262.47c-11.355 13.115-22.564 26.254-33.5 39.5l48.375 52.717c11.707-16.6 23.107-33.515 34.438-50.687zm-45.438 54.124a1112 1112 0 0 0-23.093 29.72l33.468 73.842c13.586-16.22 26.434-32.893 38.843-49.937zm-35.75 47.03c-12.108 16.978-23.57 34.335-34.124 52.282L98.53 454.47a688 688 0 0 0 17.22-18.72zm-43.437 68.688a546 546 0 0 0-14.75 29l37.375 28.313a611 611 0 0 0 23.125-21.72z"/></g><defs><linearGradient id="hmo39_0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2f6"/><stop offset="1" stop-color="#8c96a3"/></linearGradient></defs><g fill="url(#hmo39_0)"><path d="M215.97 27.813 c-2.218 0.04 -4.35 0.177 -6.407 0.375 l-0.532 0.062 c-2.774 0.266 -5.796 1.01 -9.124 1.844 c-4.418 1.11 -8.096 2.607 -11.125 4.406 l77.782 59.313 l7.375 5.656 l-5.593 7.405 l-13.72 18.156 l67.595 51.626 l14.217 -18.812 l9.47 -12.53 l6.5 14.342 l19.656 43.47 l60.593 -80.095 l-47.187 -7.124 l-15.533 -2.312 l9.47 -12.563 l14.28 -18.843 l-67.593 -51.624 L310.78 50.78 l-5.03 6.657 l-7.188 -4.25 c-28.635 -16.917 -58.02 -25.157 -80.343 -25.374 a77 77 0 0 0 -2.25 0 Z"/><path d="M453 127.124 l-71.47 94.438 l34.564 26.187 c44.24 -20.22 64.01 -52.594 71.312 -94.625 Z"/></g></svg><span class="campBadge" id="campUpN" hidden></span></button><button class="campCirc" id="campAchBtn" aria-label="Achievements" title="Achievements"><svg viewBox="8 8 496 496"><defs><linearGradient id="achg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b0"/><stop offset="1" stop-color="#d9a12e"/></linearGradient><linearGradient id="achw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703f"/><stop offset="1" stop-color="#5a3518"/></linearGradient></defs><g fill="url(#achg)" stroke="#140d05" stroke-width="34" paint-order="stroke" stroke-linejoin="round"><path  d="M98.398 21.146a17 17 0 0 0-4.636.521c-20.49 5.262-33.163 20.63-36.116 38.649c-2.952 18.019 2.168 38.346 12.676 58.193c20.695 39.086 63.262 77.08 117.852 85.85c-5.61-6.72-11.05-14.246-16.274-22.375c-39.008-12.57-70.021-42.344-85.67-71.899c-9.206-17.387-12.846-34.491-10.82-46.857C77.437 50.862 83.482 42.89 98.238 39.1c.065-.017.068-.034.092-.053c-.065-.143.105-.08 0 0a.7.7 0 0 0 .176.217c.527.493 1.689 2.24 2.207 5.14c1.036 5.804-.413 15.593-8.135 25.68l14.293 10.942c10.418-13.61 13.65-28.086 11.56-39.785c-1.044-5.85-3.396-11.165-7.628-15.124c-3.174-2.969-7.747-4.868-12.405-4.972zm315.204 0c-4.658.104-9.23 2.003-12.405 4.972c-4.232 3.96-6.584 9.274-7.629 15.124c-2.089 11.699 1.143 26.174 11.56 39.785l14.294-10.942c-7.722-10.087-9.171-19.876-8.135-25.68c.518-2.9 1.68-4.647 2.207-5.14a.7.7 0 0 0 .176-.217c-.105-.08.065-.143 0 0c.024.019.027.036.092.053c14.756 3.79 20.801 11.76 22.828 24.127c2.026 12.366-1.614 29.47-10.82 46.857c-15.649 29.555-46.662 59.33-85.67 71.899c-5.223 8.129-10.665 15.655-16.274 22.375c54.59-8.77 97.157-46.764 117.852-85.85c10.508-19.847 15.628-40.174 12.676-58.193c-2.953-18.02-15.626-33.387-36.116-38.649a17 17 0 0 0-4.636-.521m-276.166 7.713c2.146 36.533 16.76 83.07 36.537 120.824c10.707 20.442 22.876 38.334 34.761 50.685C220.62 212.72 232 218.858 240 218.858h32c8 0 19.38-6.138 31.266-18.49s24.054-30.243 34.761-50.685c19.777-37.755 34.39-84.29 36.537-120.824zm95.564 208v16h46v-16zm6.445 34c-2.458 25.967-12.796 57.873-24.437 76h81.984c-11.64-18.127-21.979-50.033-24.437-76zm-38.445 94v14h110v-14zm-32 32v94h174v-94zm23 23h128v48H192z"/></g><g fill="url(#achw)"><path d="M168.99999999999986 396.85900000000004 v94 h174 v-94 Z"/></g><g fill="url(#achg)"><path d="M191.99999999999986 419.85900000000004 h128 v48 H192 Z"/></g></svg></button><button class="campCirc" id="campCxBtn" aria-label="Archive" title="Archive"><svg viewBox="0 0 512 512"><g stroke="#140d05" stroke-width="30" stroke-linejoin="round" paint-order="stroke"><path d="M36 156 L36 424 Q148 392 256 444 Q364 392 476 424 L476 156 Z" fill="#8a5428"/><path d="M66 104 Q164 84 246 138 L246 414 Q164 364 66 386 Z" fill="#f4e8c6"/><path d="M446 104 Q348 84 266 138 L266 414 Q348 364 446 386 Z" fill="#f4e8c6"/></g><g fill="none" stroke="#a88a58" stroke-width="12" stroke-linecap="round"><path d="M104 166 Q160 156 212 186 M104 220 Q160 210 212 240 M104 274 Q160 264 212 294 M300 186 Q352 156 408 166 M300 240 Q352 210 408 220 M300 294 Q352 264 408 274"/></g><path d="M330 380 L330 470 L352 446 L374 470 L374 372" fill="#c23a2c" stroke="#140d05" stroke-width="22" stroke-linejoin="round" paint-order="stroke"/></svg></button><button class="campCirc" id="campHeroBtn" hidden aria-label="Hero" title="Hero"><span class="heroBtnFace"><svg viewBox="0 0 48 48"><path d="M8 50 Q10 34 24 33 Q38 34 40 50Z" fill="#2f5faf" stroke="#1a2742" stroke-width="1.2"/><path d="M17 33 L24 40 L31 33" fill="#c9d3e3" stroke="#1a2742" stroke-width="1"/><ellipse cx="24" cy="23" rx="8.2" ry="9.4" fill="#e6b98f" stroke="#5a3a22" stroke-width="1"/><path d="M15.6 22 Q15 12 24 12 Q33 12 32.4 22 Q30 17 24 17 Q18 17 15.6 22Z" fill="#6b4425" stroke="#3b2414" stroke-width="1"/><path d="M15.5 16.5 L17.5 10.5 L20.5 14 L24 8.5 L27.5 14 L30.5 10.5 L32.5 16.5 Z" fill="#f0c95a" stroke="#7a5418" stroke-width="1"/><circle cx="24" cy="12.2" r="1.3" fill="#d24a3a"/><circle cx="21" cy="24" r="1" fill="#2a1a10"/><circle cx="27" cy="24" r="1" fill="#2a1a10"/><path d="M21.5 28.5 Q24 30 26.5 28.5" fill="none" stroke="#8a4a32" stroke-width="1"/></svg></span><b class="campBadge" id="campHeroN" hidden></b></button></div>
           <div class="cDots" id="cDots"></div></div>
         </div>
         <div class="cDetSlot" id="cDetSlot"><div class="stSide cDet">
@@ -8895,14 +8907,15 @@ document.addEventListener('click', e => { if (e.target.closest('#campCxBtn')) op
 // One switch (mtd-dev-hero, the admin's Heroes button) turns everything here on; off, every hook below returns at once and the
 // game plays exactly as before. The Heir fights on foot (on a horse once Royal horse is learnt), holds a spot in front of the castle
 // (or where Move sends them), earns XP by fighting and keeps their level from stage to stage (mtd-hero); a fallen Heir comes
-// back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point.
+// back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point. The skills are passive (Jack: no
+// abilities in the game, like the later Kingdom Rush games) and are learnt only on the campaign's Hero screen (#heroPick).
 const heroOn = () => { try { return localStorage.getItem('mtd-dev-hero') === '1'; } catch (e) { return false; } };
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
-  cry: { name: 'Royal cry', line: 'Troops nearby hit harder', req: [1, 3, 5], k: [.15, .25, .35], t: 8, cd: 30 },
-  horse: { name: 'Royal horse', line: 'Rides a horse, faster', req: [2, 4, 6], k: [2, 2.3, 2.6] },
-  firm: { name: 'Stand firm', line: 'Takes half damage', req: [5, 7, 9], t: [4, 6, 8], cd: 40 },
+  cry: { name: 'Royal cry', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
+  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
+  firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
 const HERO_ORDER = ['cry', 'horse', 'firm'];
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -8916,7 +8929,7 @@ const heroHp = () => 260 + 30 * (HERO.lv - 1), heroDmg = () => 12 + 2 * (HERO.lv
 const heroNeed = () => 60 + 40 * HERO.lv;
 const heroSpeed = () => HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 1;
 var hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
-var cryT = 0, cryCd = 0, firmT = 0, firmCd = 0, heroRing = null, heroKey = '';
+var heroKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
 function heroKit(v) {
@@ -8943,8 +8956,7 @@ function removeHero() {
 }
 // a new game (startGame): a fresh Heir in front of the castle, timers and the Move flag cleared
 function heroStart() {
-  hero = null; heroDownT = 0; heroMove = false; heroSel = false; cryT = cryCd = firmT = firmCd = 0; heroWasNight = false; setHeroFlag(null);
-  if (heroRing) heroRing.visible = false;
+  hero = null; heroDownT = 0; heroMove = false; heroSel = false; heroWasNight = false; setHeroFlag(null);
   if (heroOn()) spawnHero();
   heroKey = ''; heroUI();
 }
@@ -8955,14 +8967,14 @@ function setHeroFlag(pt) {
   f.add(cyl(.06, .06, .06, 8, heroGold, 0, 1.53, 0));
   f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f;
 }
-// Royal cry: troops within 7 m of the Heir hit harder while it lasts (updateSoldier and the Heir's own blows)
-const heroBuff = v => hero && cryT > 0 && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
-// Stand firm halves what the Heir takes (hurtSoldier)
-const heroTake = d => firmT > 0 ? d / 2 : d;
+// Royal cry: troops within 7 m of the Heir, the Heir too, hit harder (updateSoldier and the Heir's own blows)
+const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
+// Stand firm: the Heir takes less (hurtSoldier)
+const heroTake = d => HERO.sk.firm ? d * (1 - HERO_SK.firm.k[HERO.sk.firm - 1]) : d;
 function heroFall(v) {
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
   if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 });
-  hero = null; heroDownT = HERO_CD; cryT = firmT = 0; heroMove = false; log('<b>The Heir</b> has fallen', 'warn'); heroKey = '';
+  hero = null; heroDownT = HERO_CD; heroMove = false; log('<b>The Heir</b> has fallen', 'warn'); heroKey = '';
 }
 function heroXp(n) {
   if (!heroOn() || HERO.lv >= HERO_MAX) return;
@@ -8981,30 +8993,8 @@ function heroKill(e, by) {
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
   if (HERO.pts < 1 || r >= 3 || HERO.lv < S.req[r]) { sfx('nope'); return; }
-  HERO.pts--; HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = '';
+  HERO.pts--; HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
   if (k === 'horse' && hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; if (HERO.sk.horse === 1) sfx('neigh', hero); }
-}
-function heroCast(k) {
-  if (!hero || !HERO.sk[k]) return;
-  if (PH.kind !== 'night') { setHint('Night only', 'bad'); return; }
-  if (k === 'cry') { if (cryCd > 0) return; cryT = HERO_SK.cry.t; cryCd = HERO_SK.cry.cd; heroPulse(); sfx('horn', hero, .35); setHint('Royal cry'); }
-  if (k === 'firm') { if (firmCd > 0) return; firmT = HERO_SK.firm.t[HERO.sk.firm - 1]; firmCd = HERO_SK.firm.cd; sfx('clash', hero); setHint('Stand firm'); }
-  heroKey = '';
-}
-// a gold ring that spreads out from the Heir as they cry out; a blue one round their feet while Stand firm lasts
-var heroPulseT = 0;
-function heroPulse() { heroPulseT = .8; }
-function heroRings(dt) {
-  if (!heroRing) {
-    heroRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 40), new THREE.MeshBasicMaterial({ color: '#f0c95a', transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-    heroRing.rotation.x = -Math.PI / 2; heroRing.renderOrder = 3; scene.add(heroRing);
-  }
-  if (heroRing.parent !== scene) scene.add(heroRing);
-  if (!hero) { heroRing.visible = false; return; }
-  const y = walkY(hero.rx ?? hero.x, hero.rz ?? hero.z) + .06; heroRing.position.set(hero.rx ?? hero.x, y, hero.rz ?? hero.z);
-  if (heroPulseT > 0) { heroPulseT -= dt; const t = 1 - heroPulseT / .8, s = .6 + t * 6.4; heroRing.visible = true; heroRing.scale.set(s, s, s); heroRing.material.color.set('#f0c95a'); heroRing.material.opacity = .9 * (1 - t); }
-  else if (firmT > 0) { heroRing.visible = true; heroRing.scale.set(.7, .7, .7); heroRing.material.color.set('#9fd1ff'); heroRing.material.opacity = .55 + .25 * Math.sin(performance.now() / 160); }
-  else heroRing.visible = false;
 }
 // the Heir's own step, day and night (updateVillagers): hold the spot, go for raiders within 7 m of it, give up on any that lead 10 m off
 function updateHero(v, dt) {
@@ -9026,13 +9016,10 @@ function updateHero(v, dt) {
 }
 // one step of the game (tick): timers, the comeback, a night survived
 function heroTick(dt) {
-  if (!heroOn()) { if (hero) removeHero(); if (heroRing) heroRing.visible = false; return; }
-  if (cryT > 0) cryT -= dt; if (cryCd > 0) cryCd = Math.max(0, cryCd - dt);
-  if (firmT > 0) firmT -= dt; if (firmCd > 0) firmCd = Math.max(0, firmCd - dt);
+  if (!heroOn()) { if (hero) removeHero(); return; }
   if (!hero && heroDownT > 0 && (heroDownT -= dt) <= 0) { heroDownT = 0; spawnHero(); log('<b>The Heir</b> returns', 'good'); }
   else if (!hero && !heroDownT && !gameOver) spawnHero();
   const night = PH.kind === 'night'; if (heroWasNight && !night && hero && !gameOver) heroXp(20); heroWasNight = night;
-  heroRings(dt);
 }
 // taps (tap): Move's spot first, then the Heir themself (with nothing being built)
 function heroTap(e) {
@@ -9064,21 +9051,17 @@ function heroUI() {
   if (key !== heroKey) {
     heroKey = key;
     let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><i class="hpRing"></i><span class="face">${HERO_FACE}</span><b class="lv">${HERO.lv}</b><span class="xp"><i></i></span><b class="cd"></b></button>`;
-    if (night && hero) for (const k of ['cry', 'firm']) if (HERO.sk[k]) h += `<button class="pw heroPw" data-hact="${k}" aria-label="${HERO_SK[k].name}">${HERO_ICO[k]}<b class="cd"></b></button>`;
     bar.innerHTML = h;
     // the card: name and level, Move and Recall, health, XP, stats and the three skills with a + while points are left
     if (heroSel) {
-      const sk = HERO_ORDER.map(k => {
-        const S = HERO_SK[k], r = HERO.sk[k], can = HERO.pts > 0 && r < 3 && HERO.lv >= S.req[r];
-        const btn = r >= 3 ? '' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+</button>` : `<span class="hsReq">Lv ${S.req[r]}</span>`;
-        return `<div class="hSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line}</small></span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
-      }).join('');
+      // the skills, read only: learnt on the campaign's Hero screen
+      const sk = HERO_ORDER.filter(k => HERO.sk[k]).map(k => `<span class="hSkMini" title="${HERO_SK[k].name}">${HERO_ICO[k]}<span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < HERO.sk[k] ? 'on' : ''}"></i>`).join('')}</span></span>`).join('');
       card.innerHTML = `<div class="cardHead"><span class="cardIco heroIco">${HERO_FACE}</span><div class="cardName"><h4>The Heir</h4><div class="cardSub"><span>Hero · Lv ${HERO.lv}</span></div></div>`
         + (hero ? `<button class="iconBtn" data-hact="move" aria-pressed="${heroMove}" title="Move: tap, then a spot" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/></svg></button>` : '')
         + (heroAt ? `<button class="iconBtn" data-hact="recall" title="Back to the castle" aria-label="Recall"><svg viewBox="0 0 24 24"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 H14 A5.5 5.5 0 0 1 14 20 H9"/></svg></button>` : '')
         + `<button class="iconBtn" data-hact="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button></div>`
         + `<div class="hpbar"><i class="hHp"></i></div><div class="hXp">XP<span class="hXpBar"><i></i></span><span class="hXpN"></span></div>`
-        + `<div class="stats hStats"></div><div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}`;
+        + `<div class="stats hStats"></div>${sk ? `<div class="hSkRow">${sk}</div>` : ''}`;
     }
   }
   const p = bar.querySelector('.heroPort');
@@ -9086,7 +9069,6 @@ function heroUI() {
     p.style.setProperty('--p', `${(hero ? hpf : 0) * 100}%`); p.style.setProperty('--hc', hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)');
     p.querySelector('.xp i').style.width = `${xpf * 100}%`; p.querySelector('.cd').textContent = hero ? '' : Math.ceil(heroDownT);
   }
-  for (const b of bar.querySelectorAll('.heroPw')) { const k = b.dataset.hact, cd = k === 'cry' ? cryCd : firmCd, act = k === 'cry' ? cryT > 0 : firmT > 0; b.classList.toggle('cool', cd > 0 && !act); b.setAttribute('aria-pressed', String(act)); b.querySelector('.cd').textContent = cd > 0 && !act ? Math.ceil(cd) : ''; }
   card.hidden = !heroSel || !!selected;
   if (!card.hidden) {
     const hp = card.querySelector('.hHp'); if (hp) { hp.style.width = `${hpf * 100}%`; hp.style.background = hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)'; }
@@ -9107,19 +9089,39 @@ document.addEventListener('click', ev => {
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
-  else if (a === 'cry' || a === 'firm') heroCast(a);
+  else if (a === 'back') { sfx('click'); $('#heroPick').hidden = true; openCampaign(cSel); return; }
   heroUI();
 });
+// ---- the Hero screen (from the campaign's round Hero button, shown only with heroes on): the Heir, level, XP, stats and the
+// three passive skills, each with its ranks and a gold + while a point can be spent (laid out like the Upgrades screen) ----
+function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.textContent = HERO.pts; n.hidden = !HERO.pts; } }
+function openHeroPick() { sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick')); }
+function renderHeroPick() {
+  const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
+  const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
+  const sk = HERO_ORDER.map(k => {
+    const S = HERO_SK[k], r = HERO.sk[k], can = HERO.pts > 0 && r < 3 && HERO.lv >= S.req[r];
+    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+</button>` : `<span class="hsReq">Lv ${S.req[r]}</span>`;
+    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.line(r ? r - 1 : 0)}</small>${r && r < 3 ? `<small class="hsNext">Next: ${S.line(r)}</small>` : ''}</span><span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>${btn}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><div class="upBank"><span class="upNum">Lv <b>${HERO.lv}</b></span></div></div>`
+    + `<div class="hpBody"><div class="hpStage">${HERO_FACE}</div><div class="hpInfo"><div class="hpName">The Heir</div>`
+    + `<div class="hpXp">XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}</div>`
+    + `<div class="hpStats">${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}</div></div></div>`
+    + `<div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}</div>`;
+  syncHeroBadge();
+}
+document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's switch and its helpers (testing)
-function syncHeroAdmin() { const b = $('#adHero'); if (b) { b.textContent = heroOn() ? 'Heroes: On' : 'Heroes: Off'; b.classList.toggle('on', heroOn()); } const r = $('#adHeroRow'); if (r) r.hidden = !heroOn(); }
+function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !heroOn(); syncHeroBadge(); } const b = $('#adHero'); if (b) { b.textContent = heroOn() ? 'Heroes: On' : 'Heroes: Off'; b.classList.toggle('on', heroOn()); } const r = $('#adHeroRow'); if (r) r.hidden = !heroOn(); }
 $('#adHero').addEventListener('click', () => {
   try { localStorage.setItem('mtd-dev-hero', heroOn() ? '0' : '1'); } catch (e) {}
   if (heroOn()) spawnHero(); else removeHero();
   syncHeroAdmin(); heroKey = ''; heroUI();
 });
-$('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); heroUI(); });
+$('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
-  HERO = heroBlank(); saveHero(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
+  HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
 });
 syncHeroAdmin();
 // ---------- the town's buildings for this game: one of each pair for the economy and the defences, any five decor ----------
@@ -11216,7 +11218,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '48a149c1a1'; var updateWait = false, updateT = 0;
+const BUILD = '75ca759009'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -11537,7 +11539,7 @@ function adaptResolution(raw) {
 }
 // a title screen, map or town picker, campaign or stage preview, or the new-building cards is up: the game underneath stands still
 // (setPaused(false) at startup used to set it running under the title screen, paying out gold)
-const MENUS = ['#mapPick', '#loadPick', '#campaign', '#newCards', '#upPick', '#achPick', '#codexPick'].map(q => $(q));
+const MENUS = ['#mapPick', '#loadPick', '#campaign', '#newCards', '#upPick', '#achPick', '#codexPick', '#heroPick'].map(q => $(q));
 const menuOn = () => MENUS.some(m => !m.hidden);
 const mapPickEl = $('#mapPick'), campEl = $('#campaign'), loadEl = $('#loadPick'), upEl = $('#upPick'), achEl = $('#achPick'), cxEl = $('#codexPick'); let liteN = 0;
 mapPickEl.addEventListener('click', e => { if (showcaseBuilt && !e.target.closest('button') && !e.target.closest('#colCard') && !e.target.closest('#credCard')) nextShowcase(); });   // a tap off the cards and buttons: the next scene (Jack)
