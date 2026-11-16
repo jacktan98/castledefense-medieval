@@ -113,6 +113,8 @@ function heroKit(v, id = HERO_ID, foot) {
     }
   }
   if (v.hatG) v.hatG.visible = false;
+  // the Captain's helm sits low and closed: the hair would show through its dome
+  if (v.headParts) v.headParts[2].visible = id !== 'captain';
   v.maxHp = v.hp = heroHp();
 }
 // the Captain's helm (Jack's reference: a knight's close helm): a polished dome with a raised ridge from brow to nape, a pointed
@@ -124,7 +126,7 @@ function captainHelm() {
   g.userData.helm = true;
   const dome = add(new THREE.Mesh(new THREE.SphereGeometry(.158, 16, 8, 0, Math.PI * 2, 0, Math.PI * .5), capSteelM)); dome.position.y = 1.07; dome.scale.y = 1.12;
   const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(.172, .172, .026, 18, 1, false, 0, Math.PI), capSteelM)); ridge.rotation.z = Math.PI / 2; ridge.position.y = 1.07; ridge.scale.x = 1.12;
-  add(cyl(.158, .158, .14, 16, capSteelM, 0, 1.0, 0));
+  add(cyl(.158, .158, .2, 16, capSteelM, 0, 1.03, 0));   // up into the dome, so no gap shows above the eye slit
   // the prow: two plates meeting in front; the slit is a dark band of the same shape just behind their top edge
   for (const sx of [-1, 1]) {
     const vis = add(box(.17, .15, .02, capSteelM, sx * .07, .995, .14)); vis.rotation.y = sx * .62;
@@ -132,8 +134,8 @@ function captainHelm() {
     const brow = add(box(.17, .03, .02, capSteelM, sx * .066, 1.103, .13)); brow.rotation.y = sx * .62;
     for (const x of [-.045, -.015, .015]) add(box(.014, .07, .012, M.dark, x * sx, -.005, .008), vis);
   }
-  // drawn a little smaller (Jack), kept centred on the head
-  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88);
+  // drawn a little smaller (Jack), and set down onto the shoulders so it meets the body (Jack)
+  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88) - .05;
   return g;
 }
 function heroHome() { const K = castleB(); if (!K) return null; const dp = doorPoint(K), [ox, oz] = faceRot(K.face || 0, 0, 1.6); return { x: dp.x + ox, z: dp.z + oz }; }
