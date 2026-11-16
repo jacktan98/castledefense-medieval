@@ -1121,6 +1121,9 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .sk-firm{--sa:#a3adb8;--sb:#363d46;--sl:#f4f7fa}
 .hsPips i{border-color:#f0c95a!important}.hsPips i.on{background:#f0c95a!important}
 .hSkMini svg{fill:initial;stroke:initial}
+/* the Heir's card in the game (Jack): small skill pictures, and rank dots in the building card's tier-pip style (.pips) */
+.hSkMini svg{width:14px;height:14px}
+.hSkMini .hsPips i{width:6px;height:6px;border:1px solid #6b5a2e!important;background:#3a3a30!important}.hSkMini .hsPips i.on{background:var(--gold)!important;border-color:var(--gold)!important}
 .heroSheet .hsWrap{display:flex;gap:10px;width:100%;align-items:stretch}
 .heroSheet .hsWrap .hsList{flex:0 0 44%;width:auto;display:flex;flex-direction:column;gap:7px}
 .hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 35%,#3a2d18,#15100a 78%);border:2px solid rgba(217,176,78,.7)}
