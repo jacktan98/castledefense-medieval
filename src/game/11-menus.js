@@ -804,7 +804,7 @@ function openCampaign(i) {
   buildDeck(); $('#mapPick').hidden = true; $('#campaign').hidden = false;
   { const st = MAIN, won = st.filter(c => STARS[c.map] > 0).length, stars = campStarsN(), max = st.length * 3;
     $('#campStars').innerHTML = `<span><b>${won}</b> / ${st.length} stages</span><span class="sep">·</span><span><b>★ ${stars}</b> / ${max}</span>`;
-    $('#campUpN').hidden = !upLeft(); $('#campUpN').textContent = '★' + upLeft(); }
+    $('#campUpN').hidden = !upLeft(); $('#campUpN').innerHTML = '<i class="bStar">★</i>' + upLeft(); }
   achCheck();
   // opens on the given stage (Restart / Play again) or where the player is
   cSel = i !== undefined ? i : cCur; cDrag = 0; layoutDeck(false); openStage(cSel);

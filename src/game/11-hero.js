@@ -14,7 +14,7 @@ const HERO_SK = {
   firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
-const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 1 L15.2 8.8 L23 12 L15.2 15.2 L12 23 L8.8 15.2 L1 12 L8.8 8.8 Z"/></svg>';
+const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
 const HERO_ORDER = ['cry', 'horse', 'firm'];
 // points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank

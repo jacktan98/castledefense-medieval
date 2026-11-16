@@ -1036,9 +1036,9 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .heroPort .lv{position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* health over XP under the portrait (Jack: the health ring round it was dropped) */
-.heroPort .hpb{position:absolute;left:4px;right:4px;bottom:-12px;height:6px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden}
+.heroPort .hpb{position:absolute;left:4px;right:4px;bottom:-11px;height:5px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .hpb i{display:block;height:100%;border-radius:2px;background:var(--ok)}
-.heroPort .xp{position:absolute;left:4px;right:4px;bottom:-18px;height:4px;border-radius:2px;background:rgba(0,0,0,.65);overflow:hidden}
+.heroPort .xp{position:absolute;left:4px;right:4px;bottom:-18px;height:5px;border-radius:2px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .xp i{display:block;height:100%;border-radius:2px;background:#9fd1ff}
 .heroPort .cd{position:absolute;inset:2px;display:none;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.55);font:700 15px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
 .heroPort.down .cd{display:flex} .heroPort.down .face{filter:grayscale(1) brightness(.7)}
@@ -1065,7 +1065,9 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hSkHead .hsRs{width:auto;margin:0 0 0 10px;padding:0;display:block}
 .heroSheet .hpPad{width:44px;flex:none}
 .heroSheet .hpName{display:flex;align-items:center;gap:10px}
-.heroSheet .hpLvP{font:700 16px var(--body);border:none}
+.heroSheet .hpLvP{font:700 16px var(--body);border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95));border-radius:10px}
+/* the boot has speed lines beside it, so it is drawn bigger to stand as tall as the heart and sword */
+.heroSheet .hpStats .stat[data-name="Walk speed"] .ico{width:25px;height:25px;margin:-3px 0}
 .heroSheet .hpXp{font-size:14px}
 .heroSheet .hXpBar{height:7px}
 .heroSheet .hpStats{font-size:16px;gap:16px}
@@ -1086,9 +1088,11 @@ body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
-.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:1px;fill:#2a1d0a;stroke:none;filter:none}
+.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:3px;fill:#2a1d0a;stroke:none;filter:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
 #campHeroN{font-family:var(--body);font-style:normal;display:inline-flex;align-items:center}
+
+.campBadge .bStar{font-style:normal;margin-right:3px}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -8947,7 +8951,7 @@ const HERO_SK = {
   firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
-const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 1 L15.2 8.8 L23 12 L15.2 15.2 L12 23 L8.8 15.2 L1 12 L8.8 8.8 Z"/></svg>';
+const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
 const HERO_ORDER = ['cry', 'horse', 'firm'];
 // points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
@@ -10032,7 +10036,7 @@ function openCampaign(i) {
   buildDeck(); $('#mapPick').hidden = true; $('#campaign').hidden = false;
   { const st = MAIN, won = st.filter(c => STARS[c.map] > 0).length, stars = campStarsN(), max = st.length * 3;
     $('#campStars').innerHTML = `<span><b>${won}</b> / ${st.length} stages</span><span class="sep">·</span><span><b>★ ${stars}</b> / ${max}</span>`;
-    $('#campUpN').hidden = !upLeft(); $('#campUpN').textContent = '★' + upLeft(); }
+    $('#campUpN').hidden = !upLeft(); $('#campUpN').innerHTML = '<i class="bStar">★</i>' + upLeft(); }
   achCheck();
   // opens on the given stage (Restart / Play again) or where the player is
   cSel = i !== undefined ? i : cCur; cDrag = 0; layoutDeck(false); openStage(cSel);
@@ -11320,7 +11324,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '3292754a20'; var updateWait = false, updateT = 0;
+const BUILD = 'f080869229'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
