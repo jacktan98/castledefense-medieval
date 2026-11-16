@@ -1174,6 +1174,6 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
   .heroSheet .hsWrap .hsList{gap:5px} .modal.tome .hsTile{padding:4px 8px!important} .modal.tome .hsTile.sel{padding:4px 8px!important}
   .hsTile .hsIco{width:32px;height:32px}.hsTile .hsIco svg{width:19px;height:19px} .hsTile .hsTx{gap:3px} .hsTile .hsTx b{font-size:14px}
   .heroSheet .hsDet{gap:4px;padding:6px 10px} .hsDh{gap:3px} .hsDh .hsIco{width:38px;height:38px}.hsDh .hsIco svg{width:24px;height:24px}
-  .hsDh b{font-size:16px} .hsDh small{margin-top:1px} .hsDesc{font-size:13px} .modal.tome .hsLearn{height:30px}
+  .hsDh b{font-size:16px} .hsDh small{margin-top:1px} .hsDesc{font-size:13px} .modal.tome .hsLearn{height:30px} .hsNote{min-height:30px}
   .heroSheet .hRosHead{margin:6px 0 4px} .hRoster{justify-content:flex-start} .modal.tome .hRos{flex:0 0 100px;max-width:100px;padding:4px 4px!important} .hRos .hrPic{width:40px;height:40px}   /* narrow cards: room for six (Jack) */
 }
