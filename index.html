@@ -301,7 +301,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos):not(.hsTile),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1131,6 +1131,42 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
   .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
+/* the Hero screen's skills in two sides (Jack, after Kingdom Rush 2): the skills on the left, the picked one's details on the right;
+   each skill in its own colour, not blue, which reads as the town's (Jack) */
+.sk-cry{--sa:#e6a33a;--sb:#6a3c0e;--sl:#fff1cf}
+.sk-horse{--sa:#79a84f;--sb:#22401a;--sl:#ecf8de}
+.sk-firm{--sa:#a3adb8;--sb:#363d46;--sl:#f4f7fa}
+.hsPips i{border-color:#f0c95a!important}.hsPips i.on{background:#f0c95a!important}
+.hSkMini svg{stroke:#ffe9b0}
+.heroSheet .hsWrap{display:flex;gap:10px;width:100%;align-items:stretch}
+.heroSheet .hsWrap .hsList{flex:0 0 44%;width:auto;display:flex;flex-direction:column;gap:7px}
+.hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 32%,var(--sa),var(--sb) 78%);border:2px solid var(--sa);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);fill:none;stroke:var(--sl);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 1 0;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
+.modal.tome .hsTile.sel{border:2px solid #f0c95a!important;padding:6px 8px!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
+.hsTile .hsIco{width:38px;height:38px}.hsTile .hsIco svg{width:21px;height:21px}
+.hsTile.off .hsIco{filter:saturate(.35) brightness(.75)}
+.hsTile .hsTx{display:flex;flex-direction:column;gap:5px;min-width:0}
+.hsTile .hsTx b{font:400 15px/1 var(--display);color:#ffe2a0;white-space:nowrap}
+.hsTile.off .hsTx b{color:#b9a477}
+.hsTile .hsPips i{width:9px;height:9px}
+.hsTile .hsDot{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-style:normal;background:none;filter:drop-shadow(0 0 4px rgba(240,201,90,.8))}
+.hsTile .hsDot .skp{width:16px;height:16px}
+.heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
+.hsDh{display:flex;align-items:center;gap:10px}
+.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:25px;height:25px}
+.hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
+.hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}
+.hsDesc{margin:0;font:500 14px/1.25 var(--body);color:#e9dcc0}
+.hsDet .hsSteps{display:flex;gap:5px}
+.hsDet .hsSteps i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 5px;border-radius:7px;border:1px solid rgba(240,201,90,.22);color:rgba(240,201,90,.45);font:700 13px/1 var(--body);font-style:normal}
+.hsDet .hsSteps i small{font:600 9px/1 var(--body);letter-spacing:.06em;opacity:.8}
+.hsDet .hsSteps i.on{background:linear-gradient(#f3d27a,#c9962f);border-color:#f3d27a;color:#2a1c08}
+.hsDet .hsSteps i.nx{border-color:#f0c95a;color:#ffe2a0}
+.hsAct{margin-top:auto;display:flex;justify-content:center;align-items:flex-end}
+.modal.tome .hsLearn{width:100%;height:38px;min-height:0!important;flex:none;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:0 12px!important;gap:8px;font-size:16px!important}
+.hsLc{display:inline-flex;align-items:center;gap:3px;font:700 14px var(--body)}.hsLc .skp{width:14px;height:14px;fill:#2a1c08}
+.hsNote{display:flex;align-items:center;gap:4px;min-height:36px;font:600 13px var(--body);color:var(--muted)}.hsNote .skp{width:13px;height:13px}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -8997,6 +9033,7 @@ const HERO_ORDER = ['cry', 'horse', 'firm'];
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
 const lvPts = lv => lv <= 4 ? 1 : lv <= 8 ? 2 : 3;
 const rankCost = r => r + 1;
+const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.lv >= HERO_SK[k].req[r] && HERO.pts >= rankCost(r); };
 const ptsEarned = lv => { let n = 0; for (let i = 1; i <= lv; i++) n += lvPts(i); return n; };
 const ptsSpent = sk => HERO_ORDER.reduce((t, k) => t + sk[k] * (sk[k] + 1) / 2, 0);
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -9186,6 +9223,7 @@ document.addEventListener('click', ev => {
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
+  else if (a === 'sk') { hpSkSel = b.dataset.k; renderHeroPick(); }
   else if (a === 'reset') heroReset();
   heroUI();
 });
@@ -9206,7 +9244,7 @@ function openHeroPick() {
 }
 // ---- the Heir in 3D on the Hero screen: a head-and-shoulders portrait (Jack: just the face and a bit of the upper body, no turning
 // round), drawn by the Archive's small renderer (codexRenderer); the Heir looks about a little and blinks ----
-let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpDrawn = 0;
+let hpSkSel = '', hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpDrawn = 0;
 // the colours the busts were last drawn in (Jack: after a colour change in Settings the Heroes row and the portrait kept the old one):
 // a change drops the portrait's model so it is built afresh, and redraws the row's stills
 var heroTeamKey = '';
@@ -9294,7 +9332,7 @@ function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
     + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir<span class="upBank hpLvP"><span class="upNum">Lv <b class="hpLv"></b></span></span></div><div class="hpXp"></div><div class="hpStats"></div></div></div>`
-    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div>`
+    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsWrap"><div class="hsList"></div><div class="hsDet"></div></div>`
     + `<div class="hSkHead hRosHead">Heroes</div><div class="hRoster">${HEROES.map(h => `<button class="hRos${h.soon ? ' soon' : ' on'}" data-hact="ros" data-h="${h.id}"><span class="hrPic"><canvas class="hrCv" data-h="${h.id}" width="128" height="128"></canvas>${h.soon ? `<span class="hrLock">${LOCK_ICO}</span>` : ''}</span><b>${h.name}</b><small>${h.soon ? 'Coming soon' : h.role}</small></button>`).join('')}</div></div>`;
   if (!el.querySelector('.hrCv[data-done]') || heroTeamKey !== JSON.stringify(TEAM)) { heroTeamKey = JSON.stringify(TEAM); rosterSnaps(el); }
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
@@ -9303,14 +9341,23 @@ function renderHeroPick() {
   el.querySelector('.hpStats').innerHTML = `${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}`;
   el.querySelector('.hsPts').innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : '';
   el.querySelector('.hsReset').disabled = !HERO_ORDER.some(k => HERO.sk[k]);
+  // two sides (Jack, after Kingdom Rush 2's tower upgrades): the skills on the left, the picked one's details and Learn on the right
+  if (!HERO_SK[hpSkSel]) hpSkSel = HERO_ORDER.find(k => skCan(k)) || HERO_ORDER[0];
   el.querySelector('.hsList').innerHTML = HERO_ORDER.map(k => {
-    const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
-    // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
-    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq${lvOk ? ' hsShort' : ''}">${lvOk ? `${SKP_ICO}${c}` : `Lv ${S.req[r]}`}</span>`;
-    // three steps: learnt ones lit, the next one outlined in blue, the rest dim
-    const steps = S.vals.map((v, i) => `<i class="${i < r ? 'on' : i === r ? 'nx' : ''}">${v}</i>`).join('');
-    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.desc}</small></span><span class="hsSteps">${steps}</span>${btn}</div>`;
+    const r = HERO.sk[k];
+    return `<button class="hsTile sk-${k}${k === hpSkSel ? ' sel' : ''}${r ? '' : ' off'}" data-hact="sk" data-k="${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${HERO_SK[k].name}</b><span class="hsPips">${[0, 1, 2].map(n => `<i class="${n < r ? 'on' : ''}"></i>`).join('')}</span></span>${skCan(k) ? `<i class="hsDot">${SKP_ICO}</i>` : ''}</button>`;
   }).join('');
+  {
+    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r];
+    // the three ranks as steps: learnt ones lit, the next one outlined, the rest dim
+    const steps = S.vals.map((v, n) => `<i class="${n < r ? 'on' : n === r ? 'nx' : ''}"><small>${n + 1}</small>${v}</i>`).join('');
+    const act = r >= 3 ? '<span class="hsNote">Max rank</span>'
+      : !lvOk ? `<span class="hsNote">Needs Lv ${S.req[r]}</span>`
+      : HERO.pts >= c ? `<button class="primary hsLearn" data-hact="learn" data-k="${k}">Learn<span class="hsLc">${SKP_ICO}${c}</span></button>`
+      : `<span class="hsNote">Needs ${SKP_ICO}${c}</span>`;
+    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span><b>${S.name}</b><small>Rank ${r} / 3</small></span></div>`
+      + `<p class="hsDesc">${S.desc}</p><div class="hsSteps">${steps}</div><div class="hsAct">${act}</div>`;
+  }
   syncHeroBadge();
 }
 document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
@@ -11420,7 +11467,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '5704bbf196'; var updateWait = false, updateT = 0;
+const BUILD = '16d473ea6b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

@@ -284,7 +284,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
    darken it, more than the title does, so the cards and text stay clear */
 body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 45%, rgba(8,9,6,.45) 0%, rgba(8,9,6,.62) 60%, rgba(5,6,4,.9) 100%)!important}
 /* buttons stand out on the dark: a bronze plate with a gold rim, light gold text and a soft glow; the main action stays solid gold */
-.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
+.modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):not(.upTab):not(.upNode):not(.achNode):not(.hsPlus):not(.hRos):not(.hsTile),#newCards button:not(.primary){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%)!important;border:2px solid #c9a03e!important;color:#f4e3b2!important;
   box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 12px rgba(212,168,78,.18),inset 0 1px 0 rgba(255,230,160,.25)!important;font-weight:500}
 .modal.tome button:not(.ldOpt):not(.cCard):not(.cDot):not(.primary):not(.seg):not(.sw):not(.setBtn):hover{filter:brightness(1.15)}
 .cArrow{background:linear-gradient(180deg,#4a3c22,#2e2515)!important;border:2px solid #c9a03e!important;box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(212,168,78,.25)!important}
@@ -1114,3 +1114,39 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
   .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
+/* the Hero screen's skills in two sides (Jack, after Kingdom Rush 2): the skills on the left, the picked one's details on the right;
+   each skill in its own colour, not blue, which reads as the town's (Jack) */
+.sk-cry{--sa:#e6a33a;--sb:#6a3c0e;--sl:#fff1cf}
+.sk-horse{--sa:#79a84f;--sb:#22401a;--sl:#ecf8de}
+.sk-firm{--sa:#a3adb8;--sb:#363d46;--sl:#f4f7fa}
+.hsPips i{border-color:#f0c95a!important}.hsPips i.on{background:#f0c95a!important}
+.hSkMini svg{stroke:#ffe9b0}
+.heroSheet .hsWrap{display:flex;gap:10px;width:100%;align-items:stretch}
+.heroSheet .hsWrap .hsList{flex:0 0 44%;width:auto;display:flex;flex-direction:column;gap:7px}
+.hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 32%,var(--sa),var(--sb) 78%);border:2px solid var(--sa);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);fill:none;stroke:var(--sl);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 1 0;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
+.modal.tome .hsTile.sel{border:2px solid #f0c95a!important;padding:6px 8px!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
+.hsTile .hsIco{width:38px;height:38px}.hsTile .hsIco svg{width:21px;height:21px}
+.hsTile.off .hsIco{filter:saturate(.35) brightness(.75)}
+.hsTile .hsTx{display:flex;flex-direction:column;gap:5px;min-width:0}
+.hsTile .hsTx b{font:400 15px/1 var(--display);color:#ffe2a0;white-space:nowrap}
+.hsTile.off .hsTx b{color:#b9a477}
+.hsTile .hsPips i{width:9px;height:9px}
+.hsTile .hsDot{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-style:normal;background:none;filter:drop-shadow(0 0 4px rgba(240,201,90,.8))}
+.hsTile .hsDot .skp{width:16px;height:16px}
+.heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
+.hsDh{display:flex;align-items:center;gap:10px}
+.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:25px;height:25px}
+.hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
+.hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}
+.hsDesc{margin:0;font:500 14px/1.25 var(--body);color:#e9dcc0}
+.hsDet .hsSteps{display:flex;gap:5px}
+.hsDet .hsSteps i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 5px;border-radius:7px;border:1px solid rgba(240,201,90,.22);color:rgba(240,201,90,.45);font:700 13px/1 var(--body);font-style:normal}
+.hsDet .hsSteps i small{font:600 9px/1 var(--body);letter-spacing:.06em;opacity:.8}
+.hsDet .hsSteps i.on{background:linear-gradient(#f3d27a,#c9962f);border-color:#f3d27a;color:#2a1c08}
+.hsDet .hsSteps i.nx{border-color:#f0c95a;color:#ffe2a0}
+.hsAct{margin-top:auto;display:flex;justify-content:center;align-items:flex-end}
+.modal.tome .hsLearn{width:100%;height:38px;min-height:0!important;flex:none;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:0 12px!important;gap:8px;font-size:16px!important}
+.hsLc{display:inline-flex;align-items:center;gap:3px;font:700 14px var(--body)}.hsLc .skp{width:14px;height:14px;fill:#2a1c08}
+.hsNote{display:flex;align-items:center;gap:4px;min-height:36px;font:600 13px var(--body);color:var(--muted)}.hsNote .skp{width:13px;height:13px}

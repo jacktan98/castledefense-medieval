@@ -22,6 +22,7 @@ const HERO_ORDER = ['cry', 'horse', 'firm'];
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
 const lvPts = lv => lv <= 4 ? 1 : lv <= 8 ? 2 : 3;
 const rankCost = r => r + 1;
+const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.lv >= HERO_SK[k].req[r] && HERO.pts >= rankCost(r); };
 const ptsEarned = lv => { let n = 0; for (let i = 1; i <= lv; i++) n += lvPts(i); return n; };
 const ptsSpent = sk => HERO_ORDER.reduce((t, k) => t + sk[k] * (sk[k] + 1) / 2, 0);
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -211,6 +212,7 @@ document.addEventListener('click', ev => {
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
+  else if (a === 'sk') { hpSkSel = b.dataset.k; renderHeroPick(); }
   else if (a === 'reset') heroReset();
   heroUI();
 });
@@ -231,7 +233,7 @@ function openHeroPick() {
 }
 // ---- the Heir in 3D on the Hero screen: a head-and-shoulders portrait (Jack: just the face and a bit of the upper body, no turning
 // round), drawn by the Archive's small renderer (codexRenderer); the Heir looks about a little and blinks ----
-let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpDrawn = 0;
+let hpSkSel = '', hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpDrawn = 0;
 // the colours the busts were last drawn in (Jack: after a colour change in Settings the Heroes row and the portrait kept the old one):
 // a change drops the portrait's model so it is built afresh, and redraws the row's stills
 var heroTeamKey = '';
@@ -319,7 +321,7 @@ function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
     + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir<span class="upBank hpLvP"><span class="upNum">Lv <b class="hpLv"></b></span></span></div><div class="hpXp"></div><div class="hpStats"></div></div></div>`
-    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsList"></div>`
+    + `<div class="hSkHead">Skills<span class="hsPts"></span><span class="upRs hsRs"><button class="hsReset" data-hact="reset">${UP_RESET}<span class="rsT">Reset</span></button></span></div><div class="hsWrap"><div class="hsList"></div><div class="hsDet"></div></div>`
     + `<div class="hSkHead hRosHead">Heroes</div><div class="hRoster">${HEROES.map(h => `<button class="hRos${h.soon ? ' soon' : ' on'}" data-hact="ros" data-h="${h.id}"><span class="hrPic"><canvas class="hrCv" data-h="${h.id}" width="128" height="128"></canvas>${h.soon ? `<span class="hrLock">${LOCK_ICO}</span>` : ''}</span><b>${h.name}</b><small>${h.soon ? 'Coming soon' : h.role}</small></button>`).join('')}</div></div>`;
   if (!el.querySelector('.hrCv[data-done]') || heroTeamKey !== JSON.stringify(TEAM)) { heroTeamKey = JSON.stringify(TEAM); rosterSnaps(el); }
   const xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
@@ -328,14 +330,23 @@ function renderHeroPick() {
   el.querySelector('.hpStats').innerHTML = `${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}`;
   el.querySelector('.hsPts').innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : '';
   el.querySelector('.hsReset').disabled = !HERO_ORDER.some(k => HERO.sk[k]);
+  // two sides (Jack, after Kingdom Rush 2's tower upgrades): the skills on the left, the picked one's details and Learn on the right
+  if (!HERO_SK[hpSkSel]) hpSkSel = HERO_ORDER.find(k => skCan(k)) || HERO_ORDER[0];
   el.querySelector('.hsList').innerHTML = HERO_ORDER.map(k => {
-    const S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r], can = lvOk && HERO.pts >= c;
-    // the + shows the rank's cost; short of points it reads "2 pts", short of level "Lv 5"
-    const btn = r >= 3 ? '<span class="hsReq">Max</span>' : can ? `<button class="hsPlus" data-hact="learn" data-k="${k}" aria-label="Learn">+<i class="hsCost">${c}</i></button>` : `<span class="hsReq${lvOk ? ' hsShort' : ''}">${lvOk ? `${SKP_ICO}${c}` : `Lv ${S.req[r]}`}</span>`;
-    // three steps: learnt ones lit, the next one outlined in blue, the rest dim
-    const steps = S.vals.map((v, i) => `<i class="${i < r ? 'on' : i === r ? 'nx' : ''}">${v}</i>`).join('');
-    return `<div class="hpSk${r ? '' : ' off'}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${S.name}</b><small>${S.desc}</small></span><span class="hsSteps">${steps}</span>${btn}</div>`;
+    const r = HERO.sk[k];
+    return `<button class="hsTile sk-${k}${k === hpSkSel ? ' sel' : ''}${r ? '' : ' off'}" data-hact="sk" data-k="${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${HERO_SK[k].name}</b><span class="hsPips">${[0, 1, 2].map(n => `<i class="${n < r ? 'on' : ''}"></i>`).join('')}</span></span>${skCan(k) ? `<i class="hsDot">${SKP_ICO}</i>` : ''}</button>`;
   }).join('');
+  {
+    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r];
+    // the three ranks as steps: learnt ones lit, the next one outlined, the rest dim
+    const steps = S.vals.map((v, n) => `<i class="${n < r ? 'on' : n === r ? 'nx' : ''}"><small>${n + 1}</small>${v}</i>`).join('');
+    const act = r >= 3 ? '<span class="hsNote">Max rank</span>'
+      : !lvOk ? `<span class="hsNote">Needs Lv ${S.req[r]}</span>`
+      : HERO.pts >= c ? `<button class="primary hsLearn" data-hact="learn" data-k="${k}">Learn<span class="hsLc">${SKP_ICO}${c}</span></button>`
+      : `<span class="hsNote">Needs ${SKP_ICO}${c}</span>`;
+    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span><b>${S.name}</b><small>Rank ${r} / 3</small></span></div>`
+      + `<p class="hsDesc">${S.desc}</p><div class="hsSteps">${steps}</div><div class="hsAct">${act}</div>`;
+  }
   syncHeroBadge();
 }
 document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
