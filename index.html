@@ -4720,7 +4720,7 @@ function evaluate(type, ci, cj, free) {
   const T = DEF[type], [s, sz] = dimsFor(type, placeFace), x0 = ci * CELL, z0 = cj * CELL, x1 = x0 + s * CELL, z1 = z0 + sz * CELL;
   const r = { type, ci, cj, s, sz, x0, z0, x1, z1, ok: true, reason: '' };
   if (ci < 0 || cj < 0 || ci + s > N || cj + sz > N) return { ...r, ok: false, reason: 'Off the map' };
-  if (!free && atLimit(type)) return { ...r, ok: false, reason: 'Only one ' + T.name };
+  if (!free && atLimit(type)) return { ...r, ok: false, reason: 'Only 1 ' + T.name };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (sceneryAt((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Occupied' };
   if (MAP === 'pass' || MAP === 'vale' || MAP === 'hold') for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (!mapOpen((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Too steep' };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) { if (occB[b * N + a]) return { ...r, ok: false, reason: 'Occupied' }; if (bridgeCell[b * N + a]) return { ...r, ok: false, reason: 'Bridge' }; }
@@ -8541,7 +8541,7 @@ function setDockMini(on) {
 }
 $('#dockMin').addEventListener('click', () => setDockMini(!dockMini));
 function setTool(t) {
-  if (atLimit(t)) { setHint('Only one ' + DEF[t].name, 'bad'); return; }
+  if (atLimit(t)) { setHint('Only 1 ' + DEF[t].name, 'bad'); return; }
   tool = t;
   if (dockMini && t !== 'select') { dockMini = false; document.body.classList.remove('dockMini'); }   // picking a tool (a number key) unfolds it
   syncDockBtns();
@@ -10962,7 +10962,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '9bb8657d51'; var updateWait = false, updateT = 0;
+const BUILD = 'd44ca67a1c'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

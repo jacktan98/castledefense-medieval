@@ -444,7 +444,7 @@ function setDockMini(on) {
 }
 $('#dockMin').addEventListener('click', () => setDockMini(!dockMini));
 function setTool(t) {
-  if (atLimit(t)) { setHint('Only one ' + DEF[t].name, 'bad'); return; }
+  if (atLimit(t)) { setHint('Only 1 ' + DEF[t].name, 'bad'); return; }
   tool = t;
   if (dockMini && t !== 'select') { dockMini = false; document.body.classList.remove('dockMini'); }   // picking a tool (a number key) unfolds it
   syncDockBtns();
