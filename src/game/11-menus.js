@@ -863,7 +863,7 @@ document.addEventListener('click', e => {
   const side = b.dataset.side, c = b.dataset.c, other = side === 'town' ? 'foe' : 'town';
   if (b.classList.contains('shut')) { showOffer(); return; }
   // the other side's colour: the two sides swap (Jack: with only Blue and Red free, a free player could never switch)
-  sfx('click'); TEAM = TEAM[other] === c ? { ...TEAM, [side]: c, [other]: TEAM[side] } : { ...TEAM, [side]: c }; applyTeams(); renderColours();
+  sfx('click'); TEAM = TEAM[other] === c ? { ...TEAM, [side]: c, [other]: TEAM[side] } : { ...TEAM, [side]: c }; applyTeams(); if (typeof heroRecolour === 'function') heroRecolour(); renderColours();
   try { localStorage.setItem('mtd-colours', JSON.stringify(TEAM)); } catch (e) {}
 });
 renderColours();
