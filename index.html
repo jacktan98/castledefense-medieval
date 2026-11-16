@@ -4713,10 +4713,14 @@ function countRes(type, cx, cz) {
 }
 // a building's footprint in cells, x by z, when it faces f: the forester (2 wide, 3 deep) turned sideways is 3 by 2 (Jack)
 const dimsFor = (type, f) => { const T = DEF[type], s = T.size, sz = T.dz || s; return T.turnDims && f % 2 ? [sz, s] : [s, sz]; };
+// one of these per town (Jack: a second market adds nothing, trades come from any market at its own tier); a lost one can be built again
+const ONE_ONLY = new Set(['market']);
+const atLimit = t => ONE_ONLY.has(t) && buildings.some(B => !B.dead && B.type === t);
 function evaluate(type, ci, cj, free) {
   const T = DEF[type], [s, sz] = dimsFor(type, placeFace), x0 = ci * CELL, z0 = cj * CELL, x1 = x0 + s * CELL, z1 = z0 + sz * CELL;
   const r = { type, ci, cj, s, sz, x0, z0, x1, z1, ok: true, reason: '' };
   if (ci < 0 || cj < 0 || ci + s > N || cj + sz > N) return { ...r, ok: false, reason: 'Off the map' };
+  if (!free && atLimit(type)) return { ...r, ok: false, reason: 'Only one ' + T.name };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (sceneryAt((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Occupied' };
   if (MAP === 'pass' || MAP === 'vale' || MAP === 'hold') for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (!mapOpen((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Too steep' };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) { if (occB[b * N + a]) return { ...r, ok: false, reason: 'Occupied' }; if (bridgeCell[b * N + a]) return { ...r, ok: false, reason: 'Bridge' }; }
@@ -8141,7 +8145,10 @@ function markTools() {
   if (guideStep >= 0) setTimeout(guideMark);   // the dock may have been redrawn: re-place the pulse
   document.querySelectorAll('.tool').forEach(b => {
     b.setAttribute('aria-pressed', String(b.dataset.tool === tool));
-    const T = DEF[b.dataset.tool]; b.classList.toggle('cant', b.dataset.tool === 'road' ? !canAfford(PATH_COST) : !!T && !canAfford(T.cost));
+    const t = b.dataset.tool, T = DEF[t], lim = !!T && atLimit(t);
+    b.classList.toggle('cant', t === 'road' ? !canAfford(PATH_COST) : !!T && (lim || !canAfford(T.cost)));
+    // the one market built (or going up): its tile reads Built instead of its cost
+    if (T && ONE_ONLY.has(t) && b.dataset.lim !== String(lim)) { b.dataset.lim = String(lim); const sm = b.querySelector('small'); if (sm) sm.innerHTML = lim ? 'Built' : costHTML(T.cost); }
   });
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { cat = b.dataset.cat; renderTools(); }));
@@ -8489,7 +8496,7 @@ function tap(e) {
   if (e.pointerType !== 'mouse' && !(cur && cur.ci === ci && cur.cj === cj && cur.type === tool && ghosts[tool].visible)) { showGhostAt(pt); return; }
   // placed: the building sound (Jack: it played the error sound with a mouse, as the outline shown again at once found the spot
   // taken, a red "Occupied" within the tap's 80 ms; the tap's moment is cleared first so that hint stays quiet)
-  if (place(tool, ci, cj)) { sfx('build', { x: pt.x, z: pt.z }, .8); userActT = -1e9; if (e.pointerType === 'mouse') showGhostAt(pt); else { hideGhost(); setHint('Placed'); } }
+  if (place(tool, ci, cj)) { sfx('build', { x: pt.x, z: pt.z }, .8); userActT = -1e9; if (atLimit(tool)) { setTool('select'); return; } if (e.pointerType === 'mouse') showGhostAt(pt); else { hideGhost(); setHint('Placed'); } }
 }
 const ROTATES = { wall: 1, gate: 1 };
 function rotatePlacement() {
@@ -8534,6 +8541,7 @@ function setDockMini(on) {
 }
 $('#dockMin').addEventListener('click', () => setDockMini(!dockMini));
 function setTool(t) {
+  if (atLimit(t)) { setHint('Only one ' + DEF[t].name, 'bad'); return; }
   tool = t;
   if (dockMini && t !== 'select') { dockMini = false; document.body.classList.remove('dockMini'); }   // picking a tool (a number key) unfolds it
   syncDockBtns();
@@ -10954,7 +10962,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '4ebe0c7834'; var updateWait = false, updateT = 0;
+const BUILD = '0cf52ed2c5'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

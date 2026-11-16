@@ -48,7 +48,10 @@ function markTools() {
   if (guideStep >= 0) setTimeout(guideMark);   // the dock may have been redrawn: re-place the pulse
   document.querySelectorAll('.tool').forEach(b => {
     b.setAttribute('aria-pressed', String(b.dataset.tool === tool));
-    const T = DEF[b.dataset.tool]; b.classList.toggle('cant', b.dataset.tool === 'road' ? !canAfford(PATH_COST) : !!T && !canAfford(T.cost));
+    const t = b.dataset.tool, T = DEF[t], lim = !!T && atLimit(t);
+    b.classList.toggle('cant', t === 'road' ? !canAfford(PATH_COST) : !!T && (lim || !canAfford(T.cost)));
+    // the one market built (or going up): its tile reads Built instead of its cost
+    if (T && ONE_ONLY.has(t) && b.dataset.lim !== String(lim)) { b.dataset.lim = String(lim); const sm = b.querySelector('small'); if (sm) sm.innerHTML = lim ? 'Built' : costHTML(T.cost); }
   });
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { cat = b.dataset.cat; renderTools(); }));
@@ -396,7 +399,7 @@ function tap(e) {
   if (e.pointerType !== 'mouse' && !(cur && cur.ci === ci && cur.cj === cj && cur.type === tool && ghosts[tool].visible)) { showGhostAt(pt); return; }
   // placed: the building sound (Jack: it played the error sound with a mouse, as the outline shown again at once found the spot
   // taken, a red "Occupied" within the tap's 80 ms; the tap's moment is cleared first so that hint stays quiet)
-  if (place(tool, ci, cj)) { sfx('build', { x: pt.x, z: pt.z }, .8); userActT = -1e9; if (e.pointerType === 'mouse') showGhostAt(pt); else { hideGhost(); setHint('Placed'); } }
+  if (place(tool, ci, cj)) { sfx('build', { x: pt.x, z: pt.z }, .8); userActT = -1e9; if (atLimit(tool)) { setTool('select'); return; } if (e.pointerType === 'mouse') showGhostAt(pt); else { hideGhost(); setHint('Placed'); } }
 }
 const ROTATES = { wall: 1, gate: 1 };
 function rotatePlacement() {
@@ -441,6 +444,7 @@ function setDockMini(on) {
 }
 $('#dockMin').addEventListener('click', () => setDockMini(!dockMini));
 function setTool(t) {
+  if (atLimit(t)) { setHint('Only one ' + DEF[t].name, 'bad'); return; }
   tool = t;
   if (dockMini && t !== 'select') { dockMini = false; document.body.classList.remove('dockMini'); }   // picking a tool (a number key) unfolds it
   syncDockBtns();

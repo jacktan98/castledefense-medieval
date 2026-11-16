@@ -21,10 +21,14 @@ function countRes(type, cx, cz) {
 }
 // a building's footprint in cells, x by z, when it faces f: the forester (2 wide, 3 deep) turned sideways is 3 by 2 (Jack)
 const dimsFor = (type, f) => { const T = DEF[type], s = T.size, sz = T.dz || s; return T.turnDims && f % 2 ? [sz, s] : [s, sz]; };
+// one of these per town (Jack: a second market adds nothing, trades come from any market at its own tier); a lost one can be built again
+const ONE_ONLY = new Set(['market']);
+const atLimit = t => ONE_ONLY.has(t) && buildings.some(B => !B.dead && B.type === t);
 function evaluate(type, ci, cj, free) {
   const T = DEF[type], [s, sz] = dimsFor(type, placeFace), x0 = ci * CELL, z0 = cj * CELL, x1 = x0 + s * CELL, z1 = z0 + sz * CELL;
   const r = { type, ci, cj, s, sz, x0, z0, x1, z1, ok: true, reason: '' };
   if (ci < 0 || cj < 0 || ci + s > N || cj + sz > N) return { ...r, ok: false, reason: 'Off the map' };
+  if (!free && atLimit(type)) return { ...r, ok: false, reason: 'Only one ' + T.name };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (sceneryAt((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Occupied' };
   if (MAP === 'pass' || MAP === 'vale' || MAP === 'hold') for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) if (!mapOpen((a + .5) * CELL, (b + .5) * CELL)) return { ...r, ok: false, reason: 'Too steep' };
   for (let b = cj; b < cj + sz; b++) for (let a = ci; a < ci + s; a++) { if (occB[b * N + a]) return { ...r, ok: false, reason: 'Occupied' }; if (bridgeCell[b * N + a]) return { ...r, ok: false, reason: 'Bridge' }; }
