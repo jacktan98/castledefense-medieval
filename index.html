@@ -1127,7 +1127,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 /* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
 @media (max-height:520px){
   .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
-  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hpStage{align-self:flex-start} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
+  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0;flex-direction:column;align-items:center;align-self:start;gap:10px} .heroSheet .hpInfo{width:100%;align-self:stretch} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
   .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
@@ -11488,7 +11488,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'a9ae125421'; var updateWait = false, updateT = 0;
+const BUILD = '71e1fd2d01'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

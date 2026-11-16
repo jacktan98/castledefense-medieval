@@ -1110,7 +1110,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 /* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
 @media (max-height:520px){
   .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
-  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0} .heroSheet .hpStage{align-self:flex-start} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
+  .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0;flex-direction:column;align-items:center;align-self:start;gap:10px} .heroSheet .hpInfo{width:100%;align-self:stretch} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
   .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
