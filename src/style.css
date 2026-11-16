@@ -1112,7 +1112,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 @media (max-width:440px){ .hpSk{gap:7px;padding:7px 8px} .hpSk .hsSteps{gap:3px} .hpSk .hsSteps i{min-width:33px;font-size:11px;padding:3px 0} .hpSk .hsTx small{font-size:11.5px} }
 /* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
 @media (max-height:520px){
-  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";grid-template-rows:auto auto auto auto auto 1fr;align-items:start;max-width:min(100%,820px)!important}
+  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh rosh" "ros ros";grid-template-rows:auto auto 1fr auto auto;align-items:start;max-width:min(100%,820px)!important}
   .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0;flex-direction:column;align-items:center;align-self:start;gap:10px} .heroSheet .hpInfo{width:100%;align-self:stretch} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
   .heroSheet .hsList,.heroSheet .hsWrap{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
@@ -1128,7 +1128,8 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hSkMini svg{width:14px;height:14px}
 .hSkMini .hsPips i{width:6px;height:6px;border:1px solid #6b5a2e!important;background:#3a3a30!important}.hSkMini .hsPips i.on{background:var(--gold)!important;border-color:var(--gold)!important}
 .heroSheet .hsWrap{display:flex;gap:10px;width:100%;align-items:stretch}
-.heroSheet .hsWrap .hsList{flex:0 0 44%;width:auto;display:flex;flex-direction:column;gap:7px}
+.heroSheet .hsWrap .hsList{flex:0 0 calc(50% - 5px);min-width:0;width:auto;display:flex;flex-direction:column;gap:7px}
+.heroSheet .hsWrap .hsDet{flex:0 0 calc(50% - 5px)}   /* the two halves the same for every hero (Jack), the names fitted in */
 .hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 35%,#3a2d18,#15100a 78%);border:2px solid rgba(217,176,78,.7)}
 .hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 0 auto;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
@@ -1142,17 +1143,14 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsTile .hsDot{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-style:normal;background:none;filter:drop-shadow(0 0 4px rgba(240,201,90,.8))}
 .hsTile .hsDot .skp{width:16px;height:16px}
 .heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
-/* the details: on a phone the picture with the name and rank beside it, the line under them; on a tablet (and a laptop)
-   a bigger picture on top with everything centred (Jack) */
-.hsDh{display:flex;align-items:center;gap:10px}
-.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:26px;height:26px}
-.hsDt{display:flex;flex-direction:column;gap:3px;min-width:0}
-body.tablet .hsDh{flex-direction:column;gap:8px;text-align:center}
+/* the details, one style everywhere (Jack: the picture on top like the others): the picture, the name and rank under it, then the
+   line, all centred; on a tablet (and a laptop) the picture bigger */
+.hsDh{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.hsDh .hsIco{width:52px;height:52px}.hsDh .hsIco svg{width:32px;height:32px}
+.hsDt{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.hsDet .hsDesc{text-align:center}
+body.tablet .hsDh{gap:8px}
 body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{width:42px;height:42px}
-body.tablet .hsDt{align-items:center}
-body.tablet .hsDet .hsDesc{text-align:center}
-/* a phone held sideways takes the tablet's centred details too (Jack), the picture a little smaller to keep the height */
-@media (max-height:520px){.hsDh{flex-direction:column;gap:6px;text-align:center}.hsDh .hsIco{width:56px;height:56px}.hsDh .hsIco svg{width:35px;height:35px}.hsDt{align-items:center}.hsDet .hsDesc{text-align:center}}
 
 .hsDesc .hsRk{display:block;margin-bottom:2px;font:700 11px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
@@ -1169,3 +1167,13 @@ body.tablet .hsDet .hsDesc{text-align:center}
 .hsLc{display:inline-flex;align-items:center;gap:3px;font:700 14px var(--body);font-variant-numeric:lining-nums}.hsLc .skp{width:14px;height:14px;fill:#2a1c08}
 .hsNote{display:flex;align-items:center;gap:4px;min-height:36px;font:600 13px var(--body);color:var(--muted)}.hsNote .skp{width:13px;height:13px}
 .hsDesc{min-height:2.5em}  /* every skill's line takes two rows, so the details never change height between skills (Jack) */
+/* a phone held sideways: the Hero screen's heroes row runs under both columns (Jack: room for more heroes), so the Heir sits
+   beside the name and the skills are drawn tighter to fit the height (after the base rules, which they override) */
+@media (max-height:520px){
+  .heroSheet .hpBody{flex-direction:row!important;align-items:center!important;gap:12px!important} .heroSheet .hpStage{width:76px;height:76px}
+  .heroSheet .hsWrap .hsList{gap:5px} .modal.tome .hsTile{padding:4px 8px!important} .modal.tome .hsTile.sel{padding:3px 7px!important}
+  .hsTile .hsIco{width:32px;height:32px}.hsTile .hsIco svg{width:19px;height:19px} .hsTile .hsTx{gap:3px} .hsTile .hsTx b{font-size:14px}
+  .heroSheet .hsDet{gap:4px;padding:6px 10px} .hsDh{gap:3px} .hsDh .hsIco{width:38px;height:38px}.hsDh .hsIco svg{width:24px;height:24px}
+  .hsDh b{font-size:16px} .hsDh small{margin-top:1px} .hsDesc{font-size:13px} .modal.tome .hsLearn{height:30px}
+  .heroSheet .hRosHead{margin:6px 0 4px} .hRoster{justify-content:flex-start} .modal.tome .hRos{padding:4px 4px!important} .hRos .hrPic{width:40px;height:40px}
+}
