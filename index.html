@@ -1070,6 +1070,8 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 #adHero.on{border-color:#9fd1ff;color:#dff0ff}
 .heroSheet .hpBody,.heroSheet .hSkHead,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
+/* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
+body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -9125,7 +9127,7 @@ function heroBust(now) {
   blink(p, now);
   p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
   codexStage(hpModel);
-  cxCam.position.set(hd.x + .14, hd.y + .06, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .1, hd.z);
+  cxCam.position.set(hd.x + .14, hd.y + .1, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .02, hd.z);
   cxR.render(cxScene, cxCam); cxScene.remove(hpModel.g);
   return cxR.domElement;
 }
@@ -11263,7 +11265,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '0848d1ca51'; var updateWait = false, updateT = 0;
+const BUILD = '76f2f5724b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

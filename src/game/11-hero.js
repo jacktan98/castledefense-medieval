@@ -222,7 +222,7 @@ function heroBust(now) {
   blink(p, now);
   p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
   codexStage(hpModel);
-  cxCam.position.set(hd.x + .14, hd.y + .06, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .1, hd.z);
+  cxCam.position.set(hd.x + .14, hd.y + .1, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .02, hd.z);
   cxR.render(cxScene, cxCam); cxScene.remove(hpModel.g);
   return cxR.domElement;
 }

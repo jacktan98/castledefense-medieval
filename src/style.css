@@ -1053,3 +1053,5 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 #adHero.on{border-color:#9fd1ff;color:#dff0ff}
 .heroSheet .hpBody,.heroSheet .hSkHead,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
+/* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
+body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
