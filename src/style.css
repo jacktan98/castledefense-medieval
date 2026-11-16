@@ -1040,8 +1040,10 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
 .heroSheet .hpXp{font-size:12px}
 .heroSheet .hpStats{display:flex;gap:12px;font-weight:700}
-.heroSheet .hSkHead{display:flex;justify-content:space-between;align-items:baseline;font:400 17px var(--display);color:var(--gold);margin:4px 0 6px}
+.heroSheet .hSkHead{display:flex;align-items:center;font:400 17px var(--display);color:var(--gold);margin:4px 0 6px}
 .heroSheet .hSkHead span{font:700 13px var(--body);color:#ffe2a0}
+.heroSheet .hSkHead .hsPts{margin-left:auto}
+.modal.tome .heroSheet .hsReset{margin-left:10px;min-height:0!important;height:28px;padding:0 12px!important;font:700 12px var(--body)!important;border-radius:7px!important}
 .hpSk{display:flex;align-items:center;gap:9px;padding:7px 9px;margin-bottom:7px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))}
 .hpSk.off .hsIco,.hpSk.off .hsTx{opacity:.6}
 .hpSk .hsIco{width:38px;height:38px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:2px solid #9fd1ff;position:relative}

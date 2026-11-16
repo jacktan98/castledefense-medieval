@@ -89,6 +89,13 @@ function heroKill(e, by) {
   const E = ENEMY[e.kind];
   if (by === hero) heroXp(E.boss ? 60 : E.engine ? 15 : 6 * (e.tier || 1) + (E.mounted ? 3 : 0)); else heroXp(1);
 }
+// the Hero screen's Reset (Jack): every point spent comes back, the skills start again from nothing
+function heroReset() {
+  const n = HERO_ORDER.reduce((t, k) => t + HERO.sk[k], 0); if (!n) return;
+  HERO.pts += n; HERO_ORDER.forEach(k => { HERO.sk[k] = 0; }); saveHero(); sfx('click'); heroKey = '';
+  if (hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; }
+  renderHeroPick();
+}
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
   if (HERO.pts < 1 || r >= 3 || HERO.lv < S.req[r]) { sfx('nope'); return; }
@@ -109,7 +116,7 @@ function updateHero(v, dt) {
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
     else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = .8 * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = SWORD_T; hurtEnemy(foe, heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), v); sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
-  else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); }
+  else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); if (heroFlag && heroFlag.visible) heroFlag.visible = false; }   // there: the flag comes down (Jack)
   // mends slowly by day while nobody is fighting
   if (PH.kind === 'day' && !foe && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt);
 }
@@ -187,6 +194,7 @@ document.addEventListener('click', ev => {
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
+  else if (a === 'reset') heroReset();
   else if (a === 'back') { sfx('click'); $('#heroPick').hidden = true; openCampaign(cSel); return; }
   heroUI();
 });
@@ -250,7 +258,8 @@ function renderHeroPick() {
     + `<div class="hpBody"><div class="hpStage"><canvas class="hpView" width="320" height="320"></canvas></div><div class="hpInfo"><div class="hpName">The Heir</div>`
     + `<div class="hpXp">XP<span class="hXpBar"><i style="width:${xpf * 100}%"></i></span>${HERO.lv >= HERO_MAX ? 'Max' : `${HERO.xp} / ${heroNeed()}`}</div>`
     + `<div class="hpStats">${STAT('hp', `${heroHp()}`)}${STAT('sword', `${heroDmg()}`)}${STAT('speed', `×${heroSpeed()}`)}</div></div></div>`
-    + `<div class="hSkHead">Skills<span>${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span></div>${sk}</div>`;
+    + `<div class="hSkHead">Skills<span class="hsPts">${HERO.pts ? `${HERO.pts} point${HERO.pts > 1 ? 's' : ''}` : ''}</span>`
+    + `${HERO_ORDER.some(k => HERO.sk[k]) ? '<button class="hsReset" data-hact="reset">Reset</button>' : ''}</div>${sk}</div>`;
   syncHeroBadge();
 }
 document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });

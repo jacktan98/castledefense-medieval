@@ -484,7 +484,7 @@ function dropSummoned() {
 function updateVolley(dt) {
   if (volleyCd > 0) volleyCd = Math.max(0, volleyCd - dt);
   if (summonCd > 0) summonCd = Math.max(0, summonCd - dt);
-  dropSummoned();
+  dropSummoned(); rallyFlagsDown();
   if (summonOut && !summoned().length) { summonOut = false; if (PH.kind === 'night') { summonCd = SUMMON.cd; log('<b>Riders</b> fallen', 'warn'); } const K = castleB(); if (K && K.rally) setRally(K, null); if (rallyFor === K) rallyFor = null; refreshCard(); }
   if (volleyRingT > 0) volleyRingT -= dt;
   if (volleyAim && PH.kind !== 'night') { volleyAim = false; refreshCard(); }
@@ -1271,6 +1271,15 @@ function updateMoves(dt) {
     }
     if (!mv.pts.length) { const c = center(B); g.set(c.x, hAt(c.x, c.z), c.z); B.move = null; }
     (B.manned || []).forEach((on, a) => on && showDefender(B, a));     // the crew walks with it
+  }
+}
+// a rally flag comes down once every soldier (or rider) of its building stands at it, not fighting (Jack: as the Heir's); the
+// spot itself is kept, so they still hold it
+function rallyFlagsDown() {
+  for (const B of buildings) {
+    const f = B.rallyFlag; if (!f || !f.visible || !B.rally) continue;
+    const us = villagers.filter(v => v.soldier && !v.gone && v.post && v.post.B === B && !v.post.fled);
+    if (us.length && us.every(v => !v.foe && Math.hypot(v.x - B.rally.x, v.z - B.rally.z) < 1.7)) f.visible = false;
   }
 }
 function setRally(B, pt) {
