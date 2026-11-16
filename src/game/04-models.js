@@ -235,7 +235,7 @@ function makeMarket(tier, plinth) {
     for (let i = 0; i < 6; i++) { const o = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), FLOWER[i % 5]); o.position.set(x - w / 2 + .1 + i * (w - .2) / 5, .86, z + (i % 2) * .08); o.castShadow = true; g.add(o); }
   };
   // a stall: posts, counter, awning sloping to the front in canvas and blue stripes
-  const stall = (x, z, w, d, rot = 0) => {
+  const stall = (x, z, w, d, rot = 0, sign = false) => {
     const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = rot;
     const P = tier === 1 ? M.rough : M.timber;
     for (const sx of [-1, 1]) { s.add(box(.08, 1.75, .08, P, sx * (w / 2 - .05), .87, -d / 2 + .05)); s.add(box(.08, 1.45, .08, P, sx * (w / 2 - .05), .72, d / 2 - .05)); }
@@ -244,15 +244,22 @@ function makeMarket(tier, plinth) {
     for (let i = 0; i < stripes; i++) aw.add(box((w + .2) / stripes, .03, d + .25, i % 2 ? M.awning : M.canvas, -w / 2 - .1 + (i + .5) * (w + .2) / stripes, 0, .05));
     // kept whole (not merged with the other canvas, the sacks): its white stripes come in with the coloured ones while it is built (Jack)
     aw.userData.awning = true; s.add(aw);
+    // a sign hung on two chains under the awning's front edge at the counter's right end, green while the trader is in, red
+    // while not, like the hall's (Jack: tiers 1 and 2 too)
+    if (sign) {
+      const sx = w / 2 - .3, sz = d / 2 + .02, top = 1.62 - Math.sin(.32) * (d / 2 + .1);
+      for (const dx of [-.12, .12]) s.add(box(.012, top - 1.24, .012, M.iron, sx + dx, (top + 1.24) / 2, sz));
+      const sg = box(.36, .26, .03, M.awning, sx, 1.11, sz); sg.userData.tradeSign = true; s.add(sg);
+    }
     for (let i = 0; i < 5; i++) { const o = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), FLOWER[i % 5]); o.position.set(-w / 2 + .3 + i * (w - .6) / 4, .86, d / 2 - .3); o.castShadow = true; s.add(o); }
     g.add(s);
   };
   if (tier === 1) {
-    stall(0, -.15, 1.7, 1.05);
+    stall(0, -.15, 1.7, 1.05, 0, true);
     crate(-1.1, .75); crate(-1.05, 1.15, .26, .4); sack(1.0, .8); sack(1.25, 1.05, .12); barrel(1.15, -.9); crate(-1.15, -.85, .34, .2);
     wheat(.3, 1.35); logs(-1.75, .1, 1); stones(1.75, .1); logs(.4, -1.45);
   } else if (tier === 2) {
-    stall(-.9, -.6, 1.8, 1.2); stall(1.05, -.4, 1.6, 1.1, -.25);
+    stall(-.9, -.6, 1.8, 1.2); stall(1.05, -.4, 1.6, 1.1, -.25, true);
     // a hand cart of goods at the front
     g.add(box(.9, .1, .6, M.wood, -.6, .42, 1.2)); g.add(box(.9, .22, .05, M.wood, -.6, .56, .92)); g.add(box(.9, .22, .05, M.wood, -.6, .56, 1.48));
     for (const sz of [-1, 1]) { const wh = cyl(.26, .26, .06, 10, M.timber, -.6, .26, 1.2 + sz * .34); wh.rotation.x = Math.PI / 2; g.add(wh); }

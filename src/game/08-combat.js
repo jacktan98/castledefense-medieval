@@ -1503,8 +1503,9 @@ function updateEco(dt) {
   const grow = day ? clamp(1 - PH.t / (DAYLEN[PH.wave - 1] || 300), 0, 1) : 1, cropK = .45 + .55 * grow;
   for (const B of buildings) {
     if (!B.built) continue;
-    if (B.type === 'market' && B.tier === 3) {
-      const g = B.group; if (g.userData.sign === undefined) { g.userData.sign = null; g.traverse(o => { if (o.userData.tradeSign) { o.material = o.material.clone(); g.userData.sign = o; } }); }
+    if (B.type === 'market') {
+      // found again after an upgrade swaps the model (every tier has a sign now)
+      const g = B.group; if (g.userData.sign === undefined || g.userData.signTier !== B.tier) { g.userData.sign = null; g.userData.signTier = B.tier; g.traverse(o => { if (o.userData.tradeSign) { o.material = o.material.clone(); g.userData.sign = o; } }); }
       const sg = g.userData.sign, on = traderAt(B); if (sg && sg.userData.on !== on) { sg.userData.on = on; sg.material.color.set(on ? '#3f9a4a' : '#b8392e'); }
     }
     if (B.type === 'farm') {
