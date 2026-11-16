@@ -1139,12 +1139,16 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsTile .hsDot{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-style:normal;background:none;filter:drop-shadow(0 0 4px rgba(240,201,90,.8))}
 .hsTile .hsDot .skp{width:16px;height:16px}
 .heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
-/* the details (Jack: a bigger picture, tidy): picture on top, then the name, the next rank and what it does, all centred */
-.hsDh{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-.hsDh .hsIco{width:68px;height:68px}.hsDh .hsIco svg{width:42px;height:42px}
-.hsDt{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.hsDt .hsDesc{margin-top:4px;text-align:center}
-@media (max-height:520px){.hsDh{gap:5px}.hsDh .hsIco{width:54px;height:54px}.hsDh .hsIco svg{width:34px;height:34px}.hsDt{gap:2px}.hsDt .hsDesc{margin-top:2px}}
+/* the details: on a phone the picture with the name and rank beside it, the line under them; on a tablet (and a laptop)
+   a bigger picture on top with everything centred (Jack) */
+.hsDh{display:flex;align-items:center;gap:10px}
+.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:26px;height:26px}
+.hsDt{display:flex;flex-direction:column;gap:3px;min-width:0}
+body.tablet .hsDh{flex-direction:column;gap:8px;text-align:center}
+body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{width:42px;height:42px}
+body.tablet .hsDt{align-items:center}
+body.tablet .hsDet .hsDesc{text-align:center}
+
 .hsDesc .hsRk{display:block;margin-bottom:2px;font:700 11px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
 .hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}

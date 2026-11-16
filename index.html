@@ -1156,12 +1156,16 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsTile .hsDot{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;font-style:normal;background:none;filter:drop-shadow(0 0 4px rgba(240,201,90,.8))}
 .hsTile .hsDot .skp{width:16px;height:16px}
 .heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
-/* the details (Jack: a bigger picture, tidy): picture on top, then the name, the next rank and what it does, all centred */
-.hsDh{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-.hsDh .hsIco{width:68px;height:68px}.hsDh .hsIco svg{width:42px;height:42px}
-.hsDt{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.hsDt .hsDesc{margin-top:4px;text-align:center}
-@media (max-height:520px){.hsDh{gap:5px}.hsDh .hsIco{width:54px;height:54px}.hsDh .hsIco svg{width:34px;height:34px}.hsDt{gap:2px}.hsDt .hsDesc{margin-top:2px}}
+/* the details: on a phone the picture with the name and rank beside it, the line under them; on a tablet (and a laptop)
+   a bigger picture on top with everything centred (Jack) */
+.hsDh{display:flex;align-items:center;gap:10px}
+.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:26px;height:26px}
+.hsDt{display:flex;flex-direction:column;gap:3px;min-width:0}
+body.tablet .hsDh{flex-direction:column;gap:8px;text-align:center}
+body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{width:42px;height:42px}
+body.tablet .hsDt{align-items:center}
+body.tablet .hsDet .hsDesc{text-align:center}
+
 .hsDesc .hsRk{display:block;margin-bottom:2px;font:700 11px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
 .hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}
@@ -9038,12 +9042,12 @@ const HERO_SK = {
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
 const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
-const HERO_ORDER = ['cry', 'horse', 'firm'];
+const HERO_ORDER = ['cry', 'firm', 'horse'];
 // points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
 const lvPts = lv => lv <= 4 ? 1 : lv <= 8 ? 2 : 3;
 const rankCost = r => r + 1;
-const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.lv >= HERO_SK[k].req[r] && HERO.pts >= rankCost(r); };
+const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.pts >= rankCost(r); };
 const ptsEarned = lv => { let n = 0; for (let i = 1; i <= lv; i++) n += lvPts(i); return n; };
 const ptsSpent = sk => HERO_ORDER.reduce((t, k) => t + sk[k] * (sk[k] + 1) / 2, 0);
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -9134,7 +9138,7 @@ function heroReset() {
 }
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
-  if (r >= 3 || HERO.pts < rankCost(r) || HERO.lv < S.req[r]) { sfx('nope'); return; }
+  if (r >= 3 || HERO.pts < rankCost(r)) { sfx('nope'); return; }
   HERO.pts -= rankCost(r); HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
   if (k === 'horse' && hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; if (HERO.sk.horse === 1) sfx('neigh', hero); }
 }
@@ -9363,16 +9367,15 @@ function renderHeroPick() {
     return `<button class="hsTile sk-${k}${k === hpSkSel ? ' sel' : ''}${r ? '' : ' off'}" data-hact="sk" data-k="${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${HERO_SK[k].name}</b><span class="hsPips">${[0, 1, 2].map(n => `<i class="${n < r ? 'on' : ''}"></i>`).join('')}</span></span></button>`;
   }).join('');
   {
-    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r];
+    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3;
     // one full line (Jack: no boxes of figures): what the next rank does, or the top rank's once all are learnt
     const nextLine = r < 3 ? S.line(r) : S.line(2);
     const act = r >= 3 ? '<span class="hsNote">Max rank</span>'
-      : !lvOk ? `<span class="hsNote">Needs Lv ${S.req[r]}</span>`
       : HERO.pts >= c ? `<button class="primary hsLearn" data-hact="learn" data-k="${k}">Learn<span class="hsLc">${SKP_ICO}${c}</span></button>`
       : `<span class="hsNote">Needs ${SKP_ICO}${c}</span>`;
-    // a big picture with the name, the next rank and what it does in one column beside it (Jack)
-    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsDt"><b>${S.name}</b><small class="hsRk">Rank ${r < 3 ? r + 1 : 3}</small><p class="hsDesc">${nextLine}</p></span></div>`
-      + `<div class="hsAct">${act}</div>`;
+    // the picture with the name and the next rank beside it, what it does under them; on a tablet all centred under a bigger picture (Jack)
+    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsDt"><b>${S.name}</b><small class="hsRk">Rank ${r < 3 ? r + 1 : 3}</small></span></div>`
+      + `<p class="hsDesc">${nextLine}</p><div class="hsAct">${act}</div>`;
   }
   syncHeroBadge();
 }
@@ -11483,7 +11486,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'c7e038f1e6'; var updateWait = false, updateT = 0;
+const BUILD = 'c6ded8ad38'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

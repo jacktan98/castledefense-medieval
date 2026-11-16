@@ -18,12 +18,12 @@ const HERO_SK = {
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
 const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
-const HERO_ORDER = ['cry', 'horse', 'firm'];
+const HERO_ORDER = ['cry', 'firm', 'horse'];
 // points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
 const lvPts = lv => lv <= 4 ? 1 : lv <= 8 ? 2 : 3;
 const rankCost = r => r + 1;
-const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.lv >= HERO_SK[k].req[r] && HERO.pts >= rankCost(r); };
+const skCan = k => { const r = HERO.sk[k]; return r < 3 && HERO.pts >= rankCost(r); };
 const ptsEarned = lv => { let n = 0; for (let i = 1; i <= lv; i++) n += lvPts(i); return n; };
 const ptsSpent = sk => HERO_ORDER.reduce((t, k) => t + sk[k] * (sk[k] + 1) / 2, 0);
 const heroBlank = () => ({ lv: 1, xp: 0, pts: 1, sk: { cry: 0, horse: 0, firm: 0 } });
@@ -114,7 +114,7 @@ function heroReset() {
 }
 function heroLearn(k) {
   const S = HERO_SK[k], r = HERO.sk[k];
-  if (r >= 3 || HERO.pts < rankCost(r) || HERO.lv < S.req[r]) { sfx('nope'); return; }
+  if (r >= 3 || HERO.pts < rankCost(r)) { sfx('nope'); return; }
   HERO.pts -= rankCost(r); HERO.sk[k]++; saveHero(); sfx('upgrade'); heroKey = ''; renderHeroPick();
   if (k === 'horse' && hero) { const x = hero.x, z = hero.z, hp = hero.hp / hero.maxHp; heroKit(hero); hero.hp = hero.maxHp * hp; hero.x = x; hero.z = z; if (HERO.sk.horse === 1) sfx('neigh', hero); }
 }
@@ -343,16 +343,15 @@ function renderHeroPick() {
     return `<button class="hsTile sk-${k}${k === hpSkSel ? ' sel' : ''}${r ? '' : ' off'}" data-hact="sk" data-k="${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsTx"><b>${HERO_SK[k].name}</b><span class="hsPips">${[0, 1, 2].map(n => `<i class="${n < r ? 'on' : ''}"></i>`).join('')}</span></span></button>`;
   }).join('');
   {
-    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r];
+    const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3;
     // one full line (Jack: no boxes of figures): what the next rank does, or the top rank's once all are learnt
     const nextLine = r < 3 ? S.line(r) : S.line(2);
     const act = r >= 3 ? '<span class="hsNote">Max rank</span>'
-      : !lvOk ? `<span class="hsNote">Needs Lv ${S.req[r]}</span>`
       : HERO.pts >= c ? `<button class="primary hsLearn" data-hact="learn" data-k="${k}">Learn<span class="hsLc">${SKP_ICO}${c}</span></button>`
       : `<span class="hsNote">Needs ${SKP_ICO}${c}</span>`;
-    // a big picture with the name, the next rank and what it does in one column beside it (Jack)
-    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsDt"><b>${S.name}</b><small class="hsRk">Rank ${r < 3 ? r + 1 : 3}</small><p class="hsDesc">${nextLine}</p></span></div>`
-      + `<div class="hsAct">${act}</div>`;
+    // the picture with the name and the next rank beside it, what it does under them; on a tablet all centred under a bigger picture (Jack)
+    el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span class="hsDt"><b>${S.name}</b><small class="hsRk">Rank ${r < 3 ? r + 1 : 3}</small></span></div>`
+      + `<p class="hsDesc">${nextLine}</p><div class="hsAct">${act}</div>`;
   }
   syncHeroBadge();
 }
