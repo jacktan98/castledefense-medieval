@@ -197,28 +197,33 @@ function openHeroPick() {
   sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
   codexRenderer(); cancelAnimationFrame(hpRaf); hpT0 = hpLast = performance.now(); hpRaf = requestAnimationFrame(heroLoop);
 }
-// ---- the Heir in 3D on the Hero screen: drawn by the Archive's small renderer (codexRenderer), turning slowly on its grass
-// patch, sword raised now and then; on a horse once Royal horse is learnt ----
-// framed closer than the Archive's figures: the Heir alone fills the round picture
-CX_FIT.hero = [.66, .62, .42]; CX_FIT.heroHorse = [1.18, .5, .62];
-let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpHorse = -1;
+// ---- the Heir in 3D on the Hero screen: a head-and-shoulders portrait (Jack: just the face and a bit of the upper body, no turning
+// round), drawn by the Archive's small renderer (codexRenderer); the Heir looks about a little and blinks ----
+let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0;
 function heroModel() {
-  const p = makePerson({ hair: HERO_HAIR }); p.heroHair = true; heroKit(p); p.seed = 0;
-  return { g: p.g, p, cat: HERO.sk.horse ? 'heroHorse' : 'hero' };
+  const p = makePerson({ hair: HERO_HAIR }); p.heroHair = true; heroKitFoot(p); p.seed = 0;
+  p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
+  return { g: p.g, p };
 }
-function heroPose(p, t) {
-  if (p.horseLegs) { horseGait(p.horseLegs, 0, 0); p.body.position.y = SADDLE; horseIdle(p, t, 0); }
-  else { p.legs[0].rotation.x = p.legs[1].rotation.x = 0; p.body.position.y = 0; }
-  p.arms[0].rotation.x = -.55;
-  swordPose(p, Math.max(0, SWORD_T - t % 3.4), 0);
-}
+// the portrait is always on foot (a horse would only lift the bust)
+function heroKitFoot(p) { const h = HERO.sk.horse; HERO.sk.horse = 0; heroKit(p); HERO.sk.horse = h; }
 function heroLoop(now) {
-  if ($('#heroPick').hidden) { hpRaf = 0; if (hpModel) { codexDrop(hpModel); hpModel = null; hpHorse = -1; } return; }
+  if ($('#heroPick').hidden) { hpRaf = 0; if (hpModel) { codexDrop(hpModel); hpModel = null; } return; }
   hpRaf = requestAnimationFrame(heroLoop); hpLast = now;
-  if (!hpModel || hpHorse !== HERO.sk.horse) { if (hpModel) codexDrop(hpModel); hpModel = heroModel(); hpHorse = HERO.sk.horse; codexFrame(hpModel); }
+  if (!hpModel) {
+    hpModel = heroModel(); cxScene.add(hpModel.g); hpModel.g.updateMatrixWorld(true);
+    const hd = hpModel.p.headParts[0].getWorldPosition(new THREE.Vector3());
+    Object.assign(hpModel, { r: .01, k: 1.2, c: hd.clone(), head: hd });
+  }
   const cv = $('#heroPick .hpView'); if (!cv) return;
-  const t = (now - hpT0) / 1000; windU.value = now / 1000;
-  heroPose(hpModel.p, t); codexShot(hpModel, .5 + t * .35);
+  const t = (now - hpT0) / 1000, p = hpModel.p, hd = hpModel.head;
+  // looks a little to one side, then the other, with still spells between
+  turnHead(p, .32 * Math.sin(t * .55) * Math.max(0, Math.sin(t * .23 + 1)));
+  blink(p, now);
+  p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
+  codexStage(hpModel);
+  cxCam.position.set(hd.x + .14, hd.y + .06, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .1, hd.z);
+  cxR.render(cxScene, cxCam);
   const c = cv.getContext('2d'); c.clearRect(0, 0, CX_PX, CX_PX); c.drawImage(cxR.domElement, 0, 0);
 }
 function renderHeroPick() {
