@@ -1127,7 +1127,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 1 0;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
 .modal.tome .hsTile.sel{border:2px solid #f0c95a!important;padding:6px 8px!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
-.hsTile .hsIco{width:38px;height:38px}.hsTile .hsIco svg{width:26px;height:26px}
+.hsTile .hsIco{width:38px;height:38px}.hsTile .hsIco svg{width:22px;height:22px}
 .hsTile.off .hsIco svg{filter:saturate(.4) brightness(.75)}
 .hsTile .hsTx{display:flex;flex-direction:column;gap:5px;min-width:0;padding-right:18px}
 .hsTile .hsTx b{font:400 15px/1 var(--display);color:#ffe2a0;white-space:nowrap}
@@ -1137,10 +1137,11 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .hsTile .hsDot .skp{width:16px;height:16px}
 .heroSheet .hsDet{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(22,17,9,.95));box-sizing:border-box;text-align:left}
 .hsDh{display:flex;align-items:center;gap:10px}
-.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:30px;height:30px}
+.hsDh .hsIco{width:44px;height:44px}.hsDh .hsIco svg{width:26px;height:26px}
 .hsDesc .hsRk{display:block;margin-bottom:2px;font:700 11px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
 .hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}
+.hsDh small.hsRk{font:700 12px var(--body);letter-spacing:.06em;color:#f0c95a}
 .hsDesc{margin:0;font:500 14px/1.25 var(--body);color:#e9dcc0}
 .hsDet .hsSteps{display:flex;gap:5px}
 .hsDet .hsSteps i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 5px;border-radius:7px;border:1px solid rgba(240,201,90,.22);color:rgba(240,201,90,.45);font:700 13px/1 var(--body);font-style:normal}
