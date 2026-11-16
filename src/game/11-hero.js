@@ -8,7 +8,7 @@ const heroOn = () => { try { return localStorage.getItem('mtd-dev-hero') === '1'
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
-  cry: { name: 'Royal presence', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
+  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, req: [1, 3, 5], k: [.1, .2, .3] },
   horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
   firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
@@ -75,7 +75,7 @@ function setHeroFlag(pt) {
   f.add(cyl(.06, .06, .06, 8, heroGold, 0, 1.53, 0));
   f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f; heroHere = false; flagFocus = 'hero';
 }
-// Royal presence: troops within 7 m of the Heir, the Heir too, hit harder (updateSoldier and the Heir's own blows)
+// Inspire: troops within 7 m of the Heir, the Heir too, hit harder (updateSoldier and the Heir's own blows)
 const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z - hero.z) < 7 ? 1 + HERO_SK.cry.k[HERO.sk.cry - 1] : 1;
 // Stand firm: the Heir takes less (hurtSoldier)
 const heroTake = d => HERO.sk.firm ? d * (1 - HERO_SK.firm.k[HERO.sk.firm - 1]) : d;
@@ -153,7 +153,7 @@ function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = 
 const HERO_ICO = {
   cry: '<svg viewBox="0 0 24 24"><path d="M3 8 L7.5 12 L12 5 L16.5 12 L21 8 L19 18 H5Z"/><path d="M8 21 H16"/></svg>',
   // the riders' horse with speed lines kept clear of it (Jack: Royal horse's own picture, not the Riders button's)
-  horse: `<svg viewBox="0 0 24 24"><g transform="translate(4.6 1) scale(.9)">${HORSE_ICO}</g><path d="M1.6 9 H4.6 M.8 12.5 H4 M1.6 16 H4.4"/></svg>`,
+  horse: `<svg viewBox="0 0 24 24"><g transform="translate(4.6 1) scale(.9)">${HORSE_ICO}</g><path d="M2.6 9 H5.6 M1.8 12.5 H5 M2.6 16 H5.4"/></svg>`,
   firm: '<svg viewBox="0 0 24 24"><path d="M12 3 L19 6 V11 C19 16 15.5 19 12 21 C8.5 19 5 16 5 11 V6Z"/><path d="M12 7 V17 M8 11 H16"/></svg>',
 };
 const heroShown = () => heroOn() && !gameOver && !menuOn() && !galleryOn && !showcaseBuilt && !!castleB();
@@ -206,11 +206,14 @@ document.addEventListener('click', ev => {
   else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
   else if (a === 'learn') heroLearn(b.dataset.k);
   else if (a === 'reset') heroReset();
-  else if (a === 'back') { sfx('click'); $('#heroPick').hidden = true; openCampaign(cSel); return; }
   heroUI();
 });
 // ---- the Hero screen (from the campaign's round Hero button, shown only with heroes on): the Heir, level, XP, stats and the
 // three passive skills, each with its ranks and a gold + while a point can be spent (laid out like the Upgrades screen) ----
+// Back has its own listener on the screen, like the Upgrades screen's, and runs before anything else (Jack: on his phone Back
+// sometimes did nothing)
+function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
+$('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
 function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.textContent = HERO.pts; n.hidden = !HERO.pts; } }
 function openHeroPick() {
   sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
