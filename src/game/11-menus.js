@@ -1102,7 +1102,9 @@ function galPose(p, t, dt) {
     else swordPose(p, at, sw);
     return;
   }
-  if (p.carry === 'log') { R = -2.75; L = -sw * .6; } else if (p.carry === 'stone') { L = R = -1.2; }
+  // the log as the game's woodcutters carry it home (Jack: the gallery's hand went through the log): `updateVillagers`' pose
+  if (p.carry === 'log') p.arms[1].rotation.z = .47;
+  if (p.carry === 'log') { R = -2.47; L = -sw * .6; } else if (p.carry === 'stone') { L = R = -1.2; }
   else if (p.work && !gWalk) { let crouch, twist; ({ R, L, tilt, lean, crouch, twist } = TOOL_POSE[p.tool](t + p.seed, p.seed)); kneel(p, crouch || 0); p.body.rotation.y = twist || 0; }
   else if (p.tool) { R = -.3 + sw * .25; tilt = -.25; }
   if (p.pivot) { p.pivot.visible = !p.carry; p.pivot.rotation.x = ease(p.pivot.rotation.x, tilt); }
