@@ -1015,13 +1015,15 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 /* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's card, the campaign's Hero screen */
 .heroBar{position:absolute;z-index:5;display:flex;gap:8px;align-items:center}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
-.heroPort .hpRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--hc,var(--ok)) 0 var(--p,100%),rgba(0,0,0,.6) var(--p,100%) 100%);box-shadow:0 3px 10px rgba(0,0,0,.55)}
-.heroPort .face{position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
+.heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .heroPort .lv{position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
-.heroPort .xp{position:absolute;left:6px;right:6px;bottom:-9px;height:4px;border-radius:2px;background:rgba(0,0,0,.6);overflow:hidden}
+/* health over XP under the portrait (Jack: the health ring round it was dropped) */
+.heroPort .hpb{position:absolute;left:3px;right:3px;bottom:-11px;height:6px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden;border:1px solid rgba(0,0,0,.5)}
+.heroPort .hpb i{display:block;height:100%;border-radius:2px;background:var(--ok)}
+.heroPort .xp{position:absolute;left:6px;right:6px;bottom:-17px;height:4px;border-radius:2px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .xp i{display:block;height:100%;border-radius:2px;background:#9fd1ff}
-.heroPort .cd{position:absolute;inset:4px;display:none;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.55);font:700 15px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
+.heroPort .cd{position:absolute;inset:2px;display:none;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.55);font:700 15px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
 .heroPort.down .cd{display:flex} .heroPort.down .face{filter:grayscale(1) brightness(.7)}
 .heroPort.sel .face{border-color:#fff1c4;box-shadow:0 0 0 3px rgba(240,201,90,.55)}
 .heroCard{width:min(270px,100%)!important}
@@ -1061,10 +1063,12 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
 .modal.tome .hpSk .hsPlus{position:relative}.hpSk .hsPlus .hsCost{position:absolute;right:-5px;bottom:-5px;min-width:15px;height:15px;border-radius:8px;background:#2a1c08;border:1px solid #f3d27a;color:#ffe2a0;font:700 10px/13px var(--body);font-style:normal;box-sizing:border-box;text-align:center}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
-#adHero.on{border-color:#9fd1ff;color:#dff0ff}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
 body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
 
-.skp{width:1.3em;height:1.3em;vertical-align:-.25em;margin-right:3px;fill:#f3d27a;stroke:#5a3a0c;stroke-width:1.2;stroke-linejoin:round}
+.skp{width:1.35em;height:1.35em;vertical-align:-.27em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1.6;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 0 3px rgba(255,205,90,.7))}
+/* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
+.campBadge .skp{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:1px;fill:#2a1d0a;stroke:none;filter:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
+#campHeroN{font-family:var(--body);font-style:normal;display:inline-flex;align-items:center}

@@ -4,7 +4,8 @@
 // (or where Move sends them), earns XP by fighting and keeps their level from stage to stage (mtd-hero); a fallen Heir comes
 // back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point. The skills are passive (Jack: no
 // abilities in the game, like the later Kingdom Rush games) and are learnt only on the campaign's Hero screen (#heroPick).
-const heroOn = () => { try { return localStorage.getItem('mtd-dev-hero') === '1'; } catch (e) { return false; } };
+// the Heir is part of the game for everyone now (Jack: it was a testing switch in the admin, which left the skills locked on his phone)
+const heroOn = () => true;
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
@@ -12,6 +13,8 @@ const HERO_SK = {
   horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse', req: [2, 4, 6], k: [2, 2.3, 2.6] },
   firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, req: [5, 7, 9], k: [.15, .25, .35] },
 };
+// a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
+const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 1 L15.2 8.8 L23 12 L15.2 15.2 L12 23 L8.8 15.2 L1 12 L8.8 8.8 Z"/></svg>';
 const HERO_ORDER = ['cry', 'horse', 'firm'];
 // points (Jack): each level from 1 to 4 brings 1, 5 to 8 brings 2, 9 and 10 bring 3 (18 in all); a skill's ranks cost 1, 2 and 3
 // (6 a skill, 18 for all three), so a level-10 Heir has every rank
@@ -166,7 +169,7 @@ function heroUI() {
   const key = [HERO.lv, HERO.pts, HERO.sk.cry, HERO.sk.horse, HERO.sk.firm, !!hero, night, heroSel, !!heroAt, heroMove].join('|');
   if (key !== heroKey) {
     heroKey = key;
-    let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><i class="hpRing"></i><span class="face"><canvas class="heroCv" width="96" height="96"></canvas></span><b class="lv">${HERO.lv}</b><span class="xp"><i></i></span><b class="cd"></b></button>`;
+    let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><span class="face"><canvas class="heroCv" width="96" height="96"></canvas></span><b class="lv">${HERO.lv}</b><span class="hpb"><i></i></span><span class="xp"><i></i></span><b class="cd"></b></button>`;
     bar.innerHTML = h;
     // the card: name and level, Move and Recall, health, XP, stats and the three skills with a + while points are left
     if (heroSel) {
@@ -182,7 +185,7 @@ function heroUI() {
   }
   const p = bar.querySelector('.heroPort');
   if (p) {
-    p.style.setProperty('--p', `${(hero ? hpf : 0) * 100}%`); p.style.setProperty('--hc', hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)');
+    const hb = p.querySelector('.hpb i'); hb.style.width = `${(hero ? hpf : 0) * 100}%`; hb.style.background = hpf < .35 ? 'var(--bad)' : hpf < .7 ? '#e6c46a' : 'var(--ok)';
     p.querySelector('.xp i').style.width = `${xpf * 100}%`; p.querySelector('.cd').textContent = hero ? '' : Math.ceil(heroDownT);
   }
   card.hidden = !heroSel || !!selected;
@@ -214,7 +217,8 @@ document.addEventListener('click', ev => {
 // sometimes did nothing)
 function heroBack() { $('#heroPick').hidden = true; cancelAnimationFrame(hpRaf); hpRaf = 0; sfx('click'); openCampaign(cSel); }
 $('#heroPick').addEventListener('click', e => { if (e.target.closest('[data-hact=back]')) { e.stopPropagation(); heroBack(); } });
-function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.textContent = HERO.pts; n.hidden = !HERO.pts; } }
+// the campaign button's badge, like the Upgrades' "★30": the skill-point star and the points to spend
+function syncHeroBadge() { const n = $('#campHeroN'); if (n) { n.innerHTML = HERO.pts ? `${SKP_ICO}${HERO.pts}` : ''; n.hidden = !HERO.pts; } }
 function openHeroPick() {
   sfx('click'); $('#campaign').hidden = true; $('#heroPick').hidden = false; renderHeroPick(); matchUpZoom($('#heroPick'));
   codexRenderer(); cancelAnimationFrame(hpRaf); hpT0 = hpLast = performance.now(); hpRaf = requestAnimationFrame(heroLoop);
@@ -262,8 +266,6 @@ function heroPortraitTick(now) {
 }
 // the sheet is made once and only its parts refilled (Jack: a new sheet on every + replayed the menus' rise animation, so the page
 // seemed to reload, and the portrait's canvas was made again)
-// a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
-const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 1.5 C13 9 15 11 22.5 12 C15 13 13 15 12 22.5 C11 15 9 13 1.5 12 C9 11 11 9 12 1.5 Z"/></svg>';
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
   if (!el.querySelector('.heroSheet')) el.innerHTML = `<div class="upSheet heroSheet"><div class="upTop"><button class="upBack campBack" data-hact="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12H5.5M11.5 5.5L5 12l6.5 6.5"/></svg></button><h2>Hero</h2><span class="hpPad"></span></div>`
@@ -284,13 +286,8 @@ function renderHeroPick() {
   syncHeroBadge();
 }
 document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
-// the admin's switch and its helpers (testing)
-function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !heroOn(); syncHeroBadge(); } const b = $('#adHero'); if (b) { b.textContent = heroOn() ? 'Heroes: On' : 'Heroes: Off'; b.classList.toggle('on', heroOn()); } const r = $('#adHeroRow'); if (r) r.hidden = !heroOn(); }
-$('#adHero').addEventListener('click', () => {
-  try { localStorage.setItem('mtd-dev-hero', heroOn() ? '0' : '1'); } catch (e) {}
-  if (heroOn()) spawnHero(); else removeHero();
-  syncHeroAdmin(); heroKey = ''; heroUI();
-});
+// the admin's helpers (testing)
+function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = false; syncHeroBadge(); } }
 $('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
   HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
