@@ -11,9 +11,10 @@ const HERO_CD = 30, HERO_MAX = 10;
 const HERO_SK = {
   // desc: one line that never changes; vals: each rank's figure, shown as three steps on the Hero screen (Jack: the line and a
   // "Next" line repeated each other and the rows grew uneven)
-  cry: { name: 'Inspire', desc: 'Troops nearby hit harder', vals: ['+10%', '+20%', '+30%'], req: [1, 3, 5], k: [.1, .2, .3] },
-  horse: { name: 'Royal horse', desc: 'Rides a horse, faster', vals: ['×2', '×2.3', '×2.6'], req: [2, 4, 6], k: [2, 2.3, 2.6] },
-  firm: { name: 'Stand firm', desc: 'Takes less damage', vals: ['−15%', '−25%', '−35%'], req: [5, 7, 9], k: [.15, .25, .35] },
+  // line: the full text of a rank (the Hero screen shows the next rank's, Jack: no boxes of figures)
+  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, desc: 'Troops nearby hit harder', vals: ['+10%', '+20%', '+30%'], req: [1, 3, 5], k: [.1, .2, .3] },
+  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster` : 'Rides a horse, ×2 faster', desc: 'Rides a horse, faster', vals: ['×2', '×2.3', '×2.6'], req: [2, 4, 6], k: [2, 2.3, 2.6] },
+  firm: { name: 'Stand firm', line: r => `Takes ${[15, 25, 35][r]}% less damage`, desc: 'Takes less damage', vals: ['−15%', '−25%', '−35%'], req: [5, 7, 9], k: [.15, .25, .35] },
 };
 // a skill point is a four-point star (Jack: no "pts"), on the points left, on a rank's cost and when short of points
 const SKP_ICO = '<svg class="skp" viewBox="0 0 24 24" aria-label="skill points"><path d="M12 .8 Q13.6 10.4 23.2 12 Q13.6 13.6 12 23.2 Q10.4 13.6 .8 12 Q10.4 10.4 12 .8 Z"/></svg>';
@@ -157,10 +158,11 @@ function heroTap(e) {
 function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
 // ---- on screen: the portrait (and the Heir's skills at night) under the top panel; the Heir's card in the dock ----
 const HERO_ICO = {
-  cry: '<svg viewBox="0 0 24 24"><path d="M3 8 L7.5 12 L12 5 L16.5 12 L21 8 L19 18 H5Z"/><path d="M8 21 H16"/></svg>',
-  // the riders' horse with speed lines kept clear of it (Jack: Royal horse's own picture, not the Riders button's)
-  horse: `<svg viewBox="0 0 24 24"><g transform="translate(4.6 1) scale(.9)">${HORSE_ICO}</g><path d="M4.6 9 H7.6 M2.4 12.5 H5.6 M2.6 16 H5.4"/></svg>`,
-  firm: '<svg viewBox="0 0 24 24"><path d="M12 3 L19 6 V11 C19 16 15.5 19 12 21 C8.5 19 5 16 5 11 V6Z"/><path d="M12 7 V17 M8 11 H16"/></svg>',
+  // coloured pictures in the stat icons' style (Jack: like the heart, sword, bow and boot): a gold crown with a red gem, a brown
+  // horse's head with speed lines behind it, a steel shield with a gold cross
+  cry: '<svg viewBox="0 0 16 16"><path d="M2 5.2 L5 8 L8 3 L11 8 L14 5.2 L12.8 12 H3.2 Z" fill="#e9b949" stroke="#7a5414" stroke-width=".9" stroke-linejoin="round"/><path d="M3.2 12 H12.8 V13.8 H3.2 Z" fill="#c9962f" stroke="#7a5414" stroke-width=".9" stroke-linejoin="round"/><circle cx="8" cy="9.4" r="1" fill="#d9503f" stroke="#7a2418" stroke-width=".5"/><circle cx="2" cy="5.2" r=".8" fill="#e9b949" stroke="#7a5414" stroke-width=".6"/><circle cx="8" cy="3" r=".8" fill="#e9b949" stroke="#7a5414" stroke-width=".6"/><circle cx="14" cy="5.2" r=".8" fill="#e9b949" stroke="#7a5414" stroke-width=".6"/><path d="M4.4 10.6 L5.2 7.8" stroke="#fbe3a0" stroke-width=".7" stroke-linecap="round"/></svg>',
+  horse: '<svg viewBox="0 0 16 16"><path d="M11.4 14.4 L11.7 9.6 C11.9 7 11.1 5 9.5 3.7 L9.8 1.8 L8.6 3 L7.6 2 L7.3 3.4 C5.7 4 4.3 5.3 3.4 7 L1.9 8.8 C1.4 9.4 1.6 10.3 2.3 10.5 L3.6 10.8 C4.2 10.9 4.8 10.6 5.2 10.1 L6.4 8.9 C6.8 10.7 6.8 12.6 6.2 14.4 Z" fill="#9a6532" stroke="#4e3015" stroke-width=".9" stroke-linejoin="round"/><path d="M9.5 3.7 C11.1 5 11.9 7 11.7 9.6 L11.4 14.4 H12.8 L13 9.6 C13.2 6.6 12.1 4.3 10 3 Z" fill="#3e2714" stroke="#2a1a0c" stroke-width=".6" stroke-linejoin="round"/><circle cx="7.7" cy="5.8" r=".55" fill="#1d130a"/><path d="M14.2 6.2 H15.6 M14.4 8.8 H15.8 M14.2 11.4 H15.6" stroke="#e8d9b0" stroke-width="1" stroke-linecap="round"/></svg>',
+  firm: '<svg viewBox="0 0 16 16"><path d="M8 1.6 L13.6 3.4 V8 C13.6 11.2 11.3 13.4 8 14.6 C4.7 13.4 2.4 11.2 2.4 8 V3.4 Z" fill="#b9c0c8" stroke="#4f555c" stroke-width=".9" stroke-linejoin="round"/><path d="M8 3.3 L12 4.6 V8 C12 10.4 10.4 12 8 12.9 C5.6 12 4 10.4 4 8 V4.6 Z" fill="#8d959e"/><path d="M8 4.6 V11.6 M5.4 7.4 H10.6" stroke="#e1b04a" stroke-width="1.5" stroke-linecap="round"/><path d="M3.6 4.6 L3.6 7.6" stroke="#eef1f4" stroke-width=".7" stroke-linecap="round"/></svg>',
 };
 const heroShown = () => heroOn() && !gameOver && !menuOn() && !galleryOn && !showcaseBuilt && !!castleB();
 function heroUI() {
@@ -338,14 +340,14 @@ function renderHeroPick() {
   }).join('');
   {
     const k = hpSkSel, S = HERO_SK[k], r = HERO.sk[k], c = rankCost(r), lvOk = r < 3 && HERO.lv >= S.req[r];
-    // the three ranks as steps: learnt ones lit, the next one outlined, the rest dim
-    const steps = S.vals.map((v, n) => `<i class="${n < r ? 'on' : n === r ? 'nx' : ''}"><small>${n + 1}</small>${v}</i>`).join('');
+    // one full line (Jack: no boxes of figures): what the next rank does, or the top rank's once all are learnt
+    const nextLine = r < 3 ? `<span class="hsRk">Rank ${r + 1}</span>${S.line(r)}` : S.line(2);
     const act = r >= 3 ? '<span class="hsNote">Max rank</span>'
       : !lvOk ? `<span class="hsNote">Needs Lv ${S.req[r]}</span>`
       : HERO.pts >= c ? `<button class="primary hsLearn" data-hact="learn" data-k="${k}">Learn<span class="hsLc">${SKP_ICO}${c}</span></button>`
       : `<span class="hsNote">Needs ${SKP_ICO}${c}</span>`;
     el.querySelector('.hsDet').innerHTML = `<div class="hsDh sk-${k}"><span class="hsIco">${HERO_ICO[k]}</span><span><b>${S.name}</b><small>Rank ${r} / 3</small></span></div>`
-      + `<p class="hsDesc">${S.desc}</p><div class="hsSteps">${steps}</div><div class="hsAct">${act}</div>`;
+      + `<p class="hsDesc">${nextLine}</p><div class="hsAct">${act}</div>`;
   }
   syncHeroBadge();
 }
