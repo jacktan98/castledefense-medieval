@@ -6,7 +6,8 @@
 // approved later or a refund all come through. ?debug owns it, for testing.
 var FULL_ID = 'com.jacktan.castledefense.fullgame', FREE_N = 3, fullPrice = '', buying = false;
 var STORE = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Store || null;
-function fullOwned() { if (devOn) return true; try { return localStorage.getItem('mtd-full') === '1'; } catch (e) { return false; } }
+// the public demo never owns it (nothing can be bought outside the app, so a hand-set mtd-full must not open the stages: Jack)
+function fullOwned() { if (devOn) return true; if (window.MTD_DEMO && !window.MTD_BETA) return false; try { return localStorage.getItem('mtd-full') === '1'; } catch (e) { return false; } }
 function paidStage(i) { return i >= FREE_N && !fullOwned(); }
 // the test builds' "forget purchase" switch is gone: drop its leftover flag, so the App Store's record counts again
 try { localStorage.removeItem('mtd-testfree'); } catch (e) {}

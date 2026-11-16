@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Castle Defense: Medieval</title>
+<meta http-equiv="refresh" content="4; url=https://castledefense.app/">
+<style>
+  html, body { margin: 0; height: 100%; background: #141a17; color: #f4e3b2; font: 18px/1.4 Georgia, serif; }
+  body { display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; box-sizing: border-box; }
+  a { color: #f0c95a; }
+</style>
+</head>
+<body>
+<p>Castle Defense: Medieval has moved.<br><a href="https://castledefense.app/">castledefense.app</a></p>
+<script>
+// The old site kept a copy of the game for offline play. Remove it: stop every offline helper on this address and delete what it kept.
+(async () => {
+  try { for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (e) {}
+  try { for (const k of await caches.keys()) await caches.delete(k); } catch (e) {}
+})();
+</script>
+</body>
+</html>

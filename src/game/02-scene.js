@@ -3,7 +3,7 @@ const canvas = $('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 // three asks the GPU for every new shader's error log, which makes the phone wait for the compile to finish (a hitch the first
 // time each material is seen); only wanted while debugging
-renderer.debug.checkShaderErrors = /[?&]debug\b/.test(location.search);
+renderer.debug.checkShaderErrors = /[?&]debug\b/.test(URLQ);
 // Graphics (Jack: Low / High in Settings and the pause card, kept in 'mtd-gfx'): High renders at the screen's full sharpness (phones
 // are 3×; adaptResolution steps it down if frames get slow), Low at most 1.5 pixels a point, with no shadows and a third of the weather
 var gfxLow = false; try { gfxLow = localStorage.getItem('mtd-gfx') === 'low'; } catch (e) {}
@@ -417,7 +417,7 @@ const FLOWER = ['#d4483b', '#f0c84a', '#9a5ad0', '#f2efe6', '#e27aa8'].map(mat);
 // frame. Left alone: anything with userData or under a group with userData (how the game marks and finds moving parts: door
 // leaves, turrets, arms, carts, stall horses, ropes), anything hidden or see-through, and materials whose shader reads a part's
 // own shape (userData.noMerge: flags, drapes, flames, straw and log roofs). ?nomerge turns it off, to compare.
-const MERGE_OFF = /[?&]nomerge\b/.test(location.search);
+const MERGE_OFF = /[?&]nomerge\b/.test(URLQ);
 function mergeStatic(root) {
   if (MERGE_OFF) return root;
   root.updateMatrixWorld(true);

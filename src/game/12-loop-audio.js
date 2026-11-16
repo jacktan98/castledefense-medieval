@@ -137,7 +137,7 @@ function startGame() {
 // ---------- loop ----------
 for (const t in DEF) if (t !== 'castle') makeGhost(t);   // here, once every model's materials exist (stables and siege use the soldiers' and horses')
 resize();
-if (!/[?&](gallery|debug|map=)/.test(location.search)) { showMapPick();
+if (!/[?&](gallery|debug|map=)/.test(URLQ)) { showMapPick();
   // a reload for an update made on the campaign screen opens it again
   try { if (sessionStorage.getItem('mtd-reopen') === 'campaign') { sessionStorage.removeItem('mtd-reopen'); setTimeout(() => openCampaign(), 0); } } catch (e) {} } else { startGame(); $('#mapPick').hidden = true; }   // shown from the first paint, so the game never flashes up behind it
 // the game is up: the loading screen fades once the first frames are drawn
@@ -290,7 +290,7 @@ var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser
 // the private test site (tools/demo.js --beta) has the admin buttons too
-var devOn = /[?&]debug\b/.test(location.search) || !!window.MTD_BETA; document.body.classList.toggle('dev', devOn);
+var devOn = /[?&]debug\b/.test(URLQ) || !!window.MTD_BETA; document.body.classList.toggle('dev', devOn);
 var muted = false; try { muted = devOn && localStorage.getItem('mtd-muted') === '1'; } catch (e) {}
 // music and sounds each have their own loudness (the pause card's two sliders, 0 to 1; all the way down is off); the corner
 // button still mutes everything. Stored as numbers ('mtd-music', 'mtd-sfx'; the old on/off toggles stored '1' and '0')
@@ -948,7 +948,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-if (/[?&]gallery\b/.test(location.search)) openGallery();
+if (/[?&]gallery\b/.test(URLQ)) openGallery();
 // dev hook: open with ?debug to evaluate code inside the game scope from the console (window.G('dist=20;updateCam()'))
-if (/[?&]debug\b/.test(location.search)) window.G = s => eval(s);
+if (/[?&]debug\b/.test(URLQ)) window.G = s => eval(s);
 })();

@@ -10,8 +10,11 @@ const CELL = 2, N_MAX = 40, V_MAX = N_MAX * CELL + 1;
 let N = 28, SIZE = N * CELL, V = SIZE + 1;
 const F = 3, TICK = 20;
 let KX = 19, KZ = 27;                  // castle site: Meadow cells 8–10, 12–14; River isle 12–14, 12–14 (set per map in startGame)
+// the address's test switches (?debug, ?map=, ?gallery, ?nomerge): the public demo ignores them all (Jack: ?debug opened every stage
+// and colour, and ?map= started any stage, so anyone could play the full game in the browser); the private beta keeps them
+var URLQ = window.MTD_DEMO && !window.MTD_BETA ? '' : location.search;
 // MAP: 'meadow' (the original map) or 'isle' (the castle on an island ringed by a river, three fixed bridges); ?map=isle skips the picker
-var MAP = (location.search.match(/[?&]map=(meadow|isle|pass|vale|bridge|cross|watch|dune|bend|crag|ford|mere|plains|keep|hold)\b/) || [])[1] || 'vale';
+var MAP = (URLQ.match(/[?&]map=(meadow|isle|pass|vale|bridge|cross|watch|dune|bend|crag|ford|mere|plains|keep|hold)\b/) || [])[1] || 'vale';
 // river isle: the river's centre line wobbles round the castle; ISLE.r is its mean radius in metres
 const ISLE = { r: 16.6 }, ISLE_BRIDGES = [-90, 30, 150], ISLE_ROCKS = [-30, 90, 210], MEADOW_BRIDGES = [0];   // Meadow: one bridge east from the castle over its river
 const isleOutN = z => 41 + 2.5 * Math.sin(z * .22 + .5), isleOutS = z => 18 + 2.5 * Math.sin(z * .2 + 2);   // the isle's two outflows: centre x by z
