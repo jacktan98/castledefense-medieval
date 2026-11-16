@@ -109,7 +109,7 @@ function heroKit(v, id = HERO_ID, foot) {
       c.position.y = 1.12; put(c);
     } else {
       put(captainHelm());
-      put(box(.48, .05, .1, capCloakM, 0, .88, -.13)); put(box(.42, .56, .03, capCloakM, 0, .58, -.2)); put(cyl(.05, .05, .02, 8, heroGold, -.15, .86, .1));
+      put(box(.48, .05, .1, capCloakM, 0, .88, -.13)); put(box(.42, .56, .03, capCloakM, 0, .58, -.2));
     }
   }
   if (v.hatG) v.hatG.visible = false;
@@ -135,7 +135,7 @@ function captainHelm() {
     for (const x of [-.045, -.015, .015]) add(box(.014, .07, .012, M.dark, x * sx, -.005, .008), vis);
   }
   // drawn a little smaller (Jack), and set down onto the shoulders so it meets the body (Jack)
-  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88) - .05;
+  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88) - .025;
   return g;
 }
 function heroHome() { const K = castleB(); if (!K) return null; const dp = doorPoint(K), [ox, oz] = faceRot(K.face || 0, 0, 1.6); return { x: dp.x + ox, z: dp.z + oz }; }
