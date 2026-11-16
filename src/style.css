@@ -1067,7 +1067,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
-body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar{display:none!important}
+body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar,body:has(.modal.tome:not([hidden])) #wavePop,body:has(#campaign:not([hidden])) #wavePop{display:none!important}
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
@@ -1110,9 +1110,9 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 @media (max-width:440px){ .hpSk{gap:7px;padding:7px 8px} .hpSk .hsSteps{gap:3px} .hpSk .hsSteps i{min-width:33px;font-size:11px;padding:3px 0} .hpSk .hsTx small{font-size:11.5px} }
 /* a phone held sideways: two columns, the Heir and the heroes row on the left, the skills on the right, so it fits the height */
 @media (max-height:520px){
-  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";align-items:start;max-width:min(100%,820px)!important}
+  .heroSheet{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:16px;grid-template-areas:"top top" "body skh" "body list" "rosh list" "ros list" ". list";grid-template-rows:auto auto auto auto auto 1fr;align-items:start;max-width:min(100%,820px)!important}
   .heroSheet .upTop{grid-area:top} .heroSheet .hpBody{grid-area:body;margin:0;flex-direction:column;align-items:center;align-self:start;gap:10px} .heroSheet .hpInfo{width:100%;align-self:stretch} .heroSheet .hSkHead:not(.hRosHead){grid-area:skh;margin:0 0 6px}
-  .heroSheet .hsList{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
+  .heroSheet .hsList,.heroSheet .hsWrap{grid-area:list} .heroSheet .hRosHead{grid-area:rosh;margin:8px 0 6px} .heroSheet .hRoster{grid-area:ros;gap:6px}
   .heroSheet .hpStage{width:84px;height:84px} .heroSheet .hpName{font-size:18px} .modal.tome .hRos{padding:6px 4px!important} .hRos .hrPic{width:46px;height:46px} .hRos b{font-size:12px} .hRos small{font-size:10px}
 }
 /* the Hero screen's skills in two sides (Jack, after Kingdom Rush 2): the skills on the left, the picked one's details on the right;
@@ -1166,3 +1166,4 @@ body.tablet .hsDet .hsDesc{text-align:center}
 .modal.tome .hsLearn{width:auto;height:36px;min-height:0!important;flex:none;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:0 22px!important;gap:8px;font-size:16px!important}
 .hsLc{display:inline-flex;align-items:center;gap:3px;font:700 14px var(--body)}.hsLc .skp{width:14px;height:14px;fill:#2a1c08}
 .hsNote{display:flex;align-items:center;gap:4px;min-height:36px;font:600 13px var(--body);color:var(--muted)}.hsNote .skp{width:13px;height:13px}
+.hsDesc{min-height:2.5em}  /* every skill's line takes two rows, so the details never change height between skills (Jack) */
