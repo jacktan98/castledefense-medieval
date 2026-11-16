@@ -1094,7 +1094,8 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
-body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar,body:has(.modal.tome:not([hidden])) #wavePop,body:has(#campaign:not([hidden])) #wavePop{display:none!important}
+body:has(.modal.tome:not([hidden])) #heroBar,body:has(#campaign:not([hidden])) #heroBar,body:has(.modal.tome:not([hidden])) #wavePop,body:has(#campaign:not([hidden])) #wavePop,
+body:has(.modal.tome:not([hidden])) #powers,body:has(#campaign:not([hidden])) #powers,body:has(.modal.tome:not([hidden])) #bossBar,body:has(#campaign:not([hidden])) #bossBar{display:none!important}
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
@@ -11699,7 +11700,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '7978b47e40'; var updateWait = false, updateT = 0;
+const BUILD = '9a0ff46536'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
