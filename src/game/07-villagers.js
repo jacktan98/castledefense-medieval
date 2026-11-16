@@ -1001,7 +1001,7 @@ function updateVillagers(dt, now) {
     if (v.barrow) v.barrow.visible = barrow; v.carryStone.scale.setScalar(barrow ? .001 : 1);
     const twoLogs = logC && v.carryLog.children[0] && v.carryLog.children[0].visible;
     if (twoLogs) { Rt = 0; L = -swing * .6; }                         // the right arm swung out sideways (rotation.z below) under both logs
-    else if (logC) { Rt = -2.6; L = -swing * .6; }                    // hand on the log over the right shoulder
+    else if (logC) { Rt = -2.47; L = -swing * .6; }                    // hand on the log over the right shoulder
     else if (barrow) { L = Rt = -.75; lean = 0; }                     // both hands on the barrow's handles (upright, so they stay on them)
     else if (stoneC) { L = Rt = -1.2; }                               // block held against the chest
     else if (v.working && TOOL_POSE[kind]) { ({ w, R: Rt, L, tilt, lean, crouch = 0, twist = 0, big = false } = TOOL_POSE[kind](now / 1000 + v.seed, v.seed)); if (crouch) kneel(v, crouch); } else if (kind) { Rt = -.3 + swing * .25; tilt = -.25; }          // walking with the tool held low
@@ -1038,10 +1038,10 @@ function updateVillagers(dt, now) {
       turnHead(v, turn); }
     v.arms[0].rotation.x = ease(v.arms[0].rotation.x, L); v.arms[1].rotation.x = ease(v.arms[1].rotation.x, Rt);
     // out and up: the hand round the bundle's outer log; with one log a little out too, the hand on its outer side (Jack)
-    v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .4 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
+    v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .47 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
-    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : swordPose)(v, v.attackT || 0, swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
