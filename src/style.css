@@ -1017,7 +1017,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .hpRing{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--hc,var(--ok)) 0 var(--p,100%),rgba(0,0,0,.6) var(--p,100%) 100%);box-shadow:0 3px 10px rgba(0,0,0,.55)}
 .heroPort .face{position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
-.heroPort .face svg{position:absolute;inset:0;width:100%;height:100%}
+.heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .heroPort .lv{position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/18px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 .heroPort .xp{position:absolute;left:6px;right:6px;bottom:-9px;height:4px;border-radius:2px;background:rgba(0,0,0,.6);overflow:hidden}
 .heroPort .xp i{display:block;height:100%;border-radius:2px;background:#9fd1ff}
@@ -1026,15 +1026,13 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort.sel .face{border-color:#fff1c4;box-shadow:0 0 0 3px rgba(240,201,90,.55)}
 .heroCard{width:min(270px,100%)!important}
 .heroCard .heroIco{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:1.5px solid #d9b04e;position:relative}
-.heroCard .heroIco svg{width:100%;height:100%}
+
 .hXp,.hpXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
 .hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.hXpBar i{display:block;height:100%;background:#9fd1ff}
 .hSkRow{display:flex;gap:10px}
 .hSkMini{display:flex;align-items:center;gap:4px}
 .hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
-.campCirc .heroBtnFace{width:38px;height:38px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);display:block}
-.campCirc .heroBtnFace svg{width:100%;height:100%;display:block}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
 .heroSheet .hpStage{width:140px;height:140px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
 .heroSheet .hpView{width:100%;height:100%;display:block}

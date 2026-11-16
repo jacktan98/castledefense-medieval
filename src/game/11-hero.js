@@ -56,7 +56,8 @@ function removeHero() {
 function heroStart() {
   hero = null; heroDownT = 0; heroMove = false; heroSel = false; heroWasNight = false; setHeroFlag(null);
   if (heroOn()) spawnHero();
-  heroKey = ''; heroUI();
+  // the HUD tick draws the portrait: startGame first runs while the page is still loading, before menuOn exists
+  heroKey = '';
 }
 function setHeroFlag(pt) {
   if (heroFlag) { scene.remove(heroFlag); heroFlag = null; }
@@ -132,7 +133,6 @@ function heroTap(e) {
 }
 function heroSelect() { if (selected) deselect(); heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
 // ---- on screen: the portrait (and the Heir's skills at night) under the top panel; the Heir's card in the dock ----
-const HERO_FACE = '<svg viewBox="0 0 48 48"><path d="M8 50 Q10 34 24 33 Q38 34 40 50Z" fill="#2f5faf" stroke="#1a2742" stroke-width="1.2"/><path d="M17 33 L24 40 L31 33" fill="#c9d3e3" stroke="#1a2742" stroke-width="1"/><ellipse cx="24" cy="23" rx="8.2" ry="9.4" fill="#e6b98f" stroke="#5a3a22" stroke-width="1"/><path d="M15.6 22 Q15 12 24 12 Q33 12 32.4 22 Q30 17 24 17 Q18 17 15.6 22Z" fill="#6b4425" stroke="#3b2414" stroke-width="1"/><path d="M15.5 16.5 L17.5 10.5 L20.5 14 L24 8.5 L27.5 14 L30.5 10.5 L32.5 16.5 Z" fill="#f0c95a" stroke="#7a5418" stroke-width="1"/><circle cx="24" cy="12.2" r="1.3" fill="#d24a3a"/><circle cx="21" cy="24" r="1" fill="#2a1a10"/><circle cx="27" cy="24" r="1" fill="#2a1a10"/><path d="M21.5 28.5 Q24 30 26.5 28.5" fill="none" stroke="#8a4a32" stroke-width="1"/></svg>';
 const HERO_ICO = {
   cry: '<svg viewBox="0 0 24 24"><path d="M3 8 L7.5 12 L12 5 L16.5 12 L21 8 L19 18 H5Z"/><path d="M8 21 H16"/></svg>',
   horse: `<svg viewBox="0 0 24 24">${HORSE_ICO}</svg>`,
@@ -148,13 +148,13 @@ function heroUI() {
   const key = [HERO.lv, HERO.pts, HERO.sk.cry, HERO.sk.horse, HERO.sk.firm, !!hero, night, heroSel, !!heroAt, heroMove].join('|');
   if (key !== heroKey) {
     heroKey = key;
-    let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><i class="hpRing"></i><span class="face">${HERO_FACE}</span><b class="lv">${HERO.lv}</b><span class="xp"><i></i></span><b class="cd"></b></button>`;
+    let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="The Heir"><i class="hpRing"></i><span class="face"><canvas class="heroCv" width="96" height="96"></canvas></span><b class="lv">${HERO.lv}</b><span class="xp"><i></i></span><b class="cd"></b></button>`;
     bar.innerHTML = h;
     // the card: name and level, Move and Recall, health, XP, stats and the three skills with a + while points are left
     if (heroSel) {
       // the skills, read only: learnt on the campaign's Hero screen
       const sk = HERO_ORDER.filter(k => HERO.sk[k]).map(k => `<span class="hSkMini" title="${HERO_SK[k].name}">${HERO_ICO[k]}<span class="hsPips">${[0, 1, 2].map(i => `<i class="${i < HERO.sk[k] ? 'on' : ''}"></i>`).join('')}</span></span>`).join('');
-      card.innerHTML = `<div class="cardHead"><span class="cardIco heroIco">${HERO_FACE}</span><div class="cardName"><h4>The Heir</h4><div class="cardSub"><span>Hero · Lv ${HERO.lv}</span></div></div>`
+      card.innerHTML = `<div class="cardHead"><span class="cardIco heroIco"><canvas class="heroCv" width="96" height="96"></canvas></span><div class="cardName"><h4>The Heir</h4><div class="cardSub"><span>Hero · Lv ${HERO.lv}</span></div></div>`
         + (hero ? `<button class="iconBtn" data-hact="move" aria-pressed="${heroMove}" title="Move: tap, then a spot" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M6 21 V3.5"/><path d="M6 4 H17.5 L15 8 L17.5 12 H6"/></svg></button>` : '')
         + (heroAt ? `<button class="iconBtn" data-hact="recall" title="Back to the castle" aria-label="Recall"><svg viewBox="0 0 24 24"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 H14 A5.5 5.5 0 0 1 14 20 H9"/></svg></button>` : '')
         + `<button class="iconBtn" data-hact="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button></div>`
@@ -199,7 +199,7 @@ function openHeroPick() {
 }
 // ---- the Heir in 3D on the Hero screen: a head-and-shoulders portrait (Jack: just the face and a bit of the upper body, no turning
 // round), drawn by the Archive's small renderer (codexRenderer); the Heir looks about a little and blinks ----
-let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0;
+let hpModel = null, hpRaf = 0, hpT0 = 0, hpLast = 0, hpDrawn = 0;
 function heroModel() {
   const p = makePerson({ hair: HERO_HAIR }); p.heroHair = true; heroKitFoot(p); p.seed = 0;
   p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
@@ -207,15 +207,15 @@ function heroModel() {
 }
 // the portrait is always on foot (a horse would only lift the bust)
 function heroKitFoot(p) { const h = HERO.sk.horse; HERO.sk.horse = 0; heroKit(p); HERO.sk.horse = h; }
-function heroLoop(now) {
-  if ($('#heroPick').hidden) { hpRaf = 0; if (hpModel) { codexDrop(hpModel); hpModel = null; } return; }
-  hpRaf = requestAnimationFrame(heroLoop); hpLast = now;
+// draws the bust into the small renderer and hands back its canvas: the Hero screen, the in-game portrait and the Heir's card all
+// copy it (Jack: the same 3D portrait in the game); the model joins the small renderer's scene only while it is drawn
+function heroBust(now) {
+  codexRenderer();
   if (!hpModel) {
     hpModel = heroModel(); cxScene.add(hpModel.g); hpModel.g.updateMatrixWorld(true);
     const hd = hpModel.p.headParts[0].getWorldPosition(new THREE.Vector3());
-    Object.assign(hpModel, { r: .01, k: 1.2, c: hd.clone(), head: hd });
-  }
-  const cv = $('#heroPick .hpView'); if (!cv) return;
+    Object.assign(hpModel, { r: .01, k: 1.2, c: hd.clone(), head: hd }); hpT0 = now;
+  } else cxScene.add(hpModel.g);
   const t = (now - hpT0) / 1000, p = hpModel.p, hd = hpModel.head;
   // looks a little to one side, then the other, with still spells between
   turnHead(p, .32 * Math.sin(t * .55) * Math.max(0, Math.sin(t * .23 + 1)));
@@ -223,8 +223,20 @@ function heroLoop(now) {
   p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
   codexStage(hpModel);
   cxCam.position.set(hd.x + .14, hd.y + .06, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .1, hd.z);
-  cxR.render(cxScene, cxCam);
-  const c = cv.getContext('2d'); c.clearRect(0, 0, CX_PX, CX_PX); c.drawImage(cxR.domElement, 0, 0);
+  cxR.render(cxScene, cxCam); cxScene.remove(hpModel.g);
+  return cxR.domElement;
+}
+const heroCopy = (src, cv) => { const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); c.drawImage(src, 0, 0, cv.width, cv.height); };
+function heroLoop(now) {
+  if ($('#heroPick').hidden) { hpRaf = 0; return; }
+  hpRaf = requestAnimationFrame(heroLoop); hpLast = now;
+  const cv = $('#heroPick .hpView'); if (cv) heroCopy(heroBust(now), cv);
+}
+// in the game (from frame): the portrait under the top panel and the card's icon, about 15 times a second
+function heroPortraitTick(now) {
+  if (!heroOn() || now - hpDrawn < 66) return;
+  const cvs = document.querySelectorAll('#heroBar .heroCv, #heroCard:not([hidden]) .heroCv'); if (!cvs.length || $('#heroBar').hidden) return;
+  hpDrawn = now; const src = heroBust(now); cvs.forEach(cv => heroCopy(src, cv));
 }
 function renderHeroPick() {
   const el = $('#heroPick'); if (!el || el.hidden) { syncHeroBadge(); return; }
