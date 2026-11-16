@@ -76,8 +76,11 @@ const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .
 // the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
-const fletchM = mat('#efe6d2'), fletchRedM = mat('#b8452c'), arrowWoodM = mat('#9a6b3c');
-const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'), capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
+const fletchM = mat('#efe6d2'), arrowWoodM = mat('#9a6b3c');
+const rangerTunM = mat('#5b4630'), rangerCloakM = mat('#3f5a2e'),
+  capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
+// the hood is an open shell round the head: drawn on both sides, so its inside shows where it stands off the head (Jack saw a gap)
+rangerCloakM.side = THREE.DoubleSide;
 function heroKit(v, id = HERO_ID, foot) {
   if (v.horse) stripKit(v);
   v.cape = null;
@@ -99,8 +102,9 @@ function heroKit(v, id = HERO_ID, foot) {
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.2); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
     // arrows standing up out of it (Jack: make them read as arrows): shafts well clear of the rim, each with a white fletching
     // of two crossed vanes, one red
-    for (let i = 0; i < 4; i++) {
-      const a = i / 4 * Math.PI * 2 + .4, ax = Math.cos(a) * .022, az = Math.sin(a) * .022, fm = i === 1 ? fletchRedM : fletchM;
+    // three, spread round the quiver's mouth, all white-fletched (Jack)
+    for (let i = 0; i < 3; i++) {
+      const a = i / 3 * Math.PI * 2 + .5, ax = Math.cos(a) * .026, az = Math.sin(a) * .026, fm = fletchM;
       qv.add(box(.014, .26, .014, arrowWoodM, ax, .2, az));
       const f1 = box(.05, .08, .006, fm, ax, .3, az), f2 = box(.006, .08, .05, fm, ax, .3, az); qv.add(f1, f2);
     }
