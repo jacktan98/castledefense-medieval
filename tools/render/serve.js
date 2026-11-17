@@ -15,7 +15,7 @@ async function openGame(url, opts = {}) {
   });
   await new Promise(r => server.listen(0, r));
   const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
-  const page = await browser.newPage({ viewport: opts.viewport || { width: 900, height: 600 } });
+  const page = await browser.newPage({ viewport: opts.viewport || { width: 900, height: 600 }, deviceScaleFactor: opts.deviceScaleFactor || 1 });
   if (opts.three) await page.route('**/three.min.js', r => r.fulfill({ path: path.resolve(opts.three), contentType: 'application/javascript' }));
   const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|fonts\.g/.test(m.text())) errors.push('console: ' + m.text()); });
   await page.goto(`http://localhost:${server.address().port}/${url}`);

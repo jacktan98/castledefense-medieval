@@ -63,7 +63,7 @@ const texCache = {};
 function textTex(s, color) {
   const key = s + color; if (texCache[key]) return texCache[key];
   const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
-  x.font = 'bold 38px "Alegreya Sans", system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = 'bold 38px "BodyNum", "Alegreya Sans", system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.lineWidth = 7; x.strokeStyle = 'rgba(0,0,0,.75)'; x.strokeText(s, 128, 32); x.fillStyle = color; x.fillText(s, 128, 32);
   const tx = new THREE.CanvasTexture(c); tx.encoding = THREE.sRGBEncoding; return texCache[key] = tx;
 }
@@ -73,7 +73,7 @@ for (const k of ['gold', 'food', 'wood', 'stone']) { const im = new Image(); im.
 function resTex(kind, n) {
   const key = 'res:' + kind + n; if (texCache[key]) return texCache[key];
   const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
-  x.font = 'bold 40px "Alegreya Sans", system-ui, sans-serif'; x.textAlign = 'right'; x.textBaseline = 'middle';
+  x.font = 'bold 40px "BodyNum", "Alegreya Sans", system-ui, sans-serif'; x.textAlign = 'right'; x.textBaseline = 'middle';
   // n a number: "+n" in the resource's colour; a string (e.g. "−50%", Meadowmere's poor fields): as given, in red
   const neg = typeof n === 'string', col = neg ? '#ff6a55' : { gold: '#f2c95e', food: '#e6cf74', wood: '#d9a46a', stone: '#c9c6bd' }[kind] || '#e6cf74', s = neg ? n : '+' + n;
   x.lineWidth = 7; x.strokeStyle = 'rgba(0,0,0,.75)'; x.strokeText(s, 136, 33); x.fillStyle = col; x.fillText(s, 136, 33);

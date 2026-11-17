@@ -190,6 +190,15 @@ function heroStart() {
   // the HUD tick draws the portrait: startGame first runs while the page is still loading, before menuOn exists
   heroKey = '';
 }
+// a building placed where the hero stands, or over their spot, moves them (and the spot) to the nearest open ground beside it (Jack:
+// the Ranger stood on inside a new site's scaffold)
+function heroOff(B) {
+  if (!hero || !B.ev) return; const e = B.ev, inB = p => p && p.x > e.x0 - .15 && p.x < e.x1 + .15 && p.z > e.z0 - .15 && p.z < e.z1 + .15;
+  const off = (x, z) => { for (let r = .3; r < 7; r += .25) for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
+    if (!inB({ x: px, z: pz }) && canStand(px, pz, 1)) return { x: px, z: pz }; } return { x, z }; };
+  if (inB(heroAt)) { const p = off(heroAt.x, heroAt.z); heroAt.x = p.x; heroAt.z = p.z; if (heroFlag) heroFlag.position.set(p.x, hAt(p.x, p.z), p.z); }
+  if (inB(hero)) { const p = off(hero.x, hero.z); hero.x = hero.tx = p.x; hero.z = hero.tz = p.z; hero.path = null; hero.stuck = 0; }
+}
 function setHeroFlag(pt) {
   if (heroFlag) { scene.remove(heroFlag); heroFlag = null; }
   heroAt = pt ? { x: pt.x, z: pt.z } : null;
@@ -207,11 +216,10 @@ const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z -
 function heroTake(d, v) {
   if (v.hero && HERO.sk.firm) {
     const k = HERO_SK.firm.k[HERO.sk.firm - 1]; d *= 1 - k;
-    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the share it took off in grey (the shield no longer
-    // snaps up: Jack found the move bad)
+    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the shield up, the share it took off in grey
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
-      v.deflAt = now; const y = walkY(v.rx, v.rz);
+      v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
       sparkBurst(v.rx, y + .95 * UNIT_K, v.rz, '#eef4ff', 9); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.35;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
