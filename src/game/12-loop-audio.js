@@ -236,6 +236,9 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   grunt:     { files: ['sfx/Enemy_grunt_1.mp3', 'sfx/Enemy_grunt_2.mp3'], trim: 1, reach: 60, near: .7 },   // a raider falls (at most every 3 s; arrowHit otherwise); heard across the map
   trade:     { file: 'sfx/Market_trade.mp3',         trim: .7 },
   achieve:   { file: 'sfx/Achievement_sound.mp3',    trim: .9 },   // an achievement earned in a game (the gold pop-up)
+  levelUp:   { file: 'sfx/Level_up_sound.mp3',       trim: .9 },   // a hero levels up (the old achievement sound: Jack)
+  block:     { file: 'sfx/Shield_block.mp3',         trim: .5, fallback: 'clash' },   // a shield takes a blow (tryBlock, Deflect)
+  eagle:     { file: 'sfx/Eagle_cry.mp3',            trim: .5, reach: 40, near: .5 },   // Eagle eye's bird appears, or dives at rank 3
   star:      { file: 'sfx/Star_sound.mp3',           trim: .8 },   // each summary star as it pops in
   rooster:   { file: 'sfx/Morning_rooster.mp3',      trim: 1.1 },     // dawn: the night is won
   yawn:      { file: 'sfx/Villager_yawn.mp3',        trim: .6 },     // a hungry villager goes to sleep
@@ -283,9 +286,9 @@ var LOOPS = {
   wind:  { file: 'sfx/Wind_sound.mp3',             vol: .55, amb: true },
 };
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
-var AUDIO_V = 6;
+var AUDIO_V = 7;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
-var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, path: .12, clash: .12, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
+var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser

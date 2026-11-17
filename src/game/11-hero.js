@@ -252,7 +252,7 @@ function heroTake(d, v) {
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
       v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
-      v.blockFx = deflectFx(skR('firm')); if (skR('firm') >= 3) deflectShove(v, v.foe); const c = sfx('clash', v); if (c) c.playbackRate.value = skR('firm') >= 3 ? 1.5 : 1.35;
+      v.blockFx = deflectFx(skR('firm')); if (skR('firm') >= 3) deflectShove(v, v.foe); const c = sfx('block', v); if (c && skR('firm') >= 3) c.playbackRate.value = 1.15;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
   }
@@ -277,7 +277,7 @@ function heroXp(n) {
   HERO.xp += n; let up = false;
   while (HERO.lv < HERO_MAX && HERO.xp >= heroNeed()) { HERO.xp -= heroNeed(); HERO.lv++; HERO.pts += lvPts(HERO.lv); up = true; }
   if (HERO.lv >= HERO_MAX) HERO.xp = 0;
-  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`${heroName()} · Lv ${HERO.lv}`, ''); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('achieve'); if (hero && hero.g.visible) hero.lvUpT = LVUP_T; if (achOn()) achCheck();
+  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`${heroName()} · Lv ${HERO.lv}`, ''); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('levelUp'); if (hero && hero.g.visible) hero.lvUpT = LVUP_T; if (achOn()) achCheck();
     if (HERO.pts > 0) tipOnce('heroPts', 'Spend skill points on the <b>Hero</b> screen in the campaign'); }
   saveHero(); heroKey = '';
 }
@@ -693,9 +693,9 @@ function heroLooks(dt, now) {
     if (!eagle.g.parent) scene.add(eagle.g);
     eagleA += dt * .55; const y = walkY(v.rx, v.rz) + (hawk ? 6 : 5);
     eagle.g.position.set(v.rx + Math.cos(eagleA) * 3, y + Math.sin(eagleA * 2) * .3, v.rz + Math.sin(eagleA) * 3);
-    if (er >= 3 && v.foe) eagleSwoop(eagle, v.foe, dt, (v.swoopT = ((v.swoopT || 0) + dt) % 7));
+    if (er >= 3 && v.foe) { const s0 = v.swoopT || 0; eagleSwoop(eagle, v.foe, dt, (v.swoopT = (s0 + dt) % 7)); if (v.swoopT < s0) sfx('eagle', eagle.g.position); }
     eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(EAGLE_K * [.75, .75, 1, 1.15][er] * Math.min(1, eagleK * 4));
-    if (!eagle.g.visible) { eagle.g.visible = true; eaglePoof(eagle.g.position); }
+    if (!eagle.g.visible) { eagle.g.visible = true; eaglePoof(eagle.g.position); sfx('eagle', eagle.g.position); }
     eagle.flap(Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
   } else if (eagle && eagle.g.visible) { eagle.g.visible = false; eaglePoof(eagle.g.position); }
   reachRing(v, HERO_ID === 'ranger' ? heroRange() : 1, on && HERO_ID === 'ranger' && heroSel ? .45 : 0);

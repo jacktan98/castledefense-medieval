@@ -1208,7 +1208,7 @@ function shieldDown(p) { if (p.blockZ0 != null) { p.arms[0].rotation.z = p.block
 function blockK(p, now) { const d = (now - (p.blockAt || -1e9)) / 1000; return d >= 0 && d < .45 ? Math.sin(Math.min(1, d / .45) * Math.PI) : 0; }
 function tryBlock(p) {
   const sh = shieldOf(p), now = performance.now(); if (!sh || Math.random() > .3 || now - (p.blockAt || 0) < 900) return;
-  p.blockAt = now; const w = sh.getWorldPosition(new THREE.Vector3()); sfx('clash', { x: w.x, z: w.z });
+  p.blockAt = now; const w = sh.getWorldPosition(new THREE.Vector3()); sfx('block', { x: w.x, z: w.z });
   // the sparks fly off the shield's face once it is up (shieldUp), not where it hung at the side (Jack: they showed by the head)
   p.blockFx = w => {
     for (let i = 0; i < 5 && puffs.length < 150; i++) {
