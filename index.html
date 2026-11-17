@@ -8702,7 +8702,8 @@ function tap(e) {
   if (rallyFor) {                                     // placing a barracks' rally flag
     const pt = pick(e), B = rallyFor;
     if (!pt || !canStand(pt.x, pt.z, 1)) { setHint('Blocked', 'bad'); return; }
-    rallyFor = null; setRally(B, pt); sfx('click'); setHint('Rallied'); refreshCard(); return;
+    // (Jack: like the hero's Move) the spot is set and the building let go, its flag showing until the troops reach it
+    rallyFor = null; setRally(B, pt); if (selected) deselect(); flagFocus = B; sfx('click'); setHint('Rallied'); refreshCard(); updatePowers(); return;
   }
   if (gameOver) return;
   if (paused) { const hb = pickBuilding(e); if (hb) select(hb); setHint('Paused', 'bad'); return; }
@@ -9482,7 +9483,7 @@ function heroTrail(v, line, color, on) {
   T.m.geometry.attributes.position.needsUpdate = T.m.geometry.attributes.color.needsUpdate = true;
 }
 // the other skills' looks (Jack: all of them): Inspire's sparks on the troops' weapons inside
-// it and, every 8 s, the sword raised with a gold pulse spreading out; Royal horse's dust behind the hooves, the cloth flaps and the
+// it (Jack: the gold pulse every 8 s and the sword raised were dropped); Royal horse's dust behind the hooves, the cloth flaps and the
 // rear-up as the Heir first rides out; Twin shot's two arrows on the string and a flash as they part; Eagle eye's eagle circling
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
 // the portrait's health bar pulsing and a slow breath every few seconds
@@ -9505,14 +9506,10 @@ function heroLooks(dt, now) {
   // Inspire
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
-    if (ringOn) {
+  if (ringOn) {
     if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = .3; const u = mates[Math.floor(Math.random() * mates.length)];
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
-    if ((v.cryPulse = (v.cryPulse == null ? 3 : v.cryPulse) - dt) <= 0) { v.cryPulse = 8; v.raiseT = .8; v.pulseT = 0; }
   }
-  if (v && v.pulseT != null) { v.pulseT += dt; const f = v.pulseT / 1.1, m = heroRing('pulse', 7, '#ffe27a', f < 1 ? .5 * (1 - f) : 0);
-    m.scale.setScalar(Math.max(.05, Math.min(1, f))); if (f >= 1) v.pulseT = null; }
-  if (v && v.raiseT > 0) { v.raiseT -= dt; if (!(v.attackT > 0)) { const k = Math.sin(Math.PI * (1 - v.raiseT / .8)); v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * k; } }
   // Royal horse
   if (on && v.cav) {
     const ry = v.g.rotation.y, mv = v.walking || (v.amp || 0) > .2;
@@ -11932,7 +11929,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '5c56d8160f'; var updateWait = false, updateT = 0;
+const BUILD = '20e0052c98'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

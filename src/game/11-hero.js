@@ -383,7 +383,7 @@ function heroTrail(v, line, color, on) {
   T.m.geometry.attributes.position.needsUpdate = T.m.geometry.attributes.color.needsUpdate = true;
 }
 // the other skills' looks (Jack: all of them): Inspire's sparks on the troops' weapons inside
-// it and, every 8 s, the sword raised with a gold pulse spreading out; Royal horse's dust behind the hooves, the cloth flaps and the
+// it (Jack: the gold pulse every 8 s and the sword raised were dropped); Royal horse's dust behind the hooves, the cloth flaps and the
 // rear-up as the Heir first rides out; Twin shot's two arrows on the string and a flash as they part; Eagle eye's eagle circling
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
 // the portrait's health bar pulsing and a slow breath every few seconds
@@ -406,14 +406,10 @@ function heroLooks(dt, now) {
   // Inspire
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
-    if (ringOn) {
+  if (ringOn) {
     if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = .3; const u = mates[Math.floor(Math.random() * mates.length)];
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
-    if ((v.cryPulse = (v.cryPulse == null ? 3 : v.cryPulse) - dt) <= 0) { v.cryPulse = 8; v.raiseT = .8; v.pulseT = 0; }
   }
-  if (v && v.pulseT != null) { v.pulseT += dt; const f = v.pulseT / 1.1, m = heroRing('pulse', 7, '#ffe27a', f < 1 ? .5 * (1 - f) : 0);
-    m.scale.setScalar(Math.max(.05, Math.min(1, f))); if (f >= 1) v.pulseT = null; }
-  if (v && v.raiseT > 0) { v.raiseT -= dt; if (!(v.attackT > 0)) { const k = Math.sin(Math.PI * (1 - v.raiseT / .8)); v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * k; } }
   // Royal horse
   if (on && v.cav) {
     const ry = v.g.rotation.y, mv = v.walking || (v.amp || 0) > .2;

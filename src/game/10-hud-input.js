@@ -368,7 +368,8 @@ function tap(e) {
   if (rallyFor) {                                     // placing a barracks' rally flag
     const pt = pick(e), B = rallyFor;
     if (!pt || !canStand(pt.x, pt.z, 1)) { setHint('Blocked', 'bad'); return; }
-    rallyFor = null; setRally(B, pt); sfx('click'); setHint('Rallied'); refreshCard(); return;
+    // (Jack: like the hero's Move) the spot is set and the building let go, its flag showing until the troops reach it
+    rallyFor = null; setRally(B, pt); if (selected) deselect(); flagFocus = B; sfx('click'); setHint('Rallied'); refreshCard(); updatePowers(); return;
   }
   if (gameOver) return;
   if (paused) { const hb = pickBuilding(e); if (hb) select(hb); setHint('Paused', 'bad'); return; }
