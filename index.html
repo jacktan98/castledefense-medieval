@@ -7506,7 +7506,8 @@ function updateDropped(dt) {
 }
 // the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
 // top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
-var SHB = { ry: Math.PI / 2, x: -1.35, z: .5 };
+// a brace, not a lift (Jack): the forearm drawn in across the body, the shield tight in front of the chest
+var SHB = { ry: Math.PI / 2, x: -.85, z: .5 };
 const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
 function shieldUp(p, k) {
   if (!k) return; const a = p.arms[0];
@@ -12252,7 +12253,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '5d28ab8f40'; var updateWait = false, updateT = 0;
+const BUILD = 'c3188888eb'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

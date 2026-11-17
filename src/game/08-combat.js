@@ -1176,7 +1176,8 @@ function updateDropped(dt) {
 }
 // the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
 // top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
-var SHB = { ry: Math.PI / 2, x: -1.35, z: .5 };
+// a brace, not a lift (Jack): the forearm drawn in across the body, the shield tight in front of the chest
+var SHB = { ry: Math.PI / 2, x: -.85, z: .5 };
 const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
 function shieldUp(p, k) {
   if (!k) return; const a = p.arms[0];
