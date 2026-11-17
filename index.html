@@ -9336,12 +9336,11 @@ function heroKit(v, id = HERO_ID, foot) {
     } else {
       put(captainHelm());
       // Deflect by rank (Jack: gear that shows the rank): the plain steel-rimmed shield; from rank 2 a steel boss and studs;
-      // at rank 3 a white cross on its face too (no gold: Jack)
+      // the four studs at rank 2, the boss in the middle added at rank 3 (Jack: no gold, no cross)
       { const sh = v.kit.find(o => o.userData && o.userData.shield), fr = skR('firm', v);
         if (sh && fr >= 2) { const m = steelM;
-          const boss = new THREE.Mesh(new THREE.SphereGeometry(.05, 10, 6), m); boss.scale.x = .55; boss.position.set(-.03, .04, 0); sh.add(boss);
+          if (fr >= 3) { const boss = new THREE.Mesh(new THREE.SphereGeometry(.05, 10, 6), m); boss.scale.x = .55; boss.position.set(-.03, .04, 0); sh.add(boss); }
           for (const [y, z] of [[.15, .09], [.15, -.09], [-.07, .07], [-.07, -.07]]) { const st = new THREE.Mesh(new THREE.SphereGeometry(.016, 6, 4), m); st.position.set(-.025, y, z); sh.add(st); }
-          if (fr >= 3) sh.add(box(.006, .34, .05, crossM, -.024, .02, 0), box(.006, .05, .24, crossM, -.024, .1, 0));
           sh.traverse(o => { if (o.isMesh) o.castShadow = true; }); } }
       // a war hammer in place of the sword (Jack); it swings with the sword's strikes
       if (v.pivot) v.pivot.parent.remove(v.pivot); v.pivot = makeTool('warhammer'); v.arms[1].add(v.pivot);
@@ -9362,7 +9361,7 @@ function heroKit(v, id = HERO_ID, foot) {
 // the Captain's helm (Jack's reference: a knight's close helm): a polished dome with a raised ridge from brow to nape, a pointed
 // visor whose top edge leaves a dark eye slit under the brow, three breathing slits each side of its prow (the gorget was dropped:
 // Jack); the same plain steel as the shoulder plates (Jack: the polished steel's reflections drew its faces in a darker grey)
-const capSteelM = steelM, crossM = mat('#ece6d6');
+const capSteelM = steelM;
 function captainHelm() {
   const g = new THREE.Group(), add = (o, to = g) => { o.castShadow = true; to.add(o); return o; };
   g.userData.helm = true;
@@ -9491,7 +9490,9 @@ function updateHero(v, dt) {
   // Second wind: the Captain mends all the time
   if (HERO.sk.wind && v.hp < v.maxHp) { v.hp = Math.min(v.maxHp, v.hp + v.maxHp * HERO_SK.wind.k[HERO.sk.wind - 1] * dt); v.windOn = .3;
     // soft green-white specks drift up from him while Second wind mends him
-    if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = [.5, .5, .25, .16][skR('wind')]; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); } }
+    if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = [.5, .5, .25, .16][skR('wind')]; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); }
+    // rank 3 (Jack: so it differs from rank 2): small gold orbs float slowly up round him
+    if (skR('wind') >= 3 && (v.orbT = (v.orbT || 0) - dt) <= 0) { v.orbT = .55; windOrb(v.rx, walkY(v.rx, v.rz), v.rz); } }
   if (v.march) {
     if (Math.hypot(home.x - v.x, home.z - v.z) > .4 && (v.marchT -= dt) > 0) {
       v.foe = null; v.drawing = false;
@@ -9668,6 +9669,11 @@ function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
     sp.position.set(x + (Math.random() - .5) * .2, y + Math.random() * .15, z + (Math.random() - .5) * .2); sp.scale.setScalar(.07);
     fxScene().add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
   }
+}
+// Second wind's gold orb (rank 3): a small glowing sphere that drifts up round the Captain, circling a little, and fades
+function windOrb(x, y, z) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffb21e', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  sp.renderOrder = 6; fxScene().add(sp); heroSprites.push({ sp, t: 0, life: 1.8, kind: 'orb', x, y, z, a: Math.random() * 6.283 });
 }
 // a soft star that swells and fades where a weapon glints (follow: a function giving its place each frame)
 function glintAt(at, color, follow) {
@@ -9942,6 +9948,9 @@ function heroSpriteTick(dt) {
   for (let n = heroSprites.length - 1; n >= 0; n--) {
     const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
     if (f >= 1) { unparent(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
+    if (s.kind === 'orb') { const a = s.a + f * 2.2, r = .3 + .05 * Math.sin(f * 9);
+      s.sp.position.set(s.x + Math.cos(a) * r, s.y + .25 + f * .8, s.z + Math.sin(a) * r); s.sp.scale.setScalar(.14 * Math.min(1, f * 6));
+      s.sp.material.opacity = Math.min(1, f * 5, (1 - f) * 3) * .9; continue; }
     if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
   }
 }
@@ -10289,6 +10298,7 @@ function galDemo(p, t, dt) {
   if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
     blow(0);
     if ((p.windFx = (p.windFx || 0) - dt) <= 0) { p.windFx = [.5, .5, .25, .16][r]; const a = Math.random() * 6.283; sparkBurst(x0 + Math.cos(a) * .22, .3 + Math.random() * .6, z0 + Math.sin(a) * .22, '#d6ffd9', 1); }
+    if (r >= 3 && (p.orbT = (p.orbT || 0) - dt) <= 0) { p.orbT = .55; windOrb(x0, 0, z0); }
     const D = r >= 2 ? 1.4 : .9, c = T % 4, k = c < D ? Math.sin(Math.PI * c / D) : 0; windPose(p, r, k);
   }
 }
@@ -12441,7 +12451,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'd1cbda59f8'; var updateWait = false, updateT = 0;
+const BUILD = 'af2395d579'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
