@@ -647,7 +647,9 @@ function updateDoors(dt) {
 function separateUnits(dt) {
   sepUnits.length = 0;
   for (const v of villagers) if (v.g.visible && !v.doorWalk && !v.inside && !(v.hideT > 0) && (!v.posted || v.soldier) && !v.sleeping) sepUnits.push({ u: v, r: v.horse ? .5 : .24, fixed: v.state === 'trade' && !!v.job && v.job.type === 'market', mode: 1, w: v.working ? .1 : v.walking ? 1 : .35 });
-  for (const e of enemies) sepUnits.push({ u: e, r: e.engine ? ENEMY[e.kind].r : e.horse ? .55 : .26, fixed: e.dead, mode: 2, w: e.walking ? 1 : .35 });
+  // a raider striking (a building or a soldier) hardly gives way, so walkers step round it rather than shove it out of reach
+  // (Jack: raiders crowding one target vibrated)
+  for (const e of enemies) sepUnits.push({ u: e, r: e.engine ? ENEMY[e.kind].r : e.horse ? .55 : .26, fixed: e.dead, mode: 2, w: e.walking ? 1 : e.engaged ? .12 : .35 });
   const k = Math.min(1, dt * 10);
   for (let i = 0; i < sepUnits.length; i++) for (let j = i + 1; j < sepUnits.length; j++) {
     const A = sepUnits[i], B = sepUnits[j]; if (A.fixed && B.fixed) continue;

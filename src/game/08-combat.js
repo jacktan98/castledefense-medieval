@@ -798,7 +798,8 @@ function updateEnemies(dt) {
     const B = e.target, foe = !SHOOTER[e.kind] && !E.engine ? nearestSoldier(e.x, e.z, e.horse ? 2.6 : 2.2) : null;
     const strikeT = SPEARS(e.kind) ? SPEAR_T : SWORD_T;
     if (foe) {                                               // a soldier in the way: fight them first
-      const d = Math.hypot(foe.x - e.x, foe.z - e.z), reach = Math.max(.75, e.range) + (e.horse ? .3 : 0);
+      const d = Math.hypot(foe.x - e.x, foe.z - e.z), reach = Math.max(.75, e.range) + (e.horse ? .3 : 0) + (e.engaged === foe ? .4 : 0);
+      e.engaged = d > reach ? null : foe;
       e.running = (!e.horse || e.kind === 'warlord') && d > reach;
       if (d > reach) steer(e, foe.x, foe.z, dt, 2, reach * .9, e.running ? 1.3 : 1);
       else { e.g.rotation.y = Math.atan2(foe.x - e.x, foe.z - e.z); if ((e.cool -= dt) <= 0) { e.cool = e.rate; e.attackT = strikeT; e.busyT = 1.6; sfx('clash', e); hurtSoldier(foe, e.dmg); } }
@@ -809,7 +810,8 @@ function updateEnemies(dt) {
         if (Math.hypot(vx - e.x, vz - e.z) < 1.8 || e.noProg > 4) { e.via.shift(); e.path = null; e.noProg = 0; e.stuck = 0; e.prog = null; }
       }
       else if (e.detour) { steer(e, e.detour.x, e.detour.z, dt, 2); if ((e.detour.t -= dt) < 0) e.detour = null; }
-      else if (d > e.range + (e.lob ? 3.5 : 0)) {
+      else if (d > e.range + (e.lob ? 3.5 : 0) + (e.engaged === B ? .45 : 0)) {
+        e.engaged = null;
         // the Warlord charges from further out (riders otherwise keep their pace)
         e.running = !shoots && !E.engine && (!e.horse || e.kind === 'warlord') && d < (e.horse ? 10 : 6);
         // route on the cell grid like villagers (round water, over bridges, round walls); straight in once close
@@ -830,7 +832,7 @@ function updateEnemies(dt) {
           e.stuck = 0; e.prog = null; e.noProg = 0; e.path = null;
         }
       } else {
-        const c = center(B), yaw = Math.atan2(c.x - e.x, c.z - e.z); e.aiming = true;
+        const c = center(B), yaw = Math.atan2(c.x - e.x, c.z - e.z); e.aiming = true; e.engaged = B;
         if (E.engine) turnTo(e, yaw, dt * .35); else e.g.rotation.y = yaw;    // an engine wheels round slowly
         let ad = Math.abs(Math.atan2(Math.sin(yaw - e.g.rotation.y), Math.cos(yaw - e.g.rotation.y)));
         if ((e.cool -= dt) <= 0 && ad < .25 && (!ENG_LOAD[e.kind] || (e.crewReady && e.load >= 1))) {   // engines: crew at their posts, wound

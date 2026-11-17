@@ -141,16 +141,18 @@ function heroKit(v, id = HERO_ID, foot) {
         return h; }); } else v.flaps = null;
       // the Heir fights with the sword alone (Jack: no shield)
       for (const o of v.kit.slice()) if (o.userData && o.userData.shield) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
-      // Inspire from rank 2: a small pennant in the town's colour on a short pole on the Heir's back, fluttering (heroLooks)
-      v.pennant = null;
-      if (skR('cry', v) >= 2) {
-        // the pole lies against the back (Jack), tilted with the torso's taper so it touches all the way, held by a leather strap
-        const pole = put(new THREE.Group()); pole.position.set(-.06, .62, -.178); pole.rotation.x = .12;
-        pole.add(cyl(.012, .012, .95, 5, M.timber, 0, .33, 0)); pole.add(new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), heroGold)); pole.children[1].position.y = .82;
-        pole.add(box(.05, .035, .03, leatherM, 0, .12, .005));
-        const a = new THREE.Group(), b = new THREE.Group(); a.position.y = .75; pole.add(a); b.position.z = -.17; a.add(b);
-        a.add(box(.006, .22, .17, kiteM, 0, -.11, -.085)); b.add(box(.006, .16, .16, kiteM, 0, -.08, -.08));
-        pole.traverse(m => { if (m.isMesh) m.castShadow = true; }); v.pennant = [a, b];
+      // Inspire from rank 2 (Jack: the Heir holds it): a tall standard in the free left hand, upright whatever the arm does
+      // (`standardHold` puts it at the hand each frame), a swallow-tailed flag in the town's colour that streams and flutters
+      // (`pennantWave`); bigger at rank 3
+      v.pennant = null; v.standard = null;
+      const cr = skR('cry', v);
+      if (cr >= 2) {
+        const k = cr >= 3 ? 1.25 : 1, pole = put(new THREE.Group()); pole.userData.standard = true;
+        pole.add(cyl(.016, .016, 1.95, 6, M.timber, 0, .42, 0)); const fin = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), heroGold); fin.position.y = 1.42; pole.add(fin);
+        const a = new THREE.Group(), b = new THREE.Group(); a.position.y = 1.36; pole.add(a); b.position.z = -.3 * k; a.add(b);
+        a.add(box(.008, .34 * k, .3 * k, kiteM, 0, -.17 * k, -.15 * k));
+        for (const dy of [-.07, -.27]) b.add(box(.008, .12 * k, .26 * k, kiteM, 0, dy * k, -.13 * k));   // the split tail
+        pole.traverse(m => { if (m.isMesh) m.castShadow = true; }); v.pennant = [a, b]; v.standard = pole;
       }
     } else {
       put(captainHelm());
@@ -469,6 +471,14 @@ function streakTick() {
   }
 }
 const SPEAR_LINE = [new THREE.Vector3(0, -.7, 0), new THREE.Vector3(0, -1.15, 0)];
+// the standard held in the left hand: the arm a little forward and out, the pole stood upright at the hand (in the body's frame)
+const _hand = new THREE.Vector3();
+function standardHold(v) {
+  const s = v.standard; if (!s) return;
+  const a = v.arms[0]; a.rotation.set(-.45, 0, .14);
+  a.updateWorldMatrix(true, false); a.localToWorld(_hand.set(0, -.33, 0)); v.body.worldToLocal(_hand);
+  s.position.copy(_hand); s.rotation.set(.06, 0, 0);
+}
 // Inspire's pennant (rank 2+) fluttering, faster on the move
 function pennantWave(v, now, mv) {
   const [a, b] = v.pennant, f = mv ? 150 : 260;
@@ -651,7 +661,7 @@ function heroLooks(dt, now) {
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', cr >= 2 ? 2 : 1); } }
     if (cr >= 3) for (const u of mates) heroTrail(u, u.toolKind === 'spear' ? SPEAR_LINE : SWORD_LINE, '#a88a30', u.attackT > 0);
   }
-  if (v && v.pennant) pennantWave(v, now, v.walking);
+  if (v && v.pennant) { standardHold(v); pennantWave(v, now, v.walking); }
   // Royal horse
   if (on && v.cav) {
     const ry = v.g.rotation.y, mv = v.walking || (v.amp || 0) > .2;
@@ -752,7 +762,7 @@ function heroFxRun(dt) {
   if (hero) {
     // the trail from rank 2 (dimmer there), full at rank 3
     const tr = skR(HERO_ID === 'captain' ? 'sweep' : 'flurry');
-    heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? (tr >= 3 ? '#eef4ff' : '#7e848c') : (tr >= 3 ? '#ffd24a' : '#8c7228'),
+    heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? (tr >= 3 ? '#ffd24a' : '#7e848c') : (tr >= 3 ? '#ffd24a' : '#8c7228'),
       tr >= 2 && hero.attackT > 0 && (hero.quickHit || hero.strike === 'sweep'));
     if (hero.fanT > 0) hero.fanT -= dt;
   }
@@ -768,7 +778,7 @@ function heroSpriteTick(dt) {
     const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
     if (f >= 1) { unparent(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
     if (s.kind === 'orb') { const a = s.a + f * 2.2, r = .3 + .05 * Math.sin(f * 9);
-      s.sp.position.set(s.x + Math.cos(a) * r, s.y + .25 + f * .8, s.z + Math.sin(a) * r); s.sp.scale.setScalar(.14 * Math.min(1, f * 6));
+      s.sp.position.set(s.x + Math.cos(a) * r, s.y + .25 + f * .8, s.z + Math.sin(a) * r); s.sp.scale.setScalar(.08 * Math.min(1, f * 6));
       s.sp.material.opacity = Math.min(1, f * 5, (1 - f) * 3) * .9; continue; }
     if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
   }
@@ -1041,7 +1051,7 @@ function galDemo(p, t, dt) {
     blow(T % 1.6);
     if ((p.sparkT = (p.sparkT || 0) - dt) <= 0) { p.sparkT = [.8, .8, .5, .3][r]; const u = p.mates[Math.floor(Math.random() * p.mates.length)];
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', r >= 2 ? 2 : 1); } }
-    if (p.pennant) pennantWave(p, now, false);
+    if (p.pennant) { standardHold(p); pennantWave(p, now, false); }
     for (const u of p.mates) heroTrail(u, SWORD_LINE, '#a88a30', r >= 3 && (t + u.seed) % 1.6 < SWORD_T);
     return;
   }
@@ -1112,7 +1122,7 @@ function galDemo(p, t, dt) {
     if (crossed(prev, c, 1.6)) { const cx = x0 + fx * .9, cz = z0 + fz * .9, n = [6, 6, 12, 16][r], rad = [.5, .5, .75, .95][r];
       for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; dustAt(cx + Math.cos(a) * rad, 0, cz + Math.sin(a) * rad); }
       for (const e of p.foes) e.kb = .5; }
-    heroTrail(p, HAMMER_LINE, r >= 3 ? '#eef4ff' : '#7e848c', sw && r >= 2); return;
+    heroTrail(p, HAMMER_LINE, r >= 3 ? '#ffd24a' : '#7e848c', sw && r >= 2); return;
   }
   if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
     blow(0);
