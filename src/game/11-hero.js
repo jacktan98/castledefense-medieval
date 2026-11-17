@@ -495,6 +495,7 @@ function eaglePoof(p) {
   sparkBurst(p.x, p.y, p.z, '#fff6d8', 6);
 }
 const LVUP_T = 1.8;
+var lvOwner = null;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
   // Inspire
@@ -538,9 +539,13 @@ function heroLooks(dt, now) {
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
   const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .8 : .5, '#f2d98a', on && heroSel ? .26 + .05 * Math.sin(now / 320) : 0);
   heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .5 : .8, '#f2d98a', 0); sr.material.blending = THREE.NormalBlending;
-  // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
+  // a level gained: a column of gold light rises round the hero with sparks spiralling up (the gold ring that spread on the ground was dropped: Jack),
   // and the hero hops with the weapon raised (Jack)
-  if (v) lvUpFx(v, dt, now, HERO_ID, 'lvup'); else heroRing('lvup', 2.4, '#ffd24a', 0);
+  // a hero left behind (a new game, or fallen) takes its light column with it (Jack: levelled up from the admin, then a new game
+  // showed the column standing where the old hero had been)
+  if (lvOwner && lvOwner !== v) { if (lvOwner.lvBeam) unparent(lvOwner.lvBeam); lvOwner.lvUpT = 0; }
+  lvOwner = v;
+  if (v) lvUpFx(v, dt, now, HERO_ID, 'lvup');
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
   const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0));
   if (v && v.windOn > 0) v.windOn -= dt;
@@ -568,7 +573,6 @@ function lvUpFx(v, dt, now, id, key, at) {
     lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
     if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
       for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
-    const m = heroRing(key, 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0, at); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
     if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((id === 'captain' ? HAMMER_LINE : id === 'ranger' ? BOW_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
     // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
     if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
@@ -576,7 +580,7 @@ function lvUpFx(v, dt, now, id, key, at) {
       const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
       v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
     if (v.lvUpT <= 0) { v.lvGlint = false; lvBeam.visible = false; }
-  } else { if (v.lvBeam) v.lvBeam.visible = false; heroRing(key, 2.4, '#ffd24a', 0, at); }
+  } else if (v.lvBeam) v.lvBeam.visible = false;
 }
 let heroFxErr = false;
 function heroFx(dt) {
