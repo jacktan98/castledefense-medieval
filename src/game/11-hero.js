@@ -236,15 +236,20 @@ function heroXp(n) {
   HERO.xp += n; let up = false;
   while (HERO.lv < HERO_MAX && HERO.xp >= heroNeed()) { HERO.xp -= heroNeed(); HERO.lv++; HERO.pts += lvPts(HERO.lv); up = true; }
   if (HERO.lv >= HERO_MAX) HERO.xp = 0;
-  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`${heroName()} · Lv ${HERO.lv}`, ''); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('achieve'); if (hero && hero.g.visible) hero.lvUpT = LVUP_T; }
+  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`${heroName()} · Lv ${HERO.lv}`, ''); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('achieve'); if (hero && hero.g.visible) hero.lvUpT = LVUP_T; if (achOn()) achCheck();
+    if (HERO.pts > 0) tipOnce('heroPts', 'Spend skill points on the <b>Hero</b> screen in the campaign'); }
   saveHero(); heroKey = '';
 }
 // XP (hurtEnemy): the Heir's own kills count most, any raider slain while they stand a little
 function heroKill(e, by) {
   if (!heroOn() || !hero) return;
   const E = ENEMY[e.kind];
+  if (by === hero) achAdd('heroKills', 1);
   if (by === hero) heroXp(E.boss ? 60 : E.engine ? 15 : 6 * (e.tier || 1) + (E.mounted ? 3 : 0)); else heroXp(1);
 }
+// every hero's level, for the achievements (Seasoned Hero, Hall of Heroes)
+function heroLvs() { return Object.keys(HERO_DEFS).map(id => id === HERO_ID ? HERO.lv : loadHero(id).lv); }
+function heroTopLv() { return Math.max(...heroLvs()); }
 // the Hero screen's Reset (Jack): every point spent comes back, the skills start again from nothing
 function heroReset() {
   const n = ptsSpent(HERO.sk); if (!n) return;
@@ -653,6 +658,8 @@ function heroUI() {
   const bar = $('#heroBar'), card = $('#heroCard'); if (!bar) return;
   const on = heroShown(); bar.hidden = !on; if (!on) { card.hidden = true; return; }
   if (selected && heroSel) heroSel = false;
+  // one-time tips (Jack): how to move the hero, once a day is under way and the tutorial's guide is done
+  if (hero && !guideOn && !gameOver && PH.kind === 'day') tipOnce('hero', `Tap the <b>${heroName().replace(/^The /, "")}</b> or the portrait to move them`);
   const night = PH.kind === 'night', hpf = hero ? Math.max(0, hero.hp / hero.maxHp) : 0, xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   // the portrait: a health ring, the level, a thin XP bar; greyed with the seconds left while fallen
   const key = [HERO_ID, HERO.lv, HERO.pts, ...HERO_ORDER.map(k => HERO.sk[k]), !!hero, night, heroSel, !!heroAt, heroMove].join('|');

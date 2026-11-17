@@ -242,6 +242,8 @@ function saveGame() {
   if (gameOver || showcaseBuilt || galleryOn || !castleB()) return;
   const S = { v: 1, map: MAP, seed: gameSeed, hard: !!hardOn, wave: PH.wave, t: PH.t, res: { ...res }, stats: { ...stats, t0: 0 }, goalsMet, guideDone, guideOn,
     cats: CATS, road: [...road.slice(0, N * N)].map((r, i) => r ? i : -1).filter(i => i >= 0), rocks: rocks.map(q => q.amount),
+    // (Jack: more kept on Resume) the hero's Move spot, and which of a boss stage's camp raiders are still alive
+    hero: heroAt ? { x: heroAt.x, z: heroAt.z } : null, camp: enemies.filter(e => e.campId != null && !e.dead).map(e => e.campId),
     b: buildings.filter(B => !B.dead).map(B => ({ t: B.type, ci: B.ev.ci, cj: B.ev.cj, f: B.face || 0, r: B.rot || 0, rf: !!B.rotFixed, tier: B.tier, hp: Math.round(B.hp),
       site: B.site && B.site.kind !== 'repair' ? { kind: B.site.kind, p: B.site.progress, time: B.site.time } : null, rally: B.rally || null })) };
   try { localStorage.setItem('mtd-save', JSON.stringify(S)); } catch (e) {}
@@ -277,6 +279,10 @@ function resumeGame() {
   for (const B of buildings) if (B.built) syncResidents(B);
   road.fill(0); for (const n of S.road) if (!occB[n] || occB[n].type === 'gate') road[n] = 1;
   S.rocks.forEach((a, i) => { if (rocks[i]) rocks[i].amount = a; }); seatRocks();
+  // camp raiders slain before the save stay slain (they used to come back); the hero heads back to their Move spot
+  if (S.camp) { const live = new Set(S.camp);
+    for (let n = enemies.length - 1; n >= 0; n--) { const e = enemies[n]; if (e.campId == null || live.has(e.campId)) continue; scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); dropClear(e); enemies.splice(n, 1); } }
+  if (S.hero) { setHeroFlag(S.hero); flagFocus = null; }
   refreshWalls(); rebuildRoads(); regionDirty = true;
   Object.assign(res, S.res); stats = { ...S.stats, t0: performance.now() - (S.stats.playT || 0) * 1000 }; goalsMet = S.goalsMet || {}; guideDone = !!S.guideDone; guideOn = !!S.guideOn; guideMark();
   if (S.cats) { Object.assign(CATS, S.cats); renderTools(); }

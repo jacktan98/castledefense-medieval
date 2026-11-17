@@ -416,8 +416,9 @@ function placeBossScenery() {
     for (const [t, x, z] of c.props || []) if (t === 'torch') sceneFires.push({ x, y: Y(x, z) + 2.25, z, k: 1, torch: true }); }
   // the camps' raiders are real raiders, dormant: resting or on patrol until troops come near, they're hurt, or the boss is out on the
   // last night (Jack); the patrols' corners shift a little each game, so they wander their own way round
+  let campId = 0;
   bossCamps().forEach((c, ci) => {
-    const put = (k, t, x, z, D) => { spawnEnemy(k, { x, z }, 1, t); const e = enemies[enemies.length - 1]; e.x = e.rx = x; e.z = e.rz = z; e.dormant = Object.assign({ camp: ci, u: 0, s: x * 1.3 + z }, D); e.g.rotation.y = D.ry || 0; };
+    const put = (k, t, x, z, D) => { spawnEnemy(k, { x, z }, 1, t); const e = enemies[enemies.length - 1]; e.campId = campId++; e.x = e.rx = x; e.z = e.rz = z; e.dormant = Object.assign({ camp: ci, u: 0, s: x * 1.3 + z }, D); e.g.rotation.y = D.ry || 0; };
     for (const [k, t, x, z, ry] of c.rest) put(k, t, x, z, { ry: ry !== undefined ? ry : Math.atan2(c.fire[0] - x, c.fire[1] - z) });
     for (const [k, t, pts] of c.patrol) { const P = patrolRoute(pts); put(k, t, P[0][0], P[0][1], { pts: P, i: 1, wait: 0, walk: ENEMY[k].mounted ? 1.3 : .9 }); }
   });
@@ -1154,7 +1155,7 @@ $('#adGallery').addEventListener('click', openGallery);
 let campResetT = 0;
 for (const b of document.querySelectorAll('.campReset')) b.addEventListener('click', () => {
   if (performance.now() > campResetT) { campResetT = performance.now() + 3000; b.style.minWidth = b.offsetWidth + 'px'; b.classList.add('armed'); b.innerHTML = PICO.tick.replace('<svg ', '<svg class="bIco" '); setTimeout(() => { if (performance.now() > campResetT) { b.classList.remove('armed'); b.textContent = 'Reset campaign'; b.style.minWidth = ''; } }, 3100); return; }
-  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards']) localStorage.removeItem('mtd-' + k); } catch (e) {}
+  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards', 'hero', 'hero-ranger', 'hero-captain', 'hero-pick']) localStorage.removeItem('mtd-' + k); } catch (e) {}
   location.reload();
 });
 $('#moveBtn').addEventListener('click', () => { if (paused) return setHint('Paused', 'bad'); if (!selected) return; moveFor = moveFor === selected ? null : selected; setHint(moveFor ? 'Tap a tile' : 'Select a building'); refreshCard(); });

@@ -136,7 +136,7 @@ button.danger{border-color:#6b3a33;color:var(--bad)}
 .mapSheet{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;width:min(560px,100%)}
 /* the title screen: dark over everything, the game isn't shown until a map is picked */
 /* before each game: one of each pair for the economy and the defences, any five decor */
-#loadPick{z-index:50;background:radial-gradient(ellipse at 50% 30%, #23271f 0%, #121410 70%, #0b0c09 100%);align-items:flex-start;overflow-y:auto}
+#loadPick{z-index:50;background:radial-gradient(ellipse at 50% 30%, #24261f 0%, #121410 70%, #0b0c09 100%);align-items:flex-start;overflow-y:auto}
 .loadSheet{display:flex;flex-direction:column;gap:10px;width:min(520px,100%);margin:auto 0;padding:6px 0 10px}
 .loadSheet section{display:flex;flex-direction:column;gap:6px}
 .loadSheet h3{margin:0;font-family:var(--display);font-weight:400;font-size:20px;color:var(--gold)} .loadSheet h3 span{font-family:var(--body);font-size:14px;color:var(--muted)} .loadSheet h3 span.short{color:var(--bad)}
@@ -155,7 +155,7 @@ button.danger{border-color:#6b3a33;color:var(--bad)}
 .ldGrid .lb{display:none} .ldGrid .ldOpt{flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:3px;padding:6px 4px} .ldGrid .ldOpt b{font-size:14px}
 .ldBtns{display:flex;justify-content:space-between;gap:8px;margin-top:4px} .ldBtns button{min-width:110px;min-height:42px;font-size:16px}
 @media (max-height:520px){ .loadSheet{gap:6px;width:min(780px,100%)} .ldRows{display:grid;grid-template-columns:1fr 1fr;gap:6px} .ldOpt{min-height:38px;padding:4px 6px} .loadSheet h3{font-size:17px} }
-#mapPick{z-index:50;background:radial-gradient(ellipse at 50% 35%, #23271f 0%, #121410 70%, #0b0c09 100%)}
+#mapPick{z-index:50;background:radial-gradient(ellipse at 50% 35%, #24261f 0%, #121410 70%, #0b0c09 100%)}
 .tCrown svg{width:.82em;height:.7em;fill:#f0c95a;stroke:#fff1c4;stroke-width:.8;vertical-align:-.03em;margin-left:.22em;filter:drop-shadow(0 0 8px rgba(255,205,90,.65))}
 /* the title in two lines (Jack): Castle Defense, then Medieval smaller between two gold rules */
 .tSub{display:flex;align-items:center;justify-content:center;gap:.5em;font-size:.58em;letter-spacing:.26em;line-height:1;margin-top:.24em;padding-left:.26em;white-space:nowrap}
@@ -198,16 +198,16 @@ button.danger{border-color:#6b3a33;color:var(--bad)}
 .gfxSeg button.seg.on{background:linear-gradient(180deg,#6a5432,#3e3019)!important;color:#fff1c4!important;box-shadow:inset 0 0 0 1px rgba(255,226,160,.35)!important}
 .volRow .gfxSeg{width:auto;margin:0 auto}
 .colCard #setReset{align-self:center;margin-top:4px;min-height:36px!important;padding:6px 16px!important;font-size:13px!important}
-#adReset.armed,.modal.tome #setReset.armed{display:inline-flex;align-items:center;justify-content:center;background:#8e2a20!important;border-color:#e0705a!important;color:#fff!important}
+#adReset.armed,.modal.tome #setReset.armed{display:inline-flex;align-items:center;justify-content:center;background:#8e2a20!important;border-color:#e2715b!important;color:#fff!important}
 #saveResume{padding:9px 30px;font-family:var(--display);font-size:17px;letter-spacing:.06em;-webkit-text-stroke:.35px currentColor}
 .mapActs{display:flex;flex-direction:column;align-items:center;gap:14px} .resumeBox{display:flex;flex-direction:column;align-items:center;gap:5px} .resumeBox:has(#saveResume[hidden]){display:none}
 .saveInfo{margin-top:0;font-size:12px;font-weight:600;color:#f4e3b2;letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.85)}
-#campaign{background:#14150f}
+#campaign{background:#121410}
 .campSheet{display:flex;flex-direction:column;align-items:center;gap:8px;width:min(720px,100%);max-height:100%}
 #campMap{width:100%;flex:1 1 auto;min-height:0;display:flex;justify-content:center}
 /* the menus sit in the game's own world: the campaign landscape (maps/menu-bg.jpg: maps/overview.jpg shrunk to 240 px and blurred, so the
    browser's upscale is soft and costs nothing) darkened toward the edges; the content on dark translucent panels edged in muted gold */
-.modal.tome{background-color:#10120e!important;background-image:radial-gradient(ellipse at 50% 40%, rgba(8,9,6,.25) 0%, rgba(8,9,6,.55) 55%, rgba(5,6,4,.9) 100%),
+.modal.tome{background-color:#121410!important;background-image:radial-gradient(ellipse at 50% 40%, rgba(8,9,6,.25) 0%, rgba(8,9,6,.55) 55%, rgba(5,6,4,.9) 100%),
   linear-gradient(rgba(14,16,11,.35), rgba(14,16,11,.35)), url("maps/menu-bg.jpg")!important;background-size:cover,cover,cover!important;background-position:center!important;background-repeat:no-repeat!important}
 /* the title's shadows (Jack): a soft one on Castle Defense, a strong one on the thinner Medieval so it reads over the busy showcase */
 .modal.tome .gameTitle,.ldTitle{text-shadow:0 2px 2px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.7)}
@@ -233,7 +233,7 @@ button.danger{border-color:#6b3a33;color:var(--bad)}
 @keyframes menuIn{from{opacity:0}to{opacity:1}} @keyframes menuRise{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 /* buttons press in and brighten; the main action is gold with a slow shine passing over it */
 .modal.tome button,#newCards button{transition:transform .08s ease-out,filter .12s} .modal.tome button:active,#newCards button:active{transform:scale(.95);filter:brightness(1.25)}
-.modal.tome button.primary,#newCards button.primary{position:relative;overflow:hidden;background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;color:#2a1a06!important;border-color:#f2d27a!important;font-weight:700;text-shadow:0 1px 0 rgba(255,236,170,.6);box-shadow:0 3px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,245,200,.7)}
+.modal.tome button.primary,#newCards button.primary{position:relative;overflow:hidden;background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;color:#2a1c08!important;border-color:#f2d27a!important;font-weight:700;text-shadow:0 1px 0 rgba(255,236,170,.6);box-shadow:0 3px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,245,200,.7)}
 .modal.tome button.primary:disabled,#newCards button.primary:disabled{filter:grayscale(.8) brightness(.7)}
 .modal.tome button.primary::after,#newCards button.primary::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,250,225,.22),transparent);animation:shine 4.5s ease-in-out infinite;pointer-events:none}
 @keyframes shine{0%,55%{left:-60%}100%{left:130%}}
@@ -263,7 +263,7 @@ body.tablet #mapPick .mapSheet{width:min(1100px,92%)} body.tablet #mapPick .game
 .cDeck{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%)}
 .cCards{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
 .cCard{position:absolute;left:50%;top:50%;width:var(--cw);margin-left:calc(var(--cw) / -2);margin-top:calc(var(--cw) / -2);padding:0;display:flex;flex-direction:column;
-  border:2px solid rgba(212,168,78,.75);border-radius:12px;background:#15170f;color:var(--parch);text-align:left;box-shadow:0 14px 34px rgba(0,0,0,.65);
+  border:2px solid rgba(212,168,78,.75);border-radius:12px;background:#121410;color:var(--parch);text-align:left;box-shadow:0 14px 34px rgba(0,0,0,.65);
   transition:transform .38s cubic-bezier(.2,.8,.25,1),opacity .3s;will-change:transform;backface-visibility:hidden;cursor:pointer}
 .cCard::after{content:'';position:absolute;inset:0;border-radius:10px;background:#000;opacity:var(--dim, 0);pointer-events:none;transition:opacity .3s}
 .cCard .cPic{display:block;width:100%;aspect-ratio:1/1;background-size:cover;background-position:center;border-radius:10px}
@@ -341,7 +341,7 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 /* the progress bar sits a little higher, clear of the details' title */
 .cDotsWrap{margin:-6px 0 6px}
 /* the canvas itself is dark, so nothing light ever shows through before the first frame is drawn */
-#c{background:#0d0f0b}
+#c{background:#0b0c09}
 /* stage details: "New" clear above the chips; room for two rows of chips on every stage so the box keeps its height */
 .cDet .stNew:empty{display:none}
 .stInfo{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;font-size:12px;color:#e6d6ae} .stInfo b{color:#ffe2a0;font-weight:600} .stInfo:empty{display:none}
@@ -366,9 +366,9 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 .bar .tools button{background:rgba(10,8,4,.45)!important;border-color:rgba(212,168,78,.3)!important}
 .tools button[aria-pressed="true"]{background:linear-gradient(180deg,rgba(150,112,52,.6),rgba(100,74,34,.6))!important;border-color:#f0c95a!important;box-shadow:0 0 8px rgba(240,200,90,.3)}
 .ncCard h3,.card h3,.cardName{color:#ffe2a0}
-.ncCard button.primary,.pauseCard button.primary,#summary button.primary,#offerBuy{background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;color:#2a1a06!important;border-color:#f2d27a!important;font-weight:700}
+.ncCard button.primary,.pauseCard button.primary,#summary button.primary,#offerBuy{background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;color:#2a1c08!important;border-color:#f2d27a!important;font-weight:700}
 /* the card's Upgrade is a dark bronze plate with a gold rim, gold chevrons and costs (Jack preferred it to the gold-filled button) */
-.card .row button.primary{background:linear-gradient(180deg,#3d3220 0%,#2a2216 100%);border:1px solid #c9a03e;color:var(--gold)}
+.card .row button.primary{background:linear-gradient(180deg,#3d3520 0%,#2a2216 100%);border:1px solid #c9a03e;color:var(--gold)}
 .pauseCard button:not(.primary),#summary button:not(.primary),.card .row button:not(.primary):not(.danger){background:linear-gradient(180deg,#4a3c22 0%,#2e2515 100%);border:1px solid #c9a03e;color:#f4e3b2}
 .diff{position:relative;align-self:center;display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;font-size:13px;white-space:nowrap}
 .diffSeg{position:relative;display:flex;flex-wrap:nowrap;padding:2px;border-radius:16px;border:2px solid rgba(240,201,90,.75);background:rgba(10,8,4,.55)}
@@ -396,8 +396,8 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
   radial-gradient(circle 4px at 10px 50%,rgba(212,168,78,.55) 96%,transparent 100%),
   radial-gradient(circle 4px at calc(100% - 10px) 50%,rgba(212,168,78,.55) 96%,transparent 100%),
   linear-gradient(rgba(212,168,78,.55),rgba(212,168,78,.55)) center / calc(100% - 20px) 8px no-repeat}
-.volRow input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c9962f);border:2px solid #5a4422;box-shadow:0 1px 4px rgba(0,0,0,.6)}
-.volRow input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c9962f);border:2px solid #5a4422}
+.volRow input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c7962f);border:2px solid #5a4422;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+.volRow input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe9a8,#c7962f);border:2px solid #5a4422}
 #summary .sheet{background:var(--panel)!important;max-height:calc(100% - 8px);overflow-y:auto}
 /* the summary fades in over the field and its card rises a little (it used to snap on) */
 #summary:not([hidden]){animation:sumIn .7s ease-out both} #summary:not([hidden]) .sheet{animation:sumRise .7s ease-out both} @keyframes sumIn{from{opacity:0}} @keyframes sumRise{from{transform:translateY(18px) scale(.97)}}
@@ -482,7 +482,7 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 .util{border-left:0;padding-left:0;gap:4px}
 .iconBtn{width:32px;min-width:32px;height:32px;min-height:32px;padding:0;border-radius:7px;background:#24261f;border-color:#4a4838;display:inline-flex;align-items:center;justify-content:center}
 .iconBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.iconBtn:hover{background:#2f3128}
+.iconBtn:hover{background:#2f3027}
 .iconBtn svg .solid{fill:currentColor}
 .iconBtn[aria-pressed="true"]{background:#3d3520;border-color:var(--gold);color:var(--gold)}
 .tools{gap:5px}
@@ -499,7 +499,7 @@ body.showcase #campaign.modal.tome,body.showcase #loadPick.modal.tome{background
 /* the castle's night powers, also as two big round buttons in a corner at night (Kingdom Rush style): no need to find the castle's card */
 .powers{position:absolute;left:12px;z-index:5;display:flex;gap:8px}
 .powers.col{flex-direction:column-reverse}
-.pw{position:relative;width:42px;height:42px;min-height:0!important;padding:0!important;border-radius:50%!important;background:radial-gradient(circle at 50% 35%,#5a4626,#241b0d)!important;border:2px solid #d9b04e!important;color:#ffe2a0;
+.pw{position:relative;width:42px;height:42px;min-height:0!important;padding:0!important;border-radius:50%!important;background:radial-gradient(circle at 50% 35%,#5a4428,#241a0c)!important;border:2px solid #d9b04e!important;color:#ffe2a0;
   box-shadow:0 3px 10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,160,.25);display:flex;align-items:center;justify-content:center;touch-action:manipulation}
 .pw svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round} .pw svg .solid{fill:currentColor}
 .pw .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font:700 13px/1 system-ui,sans-serif;color:#fff1c4;text-shadow:0 1px 3px #000}
@@ -559,7 +559,7 @@ button.armed .bIco{width:18px;height:18px;fill:none;stroke:currentColor;stroke-w
 .adminRes{display:flex;flex-direction:column;gap:4px}
 .adRow{display:flex;align-items:center;gap:5px}
 .adRow .ico{width:16px;height:16px}
-.adRow input{width:72px;min-width:0;flex:1;font:inherit;font-size:13px;font-variant-numeric:tabular-nums;color:var(--parch);background:#1a1c17;border:1px solid #4a4838;border-radius:6px;padding:3px 6px}
+.adRow input{width:72px;min-width:0;flex:1;font:inherit;font-size:13px;font-variant-numeric:tabular-nums;color:var(--parch);background:#1c1d18;border:1px solid #4a4838;border-radius:6px;padding:3px 6px}
 .adRow input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .adRow button,.adminRow button{min-height:28px;font-size:12px;padding:2px 7px;border-radius:6px;background:#24261f;border-color:#4a4838;flex-direction:row}
 .adminRow{display:flex;gap:5px}
@@ -621,16 +621,16 @@ body.islandR{--padR:max(8px,env(safe-area-inset-right,0px));--padL:12px}
 #app.gallery > :not(canvas):not(#galBar){display:none!important}
 .galBar{position:fixed;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;padding:6px 8px;border-radius:12px;background:rgba(24,26,20,.88);border:1px solid #4a4838;color:#efe6cf;z-index:20}
 .galBar b{padding:0 6px;font-family:inherit}
-#loading{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 45%,#1b1a12 0%,#0d0e0a 70%);transition:opacity .5s}
+#loading{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 45%,#1b1a12 0%,#0b0c09 70%);transition:opacity .5s}
 #loading.done{opacity:0;pointer-events:none}
 .ldBox{display:flex;flex-direction:column;align-items:center;gap:14px}
-.ldTitle{font-family:var(--display);font-size:clamp(28px,8vw,46px);color:#e8c46a;text-align:center;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.ldTitle{font-family:var(--display);font-size:clamp(28px,8vw,46px);color:#e6c46a;text-align:center;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.7)}
 .ldBar{width:min(220px,60vw);height:6px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid rgba(212,168,78,.5);overflow:hidden}
 .ldBar i{display:block;height:100%;width:35%;border-radius:4px;background:linear-gradient(90deg,#a47422,#f2d27a);animation:ldSlide 1.2s ease-in-out infinite}
 #loading.fail .ldBar{display:none}
 @keyframes ldSlide{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
 .ldMsg{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#bfae86}
-#ldRetry{padding:6px 20px;border-radius:8px;border:2px solid #c9a03e;background:#3a2e18;color:#f4e3b2;font-size:15px}
+#ldRetry{padding:6px 20px;border-radius:8px;border:2px solid #c9a03e;background:#3a2d16;color:#f4e3b2;font-size:15px}
 /* where the coming night's raiders will come in: a pulsing red mark at each of the two spawn points, held to the screen's edge
    (with a pointer toward it) when the point is out of view; a tap lists the coming wave */
 .raidMark{position:absolute;left:0;top:0;z-index:4;width:34px;height:34px;margin:-17px 0 0 -17px;padding:0!important;min-height:0!important;border-radius:50%!important;
@@ -662,11 +662,11 @@ body.islandR{--padR:max(8px,env(safe-area-inset-right,0px));--padL:12px}
 /* star upgrades (from the campaign screen): three tabs of trees, one per building; banners in the town's colour (--tc/--td) */
 #upPick{display:flex;justify-content:center;align-items:flex-start;overflow:auto} #upPick .upSheet{margin:auto}   /* never centred past the top: on a phone held sideways the title and tabs were cut off above the screen */
 body.showcase #upPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 20%, rgba(42,32,18,.9) 0%, rgba(14,11,6,.95) 55%, rgba(6,5,3,.98) 100%)!important}
-.upSheet{width:100%;max-width:390px;min-height:100%;display:flex;flex-direction:column;align-items:center;padding:12px 10px calc(10px + env(safe-area-inset-bottom));box-sizing:border-box;font-family:var(--body);color:#f3ead2}
+.upSheet{width:100%;max-width:390px;min-height:100%;display:flex;flex-direction:column;align-items:center;padding:12px 10px calc(10px + env(safe-area-inset-bottom));box-sizing:border-box;font-family:var(--body);color:#f6ebcf}
 .upTop{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .modal.tome .upTop .upBack{position:static}
 .upTop h2{margin:0;font-family:var(--display);font-weight:400;color:#f0c95a;font-size:28px;text-shadow:0 2px 0 #000}
-.upBank{display:flex;align-items:center;gap:4px;padding:0 11px 0 8px;height:30px;border-radius:16px;border:2px solid #d9b04e;background:linear-gradient(#4a3820,#1c150a);font-weight:700;font-size:16px;color:#fff1c4}
+.upBank{display:flex;align-items:center;gap:4px;padding:0 11px 0 8px;height:30px;border-radius:16px;border:2px solid #d9b04e;background:linear-gradient(#4a3820,#1a140a);font-weight:700;font-size:16px;color:#fff1c4}
 .upBank b{font-size:20px;line-height:1;color:#f0c95a;text-shadow:0 0 8px rgba(255,205,90,.7)}
 /* the pill's numbers sat low (the fonts' digits ride below the line's middle): lifted to the middle (Jack) */
 .upBank{line-height:1;padding-bottom:3px;box-sizing:border-box}
@@ -676,7 +676,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 .upTabs{display:flex;gap:4px;width:100%;border-bottom:2px solid #d9b04e;margin-bottom:12px}
 .modal.tome .upTabs .upTab{flex:1;min-height:0!important;padding:8px 0 6px!important;border-radius:10px 10px 0 0!important;border:2px solid rgba(217,176,78,.4)!important;border-bottom:none!important;background:#1a140a!important;font-family:var(--display);font-weight:400;font-size:15px;letter-spacing:.06em;-webkit-text-stroke:.35px currentColor;color:#8f8160!important;box-shadow:none!important}
 /* the tab in use is lit: gold like the main buttons, dark text, a glow; the others stay dark and dim (Jack: it didn't stand out) */
-.modal.tome .upTabs .upTab.on{background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;border-color:#f2d27a!important;color:#2a1a06!important;text-shadow:0 1px 0 rgba(255,236,170,.6);box-shadow:inset 0 1px 0 rgba(255,245,200,.7)!important;transform:translateY(2px)}
+.modal.tome .upTabs .upTab.on{background:linear-gradient(180deg,#e9c463 0%,#c7962f 55%,#a47422 100%)!important;border-color:#f2d27a!important;color:#2a1c08!important;text-shadow:0 1px 0 rgba(255,236,170,.6);box-shadow:inset 0 1px 0 rgba(255,245,200,.7)!important;transform:translateY(2px)}
 .upGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;width:100%}
 /* every tab's trees sit in one spot, only the open one shown, so the details below never move between tabs (Jack) */
 .upGrids{display:grid;width:100%;align-items:start} .upGrids>.upGrid{grid-area:1/1} .upGrid.off{visibility:hidden}
@@ -684,7 +684,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 .upBan{width:100%;padding:5px 0 9px;text-align:center;background:linear-gradient(var(--tc),var(--td));clip-path:polygon(0 0,100% 0,100% 78%,50% 100%,0 78%);border-radius:9px 9px 0 0;margin-bottom:6px}
 .upBan svg{width:28px;height:28px;display:block;margin:0 auto 1px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .upBan div{font-size:10.5px;font-weight:700;color:#fff;letter-spacing:.02em}
-.modal.tome .upTree .upNode{width:62px;height:62px;min-height:0!important;padding:0!important;border-radius:10px!important;position:relative;display:grid;place-items:center;border:2px solid #8a6d36!important;background:linear-gradient(#2c2213,#130e07)!important;box-shadow:none!important}
+.modal.tome .upTree .upNode{width:62px;height:62px;min-height:0!important;padding:0!important;border-radius:10px!important;position:relative;display:grid;place-items:center;border:2px solid #8a6d36!important;background:linear-gradient(#2e2515,#130e07)!important;box-shadow:none!important}
 .upNode > svg:first-child{width:36px;height:36px;transform:translateY(-2px);filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
 .modal.tome .upTree .upNode.s2{border-color:#f7d77a!important;background:radial-gradient(circle at 50% 35%,#a07a32,#4a3410)!important;box-shadow:0 0 12px rgba(255,205,90,.55),inset 0 0 0 2px rgba(255,241,196,.25)!important}
 .modal.tome .upTree .upNode.s1{border-color:#f0c95a!important;box-shadow:0 0 0 3px rgba(240,201,90,.18)!important}
@@ -693,9 +693,9 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 .upNode.s1 > svg:first-child{opacity:.55;filter:grayscale(1)} .upNode.s0 > svg:first-child{opacity:.32;filter:grayscale(1)} .upBig.dim svg{opacity:.55;filter:grayscale(1)}
 .modal.tome .upTree .upNode.sel{outline:2.5px solid #fff1c4;outline-offset:3px}
 .upLock{position:absolute;width:16px;height:16px;fill:none;stroke:#9a8a62;stroke-width:2;stroke-linecap:round}
-.upCost{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:#120d06;border:1.5px solid #d9b04e;border-radius:9px;font-size:11px;font-weight:700;padding:0 6px;color:#f0c95a;line-height:15px;white-space:nowrap}
+.upCost{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:#130e07;border:1.5px solid #d9b04e;border-radius:9px;font-size:11px;font-weight:700;padding:0 6px;color:#f0c95a;line-height:15px;white-space:nowrap}
 .s0 .upCost{border-color:#5a4a2a;color:#8a7a52}
-.upTick{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:#f0c95a;color:#2a1d0a;font-size:11px;font-weight:900;display:grid;place-items:center;border:1.5px solid #fff1c4}
+.upTick{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:#f0c95a;color:#2a1c08;font-size:11px;font-weight:900;display:grid;place-items:center;border:1.5px solid #fff1c4}
 .upChain{width:4px;height:20px;margin:5px 0;background:repeating-linear-gradient(#8a6d36 0 4px,transparent 4px 6px);border-radius:2px} .upChain.on{background:repeating-linear-gradient(#f0c95a 0 4px,transparent 4px 6px)}
 .upRs{margin-top:auto;padding-top:12px;width:100%;display:flex;justify-content:flex-end;margin-bottom:8px}
 .modal.tome .upRs button{display:flex!important;flex-direction:row!important;align-items:center;gap:4px;min-height:0!important;padding:4px 10px!important;border-radius:16px!important;border:1.5px solid rgba(217,176,78,.6)!important;background:#1f170b!important;color:#d9c08a!important;font-size:12px!important;font-weight:700;box-shadow:none!important;white-space:nowrap}
@@ -704,7 +704,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 @media (max-height:520px) and (max-width:740px){ .upRs .rsT{text-align:left;line-height:1.1} .upRs .rsW{display:block} #upPick .upRs{margin-bottom:-37.4px} }
 .upRs svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .upDet{width:100%;border:2px solid #d9b04e;border-radius:12px;background:linear-gradient(#5a4428,#2a1f0e);display:flex;gap:12px;padding:8px 12px;align-items:center;box-sizing:border-box}
-.upBig{width:56px;height:56px;flex:0 0 auto;border-radius:12px;border:2px solid #f0c95a;background:radial-gradient(circle at 50% 35%,#6a4f22,#2a1e0c);display:grid;place-items:center} .upBig svg{width:36px;height:36px}
+.upBig{width:56px;height:56px;flex:0 0 auto;border-radius:12px;border:2px solid #f0c95a;background:radial-gradient(circle at 50% 35%,#6a4f22,#2a1f0e);display:grid;place-items:center} .upBig svg{width:36px;height:36px}
 .upTx{flex:1;min-width:0} .upOf{font-size:11px;color:#bfae80;line-height:1.1}
 .upTx h3{margin:1px 0;font-family:var(--display);font-weight:400;color:#f0c95a;font-size:19px;line-height:1.05} .upTx p{margin:0;font-size:14px;font-weight:700;color:#fff1c4;line-height:1.1}
 .modal.tome .upDet .upBuy{min-height:0;height:38px;padding:0 14px;font-size:15px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
@@ -717,9 +717,9 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 /* the campaign screen's round buttons, on the left just above the progress bar (Jack): Upgrades (a hammer, with the stars still to spend), Achievements later beside it; no height of their own, so the deck and the bar don't move */
 .cDotsWrap{position:relative;width:min(380px,100%)} .cDotsWrap .cDots{width:100%}
 .campSide{position:absolute;left:0;bottom:100%;margin-bottom:10px;z-index:5;display:flex;gap:10px}
-.modal.tome .campSide .campCirc{position:relative;width:48px;height:48px;min-height:0!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;background:radial-gradient(circle at 50% 35%,#5a4426,#241a0c)!important;border:2px solid #d9b04e!important;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(240,201,90,.25)!important}
+.modal.tome .campSide .campCirc{position:relative;width:48px;height:48px;min-height:0!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;background:radial-gradient(circle at 50% 35%,#5a4428,#241a0c)!important;border:2px solid #d9b04e!important;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(240,201,90,.25)!important}
 .campCirc > svg{width:30px;height:30px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
-.campBadge{position:absolute;top:-5px;right:-14px;padding:0 5px;border-radius:9px;background:#f0c95a;color:#2a1d0a;font-size:11px;font-weight:700;line-height:16px;border:1.5px solid #fff1c4;box-shadow:0 1px 3px rgba(0,0,0,.6);animation:badgePulse 1.6s ease-in-out infinite}
+.campBadge{position:absolute;top:-5px;right:-14px;padding:0 5px;border-radius:9px;background:#f0c95a;color:#2a1c08;font-size:11px;font-weight:700;line-height:16px;border:1.5px solid #fff1c4;box-shadow:0 1px 3px rgba(0,0,0,.6);animation:badgePulse 1.6s ease-in-out infinite}
 /* stars still to spend: the badge pulses and glows so players see there are upgrades to buy (Jack); hidden at none */
 @keyframes badgePulse{0%,100%{transform:scale(1);box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 0 rgba(255,214,110,0)}50%{transform:scale(1.14);box-shadow:0 1px 3px rgba(0,0,0,.6),0 0 12px 3px rgba(255,214,110,.75)}}
 /* a phone held sideways: the trees eight across on a wider sheet, everything a little smaller, so most of a tab fits */
@@ -731,7 +731,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
   .modal.tome .upTabs .upTab{padding:4px 0 3px!important;font-size:14px} .modal.tome .upTop .upBack{width:34px;height:34px} .upBank{height:26px} }
 /* a phone held sideways: the deck reaches down to the bar, so the round buttons sit to the bar's left instead */
 /* the campaign screen's way back to the title: a round button in the top-left corner (Jack); Play has the details' foot to itself */
-.modal.tome .campBack{position:absolute;top:calc(16px + env(safe-area-inset-top));left:calc(16px + env(safe-area-inset-left));z-index:6;width:40px;height:40px;min-height:0!important;min-width:0!important;padding:0!important;border-radius:11px!important;border:2px solid #d9b04e!important;background:linear-gradient(180deg,#5a4428,#2c210f)!important;display:flex!important;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,230,160,.25)!important}
+.modal.tome .campBack{position:absolute;top:calc(16px + env(safe-area-inset-top));left:calc(16px + env(safe-area-inset-left));z-index:6;width:40px;height:40px;min-height:0!important;min-width:0!important;padding:0!important;border-radius:11px!important;border:2px solid #d9b04e!important;background:linear-gradient(180deg,#5a4428,#2a1f0e)!important;display:flex!important;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,230,160,.25)!important}
 .campBack svg{display:block;width:22px;height:22px;fill:none;stroke:#f0c95a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .cDet .stActs #campPlay{min-width:96px!important;padding:4px 18px!important}
 /* menus on a phone held sideways: the same room at each side as the game (--padL/--padR: the camera island's side at its safe
@@ -787,7 +787,7 @@ body.showcase #achPick.modal.tome{background-color:transparent!important;backgro
 .achSheet .upBank{gap:5px;font-size:14px} .achSheet .upBank b{font-size:18px}
 .achGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px;width:100%}
 .achItem{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
-.modal.tome .achNode{position:relative;width:62px;height:62px;min-height:0!important;padding:0!important;border-radius:10px!important;display:grid;place-items:center;border:2px solid #5a4a2a!important;background:linear-gradient(#2c2213,#130e07)!important;box-shadow:none!important}
+.modal.tome .achNode{position:relative;width:62px;height:62px;min-height:0!important;padding:0!important;border-radius:10px!important;display:grid;place-items:center;border:2px solid #5a4a2a!important;background:linear-gradient(#2e2515,#130e07)!important;box-shadow:none!important}
 /* a little smaller and raised so the done tick never covers the picture (Jack: as the upgrades' pictures) */
 .achNode > svg:first-child{width:34px;height:34px;transform:translateY(-4px);opacity:.42;filter:grayscale(1)}
 .modal.tome .achNode.done{border-color:#f7d77a!important;background:radial-gradient(circle at 50% 35%,#a07a32,#4a3410)!important;box-shadow:0 0 12px rgba(255,205,90,.55),inset 0 0 0 2px rgba(255,241,196,.25)!important}
@@ -831,7 +831,7 @@ body.showcase #codexPick.modal.tome,body.showcase #heroPick.modal.tome{backgroun
 .cxDet.locked .cxView{filter:brightness(0);opacity:.6}
 .cxTiers{display:flex;gap:4px;margin:5px 0 3px}
 .modal.tome .cxTiers .seg{min-height:0!important;padding:2px 9px!important;font-size:12px!important;border-radius:9px!important;border:1px solid rgba(217,176,78,.55)!important;background:#1a140a!important;color:#d9c08a!important}
-.modal.tome .cxTiers .seg.on{background:linear-gradient(180deg,#e9c463,#a47422)!important;color:#2a1a06!important;border-color:#f2d27a!important}
+.modal.tome .cxTiers .seg.on{background:linear-gradient(180deg,#e9c463,#a47422)!important;color:#2a1c08!important;border-color:#f2d27a!important}
 .modal.tome .cxTiers .seg:disabled{opacity:.6} .cxTiers .lockIco{width:12px;height:12px;vertical-align:-2px}
 .cxStats{display:flex;flex-wrap:wrap;gap:3px 10px;font-size:13px;color:#f4e3b2} .cxStats .ico svg{width:14px;height:14px;vertical-align:-2px}
 @media (max-height:520px){ .cxView{width:86px;height:86px} .cxSheet .achGrid{grid-auto-columns:72px;padding-bottom:12px} .cxNode img{width:48px;height:48px}
@@ -934,7 +934,7 @@ body.tablet .panel{top:calc(18px + var(--safeT));left:max(18px,env(safe-area-ins
 @media (max-height:520px){.setFoot{flex-direction:row;align-items:center;gap:6px}.setFoot>.setBtns{flex:1 1 0;margin-top:0}.setFoot>#setRestoreRow[hidden]+.setBtns{margin-left:50%}}
 /* the full game not bought (Jack): Stages 4 to 15 show no picture, only a dark cover with the padlock, and a grey edge; their back
    shows a teaser of the full game instead of the story; once bought each is revealed in turn (revealFull) */
-.cCover{position:absolute;left:0;right:0;top:0;aspect-ratio:1/1;border-radius:10px;background:radial-gradient(circle at 50% 44%,#34322a 0%,#1f1e18 55%,#121310 100%);pointer-events:none}
+.cCover{position:absolute;left:0;right:0;top:0;aspect-ratio:1/1;border-radius:10px;background:radial-gradient(circle at 50% 44%,#33352b 0%,#1c1d18 55%,#121410 100%);pointer-events:none}
 .cCard.paid,.cCard.paid.boss,.cCard.paid.bonus,.cCard.paid.cur.front{border-color:rgba(150,150,145,.6)}
 .cCard.paid .cName small{color:var(--muted)}
 .cCard.paid .cInfo,.cCard.paid.locked .cInfo{display:flex}
@@ -959,14 +959,14 @@ body.tablet .panel{top:calc(18px + var(--safeT));left:max(18px,env(safe-area-ins
 #campPlay.buy{animation:buyGlow 2.2s ease-in-out infinite alternate}
 @keyframes buyGlow{from{box-shadow:0 0 0 1px rgba(255,215,106,.35),0 0 6px rgba(255,200,80,.25)}to{box-shadow:0 0 0 2px rgba(255,225,130,.85),0 0 18px rgba(255,200,80,.7)}}
 /* gold and white colours: a padlock until the full game is bought */
-.colSw .sw.shut{opacity:.55} .colSw .sw.shut .lockIco{position:absolute;inset:0;margin:auto;width:14px;height:14px;fill:none;stroke:#1a1408;stroke-width:2.4}
+.colSw .sw.shut{opacity:.55} .colSw .sw.shut .lockIco{position:absolute;inset:0;margin:auto;width:14px;height:14px;fill:none;stroke:#1a140a;stroke-width:2.4}
 .modal.tome .colSw .sw{width:30px;height:30px} .colSw{gap:7px}
 .pauseCard .colSw .sw{width:26px;height:26px} .pCols .colSw{gap:6px}
 .cCard.paid.cur.front::before{display:none}
 
 /* the full game's offer card (Jack): what Unlock brings, over everything, with the same Unlock below */
 .offerWrap{position:fixed;inset:0;z-index:80;background:rgba(6,7,5,.62);display:flex;align-items:center;justify-content:center;padding:12px}
-.offerCard{position:relative;width:min(280px,86vw);border-radius:12px;border:2px solid rgba(212,168,78,.85);background:linear-gradient(180deg,#3a2d16 0%,#1f180c 100%);box-shadow:0 8px 30px rgba(0,0,0,.65);overflow:hidden;padding-bottom:14px;text-align:center}
+.offerCard{position:relative;width:min(280px,86vw);border-radius:12px;border:2px solid rgba(212,168,78,.85);background:linear-gradient(180deg,#3a2d16 0%,#1f170b 100%);box-shadow:0 8px 30px rgba(0,0,0,.65);overflow:hidden;padding-bottom:14px;text-align:center}
 .offerWrap.pop .offerCard{animation:fullIn .35s ease-out both}
 .offerCard h3{margin:0;padding:8px 10px 7px;font-family:var(--display);font-weight:400;font-size:20px;color:#ffe2a0;text-shadow:0 1px 2px rgba(0,0,0,.7);background:linear-gradient(90deg,rgba(150,112,52,.5),rgba(190,145,70,.62) 50%,rgba(150,112,52,.5));border-bottom:1px solid rgba(212,168,78,.55)}
 .offerX{position:absolute;top:6px;right:6px;width:26px;height:26px;padding:0!important;border-radius:50%;border:1px solid rgba(212,168,78,.5)!important;background:rgba(0,0,0,.35)!important;color:#f3dfae;font-size:12px;line-height:1;min-height:0!important;box-shadow:none!important}
@@ -1039,7 +1039,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
 .heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.heroPort .lv{z-index:2;position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f3d27a,#b8862f);color:#2a1c08;font:700 12px/17px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.heroPort .lv{z-index:2;position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f2d27a,#b8862f);color:#2a1c08;font:700 12px/17px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* health over XP under the portrait (Jack: the health ring round it was dropped) */
 .heroPort .hpb{position:absolute;left:4px;right:4px;bottom:-11px;height:5px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden}
 .heroPort .hpb i{display:block;height:100%;border-radius:2px;background:var(--ok)}
@@ -1058,7 +1058,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
-.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3d3520,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
 .heroSheet .hpView{width:100%;height:100%;display:block}
 .heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
@@ -1084,8 +1084,8 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hpSk .hsTx{flex:1;line-height:1.15;text-align:left}.hpSk .hsTx b{display:block;font:400 16px var(--display);color:#ffe2a0}.hpSk .hsTx small{display:block;font-size:12px;color:var(--muted)}
 .hpSk .hsTx small.hsNext{color:#9fd1ff}
 .hpSk .hsPips i{width:10px;height:10px}
-.modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f3d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
-.modal.tome .hpSk .hsPlus{position:relative}.hpSk .hsPlus .hsCost{position:absolute;right:-5px;bottom:-5px;min-width:15px;height:15px;border-radius:8px;background:#2a1c08;border:1px solid #f3d27a;color:#ffe2a0;font:700 10px/13px var(--body);font-style:normal;box-sizing:border-box;text-align:center}
+.modal.tome .hpSk .hsPlus{width:32px;height:32px;min-height:0!important;padding:0!important;border-radius:50%!important;background:linear-gradient(#f2d27a,#b8862f)!important;color:#2a1c08!important;font:700 20px/1 var(--body)!important;border:1.5px solid #fff1c4!important;box-shadow:0 0 10px rgba(240,201,90,.45)}
+.modal.tome .hpSk .hsPlus{position:relative}.hpSk .hsPlus .hsCost{position:absolute;right:-5px;bottom:-5px;min-width:15px;height:15px;border-radius:8px;background:#2a1c08;border:1px solid #f2d27a;color:#ffe2a0;font:700 10px/13px var(--body);font-style:normal;box-sizing:border-box;text-align:center}
 .hpSk .hsReq{font-size:12px;color:var(--muted);min-width:32px;text-align:center}
 .heroSheet .hpBody,.heroSheet .hSkHead,.heroSheet .hsList,.hpSk{width:100%;box-sizing:border-box;align-self:stretch}
 /* the Heir's portrait never shows over a menu (the HUD tick that hides it stops under menus) */
@@ -1094,7 +1094,7 @@ body:has(.modal.tome:not([hidden])) #powers,body:has(#campaign:not([hidden])) #p
 
 .skp{width:1em;height:1em;vertical-align:-.12em;margin-right:3px;fill:#ffd768;stroke:#3a2306;stroke-width:1;stroke-linejoin:round;paint-order:stroke}
 /* in the campaign badge the star is dark on the gold pill, like the Upgrades' ★ */
-.campBadge .skp{width:.92em;height:.92em;margin-right:2px;fill:#2a1d0a;stroke:none;filter:none;flex:none}
+.campBadge .skp{width:.92em;height:.92em;margin-right:2px;fill:#2a1c08;stroke:none;filter:none;flex:none}
 .heroSheet .hsPts{display:flex;align-items:center} .hpSk .hsReq.hsShort{display:flex;align-items:center;justify-content:center;opacity:.7}
 #campHeroN{font-family:var(--body);font-style:normal}
 /* both badges: star and number side by side, each centred on its own (Jack: the numbers sat off the middle) */
@@ -1115,14 +1115,14 @@ body:has(.modal.tome:not([hidden])) #powers,body:has(#campaign:not([hidden])) #p
 .hRoster{display:flex;gap:10px;justify-content:center;width:100%}
 .modal.tome .hRos{flex:1 1 0;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px 8px!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.55)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;min-height:0!important;box-shadow:none!important}
 .modal.tome .hRos.on{border:2px solid #f0c95a!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important}
-.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 40%,#3a3220,#16120a 72%)}
+.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 40%,#3d3520,#16120a 72%)}
 .hRos.soon .hrPic{border-color:#6d5a34}
 .hRos .hrCv{width:100%;height:100%;display:block}
 .hRos.soon .hrCv{filter:grayscale(.7) brightness(.72)}
 .hRos .hrPic{overflow:visible}.hRos .hrCv{border-radius:50%}
-.hRos .hrLock{position:absolute;right:-5px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1a140b;border:1.5px solid #8a7444;display:flex;align-items:center;justify-content:center}
+.hRos .hrLock{position:absolute;right:-5px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1a140a;border:1.5px solid #8a7444;display:flex;align-items:center;justify-content:center}
 .hRos .hrLock .lockIco{width:12px;height:12px}
-.hRos .hrLv{position:absolute;right:-6px;bottom:-4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:#1a140b;border:1.5px solid #d9b04e;font:700 11px/17px var(--body);color:#ffe2a0;text-align:center}
+.hRos .hrLv{position:absolute;right:-6px;bottom:-4px;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:#1a140a;border:1.5px solid #d9b04e;font:700 11px/17px var(--body);color:#ffe2a0;text-align:center}
 .hRos b{font:400 14px var(--display);color:#ffe2a0;white-space:nowrap}
 .hRos.soon b{color:#b39c6c}
 .hRos small{font:600 11px var(--body);color:var(--muted)}
@@ -1151,7 +1151,7 @@ body.tablet .upSheet.heroSheet{max-width:min(100%,560px)!important;min-height:0!
 .heroSheet .hsWrap{display:flex;gap:10px;width:100%;align-items:stretch}
 .heroSheet .hsWrap .hsList{flex:0 0 calc(50% - 5px);min-width:0;width:auto;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hsWrap .hsDet{flex:0 0 calc(50% - 5px)}   /* the two halves the same for every hero (Jack), the names fitted in */
-.hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 35%,#3a2d18,#15100a 78%);border:2px solid rgba(217,176,78,.7)}
+.hsIco{flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 50% 35%,#3a2d16,#130e07 78%);border:2px solid rgba(217,176,78,.7)}
 .hsIco svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .modal.tome .hsTile{position:relative;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;flex:1 0 auto;gap:9px;padding:7px 9px!important;min-height:0!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.45)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;text-align:left;box-shadow:none!important}
 .modal.tome .hsTile.sel{border:1px solid #f0c95a!important;padding:7px 9px!important;box-shadow:inset 0 0 0 1px #f0c95a,0 0 8px rgba(240,201,90,.3)!important;background:linear-gradient(rgba(70,54,26,.95),rgba(36,28,14,.95))!important}
@@ -1177,11 +1177,11 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 .hsDh b{display:block;font:400 18px/1.05 var(--display);color:#ffe2a0}
 .hsDh small{display:block;margin-top:3px;font:600 12px var(--body);color:var(--muted)}
 .hsDh small.hsRk{font:700 12px var(--body);letter-spacing:.06em;color:#f0c95a}
-.hsDesc{margin:0;font:500 14px/1.25 var(--body);color:#e9dcc0}
+.hsDesc{margin:0;font:500 14px/1.25 var(--body);color:#e6dcc0}
 .hsDet .hsSteps{display:flex;gap:5px}
 .hsDet .hsSteps i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 5px;border-radius:7px;border:1px solid rgba(240,201,90,.22);color:rgba(240,201,90,.45);font:700 13px/1 var(--body);font-style:normal}
 .hsDet .hsSteps i small{font:600 9px/1 var(--body);letter-spacing:.06em;opacity:.8}
-.hsDet .hsSteps i.on{background:linear-gradient(#f3d27a,#c9962f);border-color:#f3d27a;color:#2a1c08}
+.hsDet .hsSteps i.on{background:linear-gradient(#f2d27a,#c7962f);border-color:#f2d27a;color:#2a1c08}
 .hsDet .hsSteps i.nx{border-color:#f0c95a;color:#ffe2a0}
 .hsAct{margin-top:auto;display:flex;justify-content:center;align-items:flex-end}
 .modal.tome .hsLearn{width:auto;height:36px;min-height:0!important;flex:none;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:0 22px!important;gap:8px;font-size:16px!important}
