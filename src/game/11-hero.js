@@ -220,7 +220,7 @@ function heroTake(d, v) {
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
       v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
-      sparkBurst(v.rx, y + .95 * UNIT_K, v.rz, '#eef4ff', 9); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.35;
+      v.blockFx = w => sparkBurst(w.x, w.y, w.z, '#eef4ff', 9); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.35;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
   }
@@ -929,7 +929,7 @@ function galDemo(p, t, dt) {
   }
   if (d === 'firm') {                                             // Deflect: now and then a blow glances off, steel sparks and the share in grey
     blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
-    if (crossed(prev, c, 1.1)) { p.blockAt = now; sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
+    if (crossed(prev, c, 1.1)) { p.blockAt = now; p.blockFx = w => sparkBurst(w.x, w.y, w.z, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
     // the shield snapped up across the body as the blow glances off, as in the game (Jack couldn't see it in the gallery)
     { const bq = blockK(p, now); if (bq) shieldUp(p, bq); else shieldDown(p); }
     return;

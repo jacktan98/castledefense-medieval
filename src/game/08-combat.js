@@ -1176,8 +1176,8 @@ function updateDropped(dt) {
 }
 // the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
 // top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
-// a brace, not a lift (Jack): the forearm drawn in across the body, the shield tight in front of the chest
-var SHB = { ry: Math.PI / 2, x: -.85, z: .5 };
+// a brace (Jack): the forearm drawn across the body, the shield in front of the chest with its top at the chin
+var SHB = { ry: Math.PI / 2, x: -1.3, z: .7 };
 const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
 function shieldUp(p, k) {
   if (!k) return; const a = p.arms[0];
@@ -1190,6 +1190,9 @@ function shieldUp(p, k) {
   shieldSpot(_shQ, _shP);   // the hand behind its middle
   sh.quaternion.copy(r.q).slerp(_shQ, k); sh.position.copy(r.p).lerp(_shP, k);
   sh.userData.up = true;
+  // the block's sparks, from the shield's face once it is nearly up
+  if (p.blockFx && k > .75) { const f = p.blockFx; p.blockFx = null; sh.updateWorldMatrix(true, false);
+    const w = sh.getWorldPosition(new THREE.Vector3()), n = new THREE.Vector3(-1, 0, 0).transformDirection(sh.matrixWorld); f(w.addScaledVector(n, .05)); }
 }
 // puts a shield back on the forearm once the block is over
 function shieldDown(p) { if (p.blockZ0 != null) { p.arms[0].rotation.z = p.blockZ0; p.blockZ0 = null; }
@@ -1198,11 +1201,14 @@ function blockK(p, now) { const d = (now - (p.blockAt || -1e9)) / 1000; return d
 function tryBlock(p) {
   const sh = shieldOf(p), now = performance.now(); if (!sh || Math.random() > .3 || now - (p.blockAt || 0) < 900) return;
   p.blockAt = now; const w = sh.getWorldPosition(new THREE.Vector3()); sfx('clash', { x: w.x, z: w.z });
-  for (let i = 0; i < 5 && puffs.length < 150; i++) {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffe9a8', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
-    sp.position.set(w.x + (Math.random() - .5) * .15, w.y + .1 + Math.random() * .1, w.z + (Math.random() - .5) * .15); sp.scale.setScalar(.06);
-    scene.add(sp); puffs.push({ sp, t: 0, life: .3 + Math.random() * .25, dx: (Math.random() - .5) * 1.6, ember: true });
-  }
+  // the sparks fly off the shield's face once it is up (shieldUp), not where it hung at the side (Jack: they showed by the head)
+  p.blockFx = w => {
+    for (let i = 0; i < 5 && puffs.length < 150; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color: '#ffe9a8', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+      sp.position.set(w.x + (Math.random() - .5) * .15, w.y + (Math.random() - .5) * .12, w.z + (Math.random() - .5) * .15); sp.scale.setScalar(.06);
+      scene.add(sp); puffs.push({ sp, t: 0, life: .3 + Math.random() * .25, dx: (Math.random() - .5) * 1.6, ember: true });
+    }
+  };
 }
 function flinchK(p, now) { const d = (now - (p.flinchAt || -1e9)) / 1000; return d >= 0 && d < .5 ? Math.exp(-d * 9) * Math.min(1, d * 30) : 0; }
 // a blink now and then, each on its own clock
