@@ -9412,14 +9412,21 @@ function heroTake(d, v) {
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
       v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
-      v.blockFx = deflectFx(skR('firm')); const c = sfx('clash', v); if (c) c.playbackRate.value = skR('firm') >= 3 ? 1.5 : 1.35;
+      v.blockFx = deflectFx(skR('firm')); if (skR('firm') >= 3) deflectShove(v, v.foe); const c = sfx('clash', v); if (c) c.playbackRate.value = skR('firm') >= 3 ? 1.5 : 1.35;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
   }
   return d;
 }
-// Deflect's sparks off the shield by rank: a few, more, then a bright burst with a glint
-function deflectFx(r) { return w => { sparkBurst(w.x, w.y, w.z, '#eef4ff', [4, 4, 8, 14][r]); if (r >= 3) glintAt(w, '#ffffff'); }; }
+// Deflect's sparks off the shield by rank: a few, more, then a bright burst (the glint was dropped: Jack, it looked cheap)
+function deflectFx(r) { return w => { sparkBurst(w.x, w.y, w.z, '#eef4ff', [4, 4, 8, 14][r]); }; }
+// Deflect at rank 3: the raider whose blow glanced off is thrown back a step, reeling (a flinch, as when hit)
+function deflectShove(v, e) {
+  if (!e || e.dead || ENEMY[e.kind].engine || ENEMY[e.kind].boss) return;
+  const d = Math.hypot(e.x - v.x, e.z - v.z); if (d > 2.6 || d < .01) return;
+  e.flinchAt = performance.now(); const nx = e.x + (e.x - v.x) / d * .35, nz = e.z + (e.z - v.z) / d * .35;
+  if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; }
+}
 function heroFall(v) {
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
   if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 });
@@ -9531,16 +9538,17 @@ function rangerStep(v, dt, home) {
     // Quick draw's arrows: a quicker, higher twang, a glow and a trail of sparks, the draw hand flicking back to the quiver
     shotRate = b === 'quick' ? 1.35 : 0;
     const m = fireArrow(from, to, () => { if (!e.dead) hurtEnemy(e, d, v); }); shotRate = 0;
+    m.geometry = ARROW_GEO; m.material = ARROW_PLAIN;   // a real arrow: shaft, steel head, white fletching (Jack: they read as sticks)
     // by rank: plain arrows at 1, gold glowing ones at 2, trailing sparks at 3
-    if (b === 'quick') { const qr = skR('quick'); if (qr >= 2) m.material = glowArrowM; if (qr >= 3) glowArrows.push(m); v.fanT = .2; }
+    if (b === 'quick') { const qr = skR('quick'); if (qr >= 2) m.material = ARROW_GOLD; if (qr >= 3) glowArrows.push(m); v.fanT = .2; }
     return m;
   };
-  shoot(foe, dm);
+  const first = shoot(foe, dm);
   if (HERO.sk.twin) {
     let two = null, bd = R; for (const e of enemies) if (e !== foe && !e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; two = e; } }
-    // by rank: no flash at 1, a small one at 2, a bright one and a faint glow on the second arrow at 3
+    // by rank (Jack: no flash, both arrows alike): plain at 1, a faint streak of air behind the second arrow at 2, behind both at 3
     if (two) { const m = shoot(two, dm * HERO_SK.twin.k[HERO.sk.twin - 1]), tr = skR('twin');
-      if (tr >= 2) glintAt(from, tr >= 3 ? '#ffffff' : '#8a8a8a'); if (tr >= 3 && m && b !== 'quick') m.material = twinArrowM; }
+      if (tr >= 2 && b !== 'quick') arrowStreak(m, tr); if (tr >= 3 && b !== 'quick') arrowStreak(first, tr); }
   }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
@@ -9568,7 +9576,53 @@ function heroBurst(v, sk, n, quick, at) {
 // glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: a steel
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
-const twinArrowM = new THREE.MeshBasicMaterial({ color: '#fff3cf', toneMapped: false }), glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
+const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
+// the Ranger's arrow (Jack: the plain sticks didn't look like arrows): a shaft, a four-sided steel head and two crossed white
+// vanes, one geometry with a group per material; Quick draw's gold one glows (ARROW_GOLD)
+const ARROW_GEO = (() => {
+  const parts = [[new THREE.BoxGeometry(.022, .022, .56), 0, -.03], [new THREE.ConeGeometry(.032, .1, 4), 1, .3], [new THREE.BoxGeometry(.004, .075, .15), 2, -.24], [new THREE.BoxGeometry(.075, .004, .15), 2, -.24]];
+  const pos = [], nor = [], g = new THREE.BufferGeometry(); let at = 0;
+  for (const [geo0, mi, z] of parts) {
+    const geo = geo0.index ? geo0.toNonIndexed() : geo0;
+    if (mi === 1) geo.rotateX(Math.PI / 2);   // the cone's tip along +z, the way the arrow flies (lookAt)
+    geo.translate(0, 0, z); const n = geo.attributes.position.count;
+    pos.push(...geo.attributes.position.array); nor.push(...geo.attributes.normal.array); g.addGroup(at, n, mi); at += n;
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); return g;
+})();
+const ARROW_PLAIN = [arrowWoodM, steelM, fletchM];
+const ARROW_GOLD = [glowArrowM, new THREE.MeshBasicMaterial({ color: '#fff0b8', toneMapped: false }), new THREE.MeshBasicMaterial({ color: '#fff6dc', toneMapped: false })];
+// Twin shot's streak of air behind an arrow (rank 2 the second arrow, rank 3 both): a thin pale ribbon turned to face the camera,
+// fading behind it; `alive` tells whether the arrow still flies (the game's arrows or the gallery's)
+const streaks = [];
+function arrowStreak(m, r, alive) {
+  if (!m) return;
+  const N = 12, geo = new THREE.BufferGeometry(), idx = [];
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 6), 3)); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 6), 3));
+  for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+  mesh.frustumCulled = false; mesh.renderOrder = 6; fxScene().add(mesh);
+  streaks.push({ m, mesh, N, pts: [{ p: m.getWorldPosition(new THREE.Vector3()), t: performance.now() }], k: r >= 3 ? .6 : .42, w: r >= 3 ? .014 : .01, alive: alive || (() => arrows.some(a => a.m === m)) });
+}
+const _sd = new THREE.Vector3(), _sc = new THREE.Vector3(), _ss = new THREE.Vector3();
+function streakTick() {
+  const now = performance.now(), LIFE = 260;
+  for (let n = streaks.length - 1; n >= 0; n--) {
+    const S = streaks[n], fly = S.alive();
+    if (fly) { const p = S.m.getWorldPosition(new THREE.Vector3()), q = S.pts[0];
+      if (q) { _sd.subVectors(p, q.p); if (_sd.lengthSq() > 1e-6) { _sc.subVectors(camera.position, p); _ss.crossVectors(_sd, _sc).normalize(); S.side = _ss.clone().multiplyScalar(S.w); } }
+      S.pts.unshift({ p, t: now }); }
+    while (S.pts.length > S.N || (S.pts.length && now - S.pts[S.pts.length - 1].t > LIFE)) S.pts.pop();
+    if (!fly && !S.pts.length) { unparent(S.mesh); S.mesh.geometry.dispose(); S.mesh.material.dispose(); streaks.splice(n, 1); continue; }
+    const P = S.mesh.geometry.attributes.position.array, C = S.mesh.geometry.attributes.color.array;
+    const sd = S.side || new THREE.Vector3(S.w, 0, 0);
+    S.pts.forEach((q, i) => { q.s = sd; const k = Math.max(0, 1 - (now - q.t) / LIFE) * (1 - i / S.N) * S.k, w = 1 - i / S.N;
+      P.set([q.p.x + q.s.x * w, q.p.y + q.s.y * w, q.p.z + q.s.z * w, q.p.x - q.s.x * w, q.p.y - q.s.y * w, q.p.z - q.s.z * w], i * 6);
+      C.set([.9 * k, .94 * k, k, .9 * k, .94 * k, k], i * 6); });
+    S.mesh.geometry.setDrawRange(0, Math.max(0, S.pts.length - 1) * 6);
+    S.mesh.geometry.attributes.position.needsUpdate = S.mesh.geometry.attributes.color.needsUpdate = true;
+  }
+}
 const BOW_LINE = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, .35, 0)], SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
 function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
   for (let i = 0; i < n && puffs.length < 170; i++) {
@@ -9582,9 +9636,9 @@ function glintAt(at, color, follow) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, toneMapped: false }));
   sp.position.copy(at); sp.renderOrder = 25; fxScene().add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
 }
-// by rank: 1 nothing (the quick blows show it), 2 the "×N", 3 the glint at the tip too
+// "×N" for the quick blows to come at every rank (×2, ×3, ×4: Jack), a glint at the tip at rank 3
 function flurryStart(v) {
-  const r = skR('flurry'); if (r < 2) return;
+  const r = skR('flurry'); if (r < 1) return;
   const tip = () => v.pivot ? v.pivot.localToWorld(SWORD_LINE[1].clone()) : new THREE.Vector3(v.x, 1, v.z);
   if (r >= 3) glintAt(tip(), '#fff4c0', tip);
   floatText('×' + v.burst, '#ffd768', v.x + .7, walkY(v.x, v.z) + 1.25, v.z);
@@ -9704,16 +9758,6 @@ function eaglePoof(p) {
   }
   sparkBurst(p.x, p.y, p.z, '#fff6d8', 6);
 }
-// Second wind's soft green glow at rank 3 (the game's hero, or a gallery figure p)
-const windGlowM = new THREE.SpriteMaterial({ map: emberTex, color: '#9dffb0', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
-function windGlow(v, on, dt, at) {
-  if (!v) return;
-  let g = v.windGl; if (!g) { if (!on) return; g = v.windGl = new THREE.Sprite(windGlowM.clone()); g.renderOrder = 5; }
-  if (!g.parent) fxScene().add(g);
-  g.userData.k = Math.max(0, Math.min(1, (g.userData.k || 0) + (on ? 2 : -2) * dt));
-  g.visible = g.userData.k > .01; g.material.opacity = g.userData.k * (.32 + .1 * Math.sin(performance.now() / 260));
-  g.position.set(v.rx, (at ? 0 : walkY(v.rx, v.rz)) + .55 * UNIT_K * 1.6, v.rz); g.scale.setScalar(1.5);
-}
 const LVUP_T = 1.8;
 var lvOwner = null;
 function heroLooks(dt, now) {
@@ -9722,12 +9766,13 @@ function heroLooks(dt, now) {
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
   if (ringOn) {
-    // by rank: a spark now and then (1 s apart), twice as often, then every .3 s with a glint on the Heir's own sword now and then
+    // by rank: a gold spark now and then (.8 s apart), two every .5 s, then every .3 s and gold sparks off the Heir's own sword too
+    // (the glint on the sword was dropped: Jack, it looked cheap)
     const cr = skR('cry');
-    if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = [1, 1, .55, .3][cr]; const u = mates[Math.floor(Math.random() * mates.length)];
-      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
-    if (cr >= 3 && mates.length && v.pivot && (v.cryGlint = (v.cryGlint || 0) - dt) <= 0) { v.cryGlint = 2.5;
-      const tip = () => v.pivot.localToWorld(SWORD_LINE[1].clone()); glintAt(tip(), '#fff4c0', tip); }
+    if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = [.8, .8, .5, .3][cr]; const u = mates[Math.floor(Math.random() * mates.length)];
+      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', cr >= 2 ? 2 : 1); } }
+    if (cr >= 3 && mates.length && v.pivot && (v.cryGlint = (v.cryGlint || 0) - dt) <= 0) { v.cryGlint = .45;
+      const w = v.pivot.localToWorld(SWORD_LINE[0].clone().lerp(SWORD_LINE[1], Math.random())); sparkBurst(w.x, w.y, w.z, '#ffd24a', 1); }
   }
   // Royal horse
   if (on && v.cav) {
@@ -9777,10 +9822,9 @@ function heroLooks(dt, now) {
   lvOwner = v;
   if (v) lvUpFx(v, dt, now, HERO_ID, 'lvup');
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
-  // by rank: a few specks; more, and the portrait's bar pulses; then a soft green glow round him too
+  // by rank: a few specks, more, then more still and the portrait's bar pulses (Jack: the green glow round him was dropped)
   const wr = HERO_ID === 'captain' ? skR('wind') : 0;
-  const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0 && wr >= 2));
-  windGlow(v, on && wr >= 3 && v.windOn > 0, dt);
+  const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0 && wr >= 3));
   if (v && v.windOn > 0) v.windOn -= dt;
   if (on && HERO_ID === 'captain' && HERO.sk.wind && !(v.attackT > 0)) {
     if ((v.breathIn = (v.breathIn == null ? 4 : v.breathIn) - dt) <= 0) { v.breathIn = 4; v.breathT = .9; }
@@ -9831,7 +9875,7 @@ function heroFxRun(dt) {
     if (hero.fanT > 0) hero.fanT -= dt;
   }
   for (const [v, T] of heroTrails) if (v !== hero) { unparent(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
-  heroSpriteTick(dt);
+  heroSpriteTick(dt); streakTick();
   for (let n = glowArrows.length - 1; n >= 0; n--) { const m = glowArrows[n];
     if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
     sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1); }
@@ -10078,13 +10122,14 @@ syncHeroAdmin();
 // galPose hands any figure with `demo` here; the effects are the game's own (sparks, glints, trails, rings, the level-up column),
 // put into the gallery's scene while it is open (fxScene); arrows are the gallery's own, flown by galFxTick
 const galArrows = [];
-// look: undefined a plain arrow, 'gold' Quick draw's glowing one, 'sparks' glowing with a trail of sparks, 'pale' Twin shot's rank 3
-function galArrow(from, to, look) {
-  const m = new THREE.Mesh(arrowGeo, look === 'pale' ? twinArrowM : look ? glowArrowM : arrowMat), glow = look === 'sparks'; m.position.copy(from); gScene.add(m);
-  galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / 20), glow });
+// look: undefined a plain arrow, 'gold' Quick draw's glowing one, 'sparks' glowing with a trail of sparks; streak: Twin shot's rank
+function galArrow(from, to, look, streak) {
+  const m = new THREE.Mesh(ARROW_GEO, look ? ARROW_GOLD : ARROW_PLAIN), glow = look === 'sparks'; m.position.copy(from); gScene.add(m);
+  m.lookAt(to); galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / 20), glow });
+  if (streak) arrowStreak(m, streak, () => galArrows.some(a => a.m === m));
 }
 function galFxTick(dt) {
-  updatePuffs(dt); updateFloats(dt); heroSpriteTick(dt);
+  updatePuffs(dt); updateFloats(dt); heroSpriteTick(dt); streakTick();
   for (let n = galArrows.length - 1; n >= 0; n--) {
     const a = galArrows[n]; a.t += dt / a.dur; const k = Math.min(1, a.t), m = a.m, p = m.position.clone();
     m.position.lerpVectors(a.from, a.to, k); m.position.y += .35 * 4 * k * (1 - k); m.lookAt(m.position.clone().add(m.position.clone().sub(p)));
@@ -10109,9 +10154,10 @@ function galDemo(p, t, dt) {
   }
   if (d === 'cry') {                                              // Inspire: gold sparks on the troops' weapons beside the Heir
     blow(T % 1.6);
-    if ((p.sparkT = (p.sparkT || 0) - dt) <= 0) { p.sparkT = [1, 1, .55, .3][r]; const u = p.mates[Math.floor(Math.random() * p.mates.length)];
-      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
-    if (r >= 3 && (p.cryGlint = (p.cryGlint || 0) - dt) <= 0) { p.cryGlint = 2.5; const tip = () => p.pivot.localToWorld(SWORD_LINE[1].clone()); glintAt(tip(), '#fff4c0', tip); }
+    if ((p.sparkT = (p.sparkT || 0) - dt) <= 0) { p.sparkT = [.8, .8, .5, .3][r]; const u = p.mates[Math.floor(Math.random() * p.mates.length)];
+      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', r >= 2 ? 2 : 1); } }
+    if (r >= 3 && (p.cryGlint = (p.cryGlint || 0) - dt) <= 0) { p.cryGlint = .45; p.g.updateMatrixWorld(true);
+      const w = p.pivot.localToWorld(SWORD_LINE[0].clone().lerp(SWORD_LINE[1], Math.random())); sparkBurst(w.x, w.y, w.z, '#ffd24a', 1); }
     return;
   }
   if (d === 'flurry') {                                           // two blows, then the burst: a glint, ×3, three quick blows with a trail
@@ -10121,11 +10167,11 @@ function galDemo(p, t, dt) {
     const hit = (n, rem) => { if (n % 2) { swordPose(p, 0, 0); thrustPose(p, rem, 0); } else { thrustPose(p, 0, 0); swordPose(p, rem, 0); } };
     if (c < 1.6) hit(Math.floor(c / .8), Math.max(0, SWORD_T - c % .8));
     else { const q = c - 1.6, n = Math.floor(q / .3), cq = q - n * .3;
-      if (n < 3) { quick = true; hit(n, Math.max(0, SWORD_T * (1 - cq / .3)));
+      if (n < r + 1) { quick = true; hit(n, Math.max(0, SWORD_T * (1 - cq / .3)));
         if (crossed(prev - 1.6 - n * .3, cq, .16) && p.foes[0]) { const w = foeAt(p.foes[0]); sparkBurst(w.x, w.y + .1, w.z, '#ffe9a8', [3, 3, 5, 7][r]); } }
       else blow(0); }
     if (p.burstCi !== ci && c >= 1.5) { p.burstCi = ci; const tip = () => p.pivot.localToWorld(SWORD_LINE[1].clone());
-      if (r >= 3) glintAt(tip(), '#fff4c0', tip); if (r >= 2) floatText('×3', '#ffd768', x0 + .7, 1.25, z0); }
+      if (r >= 3) glintAt(tip(), '#fff4c0', tip); floatText('×' + (r + 1), '#ffd768', x0 + .7, 1.25, z0); }
     heroTrail(p, SWORD_LINE, r >= 3 ? '#ffd24a' : '#8c7228', quick && r >= 2); return;
   }
   if (d === 'horse') {                                            // Royal horse: dust behind the hooves, the flaps flutter, a rear-up
@@ -10148,7 +10194,7 @@ function galDemo(p, t, dt) {
       bowPose(p, cc > .6 && cc < 1.05, cc >= 1.05 && cc < 1.4, -.35, 0);
       if (crossed(pc, cc, 1.05)) {
         const b = bowAt();
-        if (d === 'twin') { if (r >= 2) glintAt(b, r >= 3 ? '#ffffff' : '#8a8a8a'); p.foes.forEach((e, i) => galArrow(b, foeAt(e), i && r >= 3 ? 'pale' : undefined)); }
+        if (d === 'twin') p.foes.forEach((e, i) => galArrow(b, foeAt(e), undefined, (i ? r >= 2 : r >= 3) ? r : 0));
         else galArrow(b, foeAt(p.foes[0]));
       }
       if (d === 'quick' && r >= 3 && crossed(prev, c, 3.45)) { const b = bowAt(); glintAt(b, '#fff4c0'); }
@@ -10169,7 +10215,7 @@ function galDemo(p, t, dt) {
   }
   if (d === 'firm') {                                             // Deflect: now and then a blow glances off, steel sparks and the share in grey
     blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
-    if (crossed(prev, c, 1.1)) { p.blockAt = now; p.blockFx = deflectFx(r); floatText(`−${[15, 15, 25, 35][r]}%`, '#c9ced6', x0 + .5, 1.5, z0); }
+    if (crossed(prev, c, 1.1)) { p.blockAt = now; p.blockFx = deflectFx(r); if (r >= 3) for (const e of p.foes || []) e.kb = .35; floatText(`−${[15, 15, 25, 35][r]}%`, '#c9ced6', x0 + .5, 1.5, z0); }
     // the shield snapped up across the body as the blow glances off, as in the game (Jack couldn't see it in the gallery)
     { const bq = blockK(p, now); if (bq) shieldUp(p, bq); else shieldDown(p); }
     return;
@@ -10185,7 +10231,6 @@ function galDemo(p, t, dt) {
   }
   if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
     blow(0);
-    windGlow(p, r >= 3, dt, true);
     if ((p.windFx = (p.windFx || 0) - dt) <= 0) { p.windFx = [.5, .5, .25, .16][r]; const a = Math.random() * 6.283; sparkBurst(x0 + Math.cos(a) * .22, .3 + Math.random() * .6, z0 + Math.sin(a) * .22, '#d6ffd9', 1); }
     const c = T % 4, k = c < .9 ? Math.sin(Math.PI * c / .9) : 0; p.body.position.y += .03 * k; p.arms[0].rotation.z = .12 * k; p.arms[1].rotation.z = -.12 * k;
   }
@@ -12339,7 +12384,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '9136c85142'; var updateWait = false, updateT = 0;
+const BUILD = 'a569ae1980'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
