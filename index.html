@@ -85,7 +85,10 @@ details[open] .glShow,details:not([open]) .glHide{display:none}
 #log li::marker{color:var(--gold)}
 #log .warn{color:var(--bad)} #log .good{color:var(--ok)}
 .dock{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;
-  width:max-content;max-width:calc(100% - 24px)}
+  width:max-content;max-width:calc(100% - 24px);pointer-events:none}
+/* the dock's own box is as wide as its widest part (the bar), so beside a narrower card it is empty: taps there go through to the
+   map (Jack could not set the hero's spot beside the card); only its parts take taps */
+.dock > *{pointer-events:auto}
 .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 14px;font-size:14px;text-align:center;font-variant-numeric:tabular-nums}
 .pill.ok{border-color:var(--ok);color:var(--ok)} .pill.bad{border-color:var(--bad);color:var(--bad)}
 .card{background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;width:min(400px,100%)}
@@ -12072,7 +12075,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '5a93d028f3'; var updateWait = false, updateT = 0;
+const BUILD = 'f1537fc121'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
