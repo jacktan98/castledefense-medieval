@@ -1061,6 +1061,10 @@ function updateSoldier(v, dt) {
   const B = v.post.B, k = v.kitTier - 1, S = v.cav ? RIDER : SOLDIER, walkK = 1 + decorFx(v.x, v.z, 'troopWalk'), ride = (v.cav ? RIDER.speed : 1) * walkK;
   v.attackT = Math.max(0, (v.attackT || 0) - dt); v.cool = (v.cool || 0) - dt;
   const base = (!v.post.fled && B.rally) || doorPoint(B), [ox, oz] = v.summoned && !B.rally ? summonSpot(B, v.post.a) : SQUAD[v.post.a % SQUAD.length], hx = base.x + ox, hz = base.z + oz;
+  if (v.march) {
+    if (Math.hypot(hx - v.x, hz - v.z) > .5 && (v.marchT -= dt) > 0) { v.foe = null; if (!gateWait(v, hx, hz)) walkTo(v, hx, hz, dt, 1, .3, 1.3 * ride); return; }
+    v.march = false;
+  }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
   let foe = v.foe && !v.foe.dead && Math.hypot(v.foe.x - hx, v.foe.z - hz) < 9 ? v.foe : null;
   if (!foe) { let bd = 6; for (const e of enemies) if (!e.dead && (!v.skip || v.skip.e !== e)) { const d = Math.hypot(e.x - hx, e.z - hz); if (d < bd) { bd = d; foe = e; } } }
@@ -1320,6 +1324,8 @@ function setRally(B, pt) {
   if (B.rallyFlag) scene.remove(B.rallyFlag);
   if (!pt) { B.rally = null; B.rallyFlag = null; return; }
   B.rally = { x: pt.x, z: pt.z };
+  // (Jack) troops sent to a new spot march there, ignoring raiders on the way, until they arrive (or 15 s pass)
+  for (const v of villagers) if (v.soldier && v.post && v.post.B === B && !v.post.fled) { v.march = true; v.marchT = 15; v.foe = null; }
   const f = new THREE.Group(); f.add(box(.05, 1.5, .05, M.timber, 0, .75, 0)); f.add(flagBox(.46, .3, .03, M.flag, .25, 1.33, 0));
   f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); B.rallyFlag = f; B.rallyHere = false; flagFocus = B;
 }

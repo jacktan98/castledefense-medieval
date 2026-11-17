@@ -192,7 +192,11 @@ function heroStart() {
 }
 function setHeroFlag(pt) {
   if (heroFlag) { scene.remove(heroFlag); heroFlag = null; }
-  heroAt = pt ? { x: pt.x, z: pt.z } : null; if (!pt) return;
+  heroAt = pt ? { x: pt.x, z: pt.z } : null;
+  // (Jack: sent to a new spot, the Ranger kept turning back to shoot and stepping on by turns) the hero now marches there, or back
+  // home on Recall, ignoring raiders until they arrive (or 15 s pass)
+  if (hero) { hero.march = true; hero.marchT = 15; hero.foe = null; hero.drawing = false; }
+  if (!pt) return;
   const f = new THREE.Group(); f.add(box(.05, 1.5, .05, M.timber, 0, .75, 0)); f.add(flagBox(.46, .3, .03, M.flag, .25, 1.33, 0));
   f.add(cyl(.06, .06, .06, 8, heroGold, 0, 1.53, 0));
   f.position.set(pt.x, hAt(pt.x, pt.z), pt.z); scene.add(f); heroFlag = f; heroHere = false; flagFocus = 'hero';
@@ -254,6 +258,14 @@ function updateHero(v, dt) {
   if (HERO.sk.wind && v.hp < v.maxHp) { v.hp = Math.min(v.maxHp, v.hp + v.maxHp * HERO_SK.wind.k[HERO.sk.wind - 1] * dt); v.windOn = .3;
     // soft green-white specks drift up from him while Second wind mends him
     if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = .16; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); } }
+  if (v.march) {
+    if (Math.hypot(home.x - v.x, home.z - v.z) > .4 && (v.marchT -= dt) > 0) {
+      v.foe = null; v.drawing = false;
+      if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * (heroDef().range ? 1 : heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk'))));
+      heroMend(v, dt, null); return;
+    }
+    v.march = false;
+  }
   if (heroDef().range) { rangerStep(v, dt, home); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
   const foe = heroFoe(v, home, dt, 7, 7.5, e => Math.hypot(e.x - home.x, e.z - home.z));
@@ -436,6 +448,16 @@ function makeEagle() {
   return { g, wings, flap: k => wings.forEach((w, i) => { const sg = i ? -1 : 1; w.rotation.z = sg * (k - .06); w.userData.outer.rotation.z = sg * (k * .7 + .04); }) };
 }
 let eagle = null, eagleA = 0, eagleK = 0;
+const EAGLE_K = .6;
+// a puff of white and brown feathers where the eagle appears or vanishes
+function eaglePoof(p) {
+  for (let i = 0; i < 11; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: i < 7 ? '#f3efe4' : '#7a5a3a', transparent: true, depthWrite: false, opacity: 0 }));
+    sp.position.set(p.x + (Math.random() - .5) * .7, p.y + (Math.random() - .5) * .4, p.z + (Math.random() - .5) * .7); sp.scale.setScalar(.3);
+    fxScene().add(sp); puffs.push({ sp, t: 0, life: .55 + Math.random() * .4, dx: (Math.random() - .5) * 1.4, dust: true, k: 1.3 });
+  }
+  sparkBurst(p.x, p.y, p.z, '#fff6d8', 6);
+}
 const LVUP_T = 1.8;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
@@ -464,15 +486,18 @@ function heroLooks(dt, now) {
   eagleK += ((eye && v.foe ? 1 : 0) - eagleK) * Math.min(1, dt * 1.5);
   // (the eagle fades out over a second or so: with the Ranger fallen mid-fade there is no one to circle, so it goes at once;
   // it used to read the fallen hero's place and the error stopped the whole game: Jack)
+  // (Jack: smaller, and a poof as it comes and goes: it now appears and vanishes in a puff of feathers where it circles, popping
+  // up to size, rather than flying down and fading; with the Ranger fallen it goes at once)
   if (!v) eagleK = 0;
   if (eagleK > .02) {
     if (!eagle) eagle = makeEagle();
     if (!eagle.g.parent) scene.add(eagle.g);
-    eagleA += dt * .55; const y = walkY(v.rx, v.rz) + 5.5 + 8 * (1 - eagleK);
-    eagle.g.position.set(v.rx + Math.cos(eagleA) * 3.2, y + Math.sin(eagleA * 2) * .3, v.rz + Math.sin(eagleA) * 3.2);
-    eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(.9); eagle.g.visible = true;
+    eagleA += dt * .55; const y = walkY(v.rx, v.rz) + 5;
+    eagle.g.position.set(v.rx + Math.cos(eagleA) * 3, y + Math.sin(eagleA * 2) * .3, v.rz + Math.sin(eagleA) * 3);
+    eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(EAGLE_K * Math.min(1, eagleK * 4));
+    if (!eagle.g.visible) { eagle.g.visible = true; eaglePoof(eagle.g.position); }
     eagle.flap(Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
-  } else if (eagle) eagle.g.visible = false;
+  } else if (eagle && eagle.g.visible) { eagle.g.visible = false; eaglePoof(eagle.g.position); }
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
   const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .8 : .5, '#f2d98a', on && heroSel ? .26 + .05 * Math.sin(now / 320) : 0);
@@ -851,7 +876,7 @@ function galDemo(p, t, dt) {
     if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
       if (!p.eagle) { p.eagle = makeEagle(); gScene.add(p.eagle.g); }
       const a = t * .55; p.eagle.g.position.set(x0 + Math.cos(a) * 1.6, 3.2 + Math.sin(a * 2) * .2, z0 + Math.sin(a) * 1.6);
-      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(.9);
+      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(EAGLE_K);
       p.eagle.flap(Math.sin(t * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
       heroRing('g-eye' + p.seed, 2, '#8fc1db', .45, p);
     }
