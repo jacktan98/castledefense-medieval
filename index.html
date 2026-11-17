@@ -824,7 +824,7 @@ body.showcase #achPick.modal.tome{background-color:transparent!important;backgro
 
 /* ---- the Codex (Jack): Upgrades, Achievements and the Codex's book side by side just above the progress bar, upright and sideways ---- */
 #codexPick{display:flex;justify-content:center;align-items:flex-start;overflow:hidden} #codexPick .achSheet{height:100%;min-height:0;margin:0 auto}
-body.showcase #codexPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 20%, rgba(42,32,18,.9) 0%, rgba(14,11,6,.95) 55%, rgba(6,5,3,.98) 100%)!important}
+body.showcase #codexPick.modal.tome,body.showcase #heroPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 20%, rgba(42,32,18,.9) 0%, rgba(14,11,6,.95) 55%, rgba(6,5,3,.98) 100%)!important}
 .cxSheet .upTop{margin-bottom:8px;padding-bottom:0;border-bottom:none}
 .cxSheet .upTabs{flex:0 0 auto}
 .modal.tome .cxNode{overflow:hidden}
@@ -9481,7 +9481,7 @@ function heroTrail(v, line, color, on) {
   T.m.geometry.setDrawRange(0, Math.max(0, T.pts.length - 1) * 6);
   T.m.geometry.attributes.position.needsUpdate = T.m.geometry.attributes.color.needsUpdate = true;
 }
-// the other skills' looks (Jack: all of them): Inspire's gold ring on the ground round the Heir with sparks on the troops' weapons inside
+// the other skills' looks (Jack: all of them): Inspire's sparks on the troops' weapons inside
 // it and, every 8 s, the sword raised with a gold pulse spreading out; Royal horse's dust behind the hooves, the cloth flaps and the
 // rear-up as the Heir first rides out; Twin shot's two arrows on the string and a flash as they part; Eagle eye's eagle circling
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
@@ -9505,8 +9505,7 @@ function heroLooks(dt, now) {
   // Inspire
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
-  heroRing('cry', 7, '#ffd24a', ringOn ? .22 + .06 * Math.sin(now / 400) : 0);
-  if (ringOn) {
+    if (ringOn) {
     if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = .3; const u = mates[Math.floor(Math.random() * mates.length)];
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
     if ((v.cryPulse = (v.cryPulse == null ? 3 : v.cryPulse) - dt) <= 0) { v.cryPulse = 8; v.raiseT = .8; v.pulseT = 0; }
@@ -11921,7 +11920,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '486dffd6dd'; var updateWait = false, updateT = 0;
+const BUILD = '407380013e'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -12245,6 +12244,9 @@ function adaptResolution(raw) {
 const MENUS = ['#mapPick', '#loadPick', '#campaign', '#newCards', '#upPick', '#achPick', '#codexPick', '#heroPick'].map(q => $(q));
 const menuOn = () => MENUS.some(m => !m.hidden);
 const mapPickEl = $('#mapPick'), campEl = $('#campaign'), loadEl = $('#loadPick'), upEl = $('#upPick'), achEl = $('#achPick'), cxEl = $('#codexPick'); let liteN = 0;
+// every menu screen the title's showcase runs behind (body.showcase hides the game's HUD under them), and those drawn in lite mode:
+// one list, so a new screen can't be left out (the Hero screen was, and a night's red "!" pointer showed over it: Jack)
+const SHOW_MENUS = MENUS.filter(m => m.id !== 'newCards'), LITE_MENUS = SHOW_MENUS.filter(m => m !== mapPickEl);
 mapPickEl.addEventListener('click', e => { if (showcaseBuilt && !e.target.closest('button') && !e.target.closest('#colCard') && !e.target.closest('#credCard')) nextShowcase(); });   // a tap off the cards and buttons: the next scene (Jack)
 // one step of the game itself (no camera, no drawing): frame runs it every animation frame; tools/test runs it in a loop to play fast
 function tick(dt, now) {
@@ -12297,7 +12299,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   keyCamera(dt);
   if (galleryOn) { updateGallery(dt, now); renderer.render(gScene, camera); requestAnimationFrame(frame); return; } updateLamps(dt, now); updateLight(dt, now); updateWeather(dt, !paused && !menuOn() && !gameOver);
-  const sc = showcaseBuilt && (!mapPickEl.hidden || !campEl.hidden || !loadEl.hidden || !upEl.hidden || !achEl.hidden || !cxEl.hidden); if (sc !== document.body.classList.contains('showcase')) { document.body.classList.toggle('showcase', sc); syncMusic(); }
+  const sc = showcaseBuilt && SHOW_MENUS.some(m => !m.hidden); if (sc !== document.body.classList.contains('showcase')) { document.body.classList.toggle('showcase', sc); syncMusic(); }
   // the title's showcase town: the camera circles slowly. It looks a little beyond the town, so the town sits low on the screen,
   // under the cards (an off-centre lens did that before and skewed the picture: Jack found it squeezed); on a wide screen the view
   // is narrowed to about 64 degrees across (45 degrees up and down gave nearly 90 across a laptop: wide-angle smear at the sides)
@@ -12313,7 +12315,7 @@ function frame(now) {
   } else if (camera.fov !== 45) { camera.fov = 45; camera.updateProjectionMatrix(); }
   // behind the campaign and the town picker the scene is darkened under panels: drawn at 1x pixels and every other frame, so the
   // phone keeps its time for the cards (Jack found the carousel slow to answer); full detail again on the title and in the game
-  const lite = sc && (!campEl.hidden || !loadEl.hidden || !upEl.hidden || !achEl.hidden || !cxEl.hidden), pr = lite ? Math.min(pixelK, 1) : pixelK;
+  const lite = sc && LITE_MENUS.some(m => !m.hidden), pr = lite ? Math.min(pixelK, 1) : pixelK;
   // (a resize clears the canvas, so that frame is always drawn: a skipped one showed a blank canvas for a moment)
   let fresh = false; if (renderer.getPixelRatio() !== pr) { renderer.setPixelRatio(pr); resize(); fresh = true; }
   if (paused || menuOn()) { if (!lite || fresh || (liteN = (liteN + 1) % 2) === 0) renderer.render(scene, camera); requestAnimationFrame(frame); if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); } return; }

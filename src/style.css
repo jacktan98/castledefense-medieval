@@ -807,7 +807,7 @@ body.showcase #achPick.modal.tome{background-color:transparent!important;backgro
 
 /* ---- the Codex (Jack): Upgrades, Achievements and the Codex's book side by side just above the progress bar, upright and sideways ---- */
 #codexPick{display:flex;justify-content:center;align-items:flex-start;overflow:hidden} #codexPick .achSheet{height:100%;min-height:0;margin:0 auto}
-body.showcase #codexPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 20%, rgba(42,32,18,.9) 0%, rgba(14,11,6,.95) 55%, rgba(6,5,3,.98) 100%)!important}
+body.showcase #codexPick.modal.tome,body.showcase #heroPick.modal.tome{background-color:transparent!important;background-image:radial-gradient(ellipse at 50% 20%, rgba(42,32,18,.9) 0%, rgba(14,11,6,.95) 55%, rgba(6,5,3,.98) 100%)!important}
 .cxSheet .upTop{margin-bottom:8px;padding-bottom:0;border-bottom:none}
 .cxSheet .upTabs{flex:0 0 auto}
 .modal.tome .cxNode{overflow:hidden}

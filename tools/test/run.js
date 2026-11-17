@@ -73,6 +73,28 @@ const ok = (cond, what, more) => { if (!cond) fails++; console.log(`${cond ? '  
     ok(await p.evaluate(() => !document.getElementById('summary').hidden), 'the summary opens after a win');
     await G(`setGfx(true); setGfx(false); 0`); ok(true, 'graphics Low and High switch');
   } catch (e) { ok(false, 'ran without throwing', e.message.split('\n')[0]); }
+  // 4) nothing from a running game shows over a menu screen (Jack saw a night's red "!" pointer over the Hero screen): a night with
+  // raiders, buildings under attack, the card and a banner, then every menu screen in turn
+  console.log('menus over a night');
+  try {
+    await G(`MAP = 'bridge'; nextSeed = 7; gameOver = false; startGame(); $('#summary').hidden = true; $('#newCards').hidden = true; newCards = []; paused = false; startNight(); 0`);
+    await p.waitForTimeout(1500);
+    await G(`for (const B of buildings) B.hitT = performance.now() + 60000; target.set(2, 0, 2); updateCam(); select(castleB()); banner('Test', 'x'); 0`);
+    await p.waitForTimeout(800);
+    const leaks = () => p.evaluate(() => [...document.querySelectorAll('#app > *, body > *, .hitMark')].filter(e => {
+      if (e.closest('.modal') || e.id === 'c' || e.id === 'app' || e.closest('#loading')) return false;
+      const r = e.getBoundingClientRect(), cs = getComputedStyle(e); if (r.width < 2 || r.height < 2 || cs.visibility === 'hidden' || +cs.opacity === 0) return false;
+      const pt = document.elementFromPoint(Math.min(innerWidth - 1, Math.max(0, r.x + r.width / 2)), Math.min(innerHeight - 1, Math.max(0, r.y + r.height / 2)));
+      return pt && (pt === e || e.contains(pt));
+    }).map(e => e.id ? '#' + e.id : e.getAttribute('class') || e.tagName));
+    const shown = await leaks(); ok(shown.length > 0, 'the game HUD shows in play', shown.join(' '));
+    for (const [n, c] of [['campaign', `showStart()`], ['hero', `openHeroPick()`], ['upgrades', `$('#heroPick').hidden = true; openCampaign(); openUpgrades()`],
+      ['achievements', `$('#upPick').hidden = true; openAchievements()`], ['archive', `$('#achPick').hidden = true; openCodex()`],
+      ['title', `$('#codexPick').hidden = true; showMapPick()`], ['town picker', `$('#mapPick').hidden = true; showLoadPick('watch')`]]) {
+      await G(c + '; 0'); await p.waitForTimeout(700);
+      const l = await leaks(); ok(!l.length, `nothing of the game over the ${n} screen`, l.join(' '));
+    }
+  } catch (e) { ok(false, 'ran without throwing', e.message.split('\n')[0]); }
   ok(!g.errors.length, 'no page errors overall', g.errors.join(' | '));
   await g.close();
   console.log(`\n${fails ? fails + ' failed' : 'all passed'} · ${Math.round((Date.now() - t0) / 1000)} s`);

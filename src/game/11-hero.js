@@ -382,7 +382,7 @@ function heroTrail(v, line, color, on) {
   T.m.geometry.setDrawRange(0, Math.max(0, T.pts.length - 1) * 6);
   T.m.geometry.attributes.position.needsUpdate = T.m.geometry.attributes.color.needsUpdate = true;
 }
-// the other skills' looks (Jack: all of them): Inspire's gold ring on the ground round the Heir with sparks on the troops' weapons inside
+// the other skills' looks (Jack: all of them): Inspire's sparks on the troops' weapons inside
 // it and, every 8 s, the sword raised with a gold pulse spreading out; Royal horse's dust behind the hooves, the cloth flaps and the
 // rear-up as the Heir first rides out; Twin shot's two arrows on the string and a flash as they part; Eagle eye's eagle circling
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
@@ -406,8 +406,7 @@ function heroLooks(dt, now) {
   // Inspire
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
-  heroRing('cry', 7, '#ffd24a', ringOn ? .22 + .06 * Math.sin(now / 400) : 0);
-  if (ringOn) {
+    if (ringOn) {
     if (mates.length && (v.crySpark = (v.crySpark || 0) - dt) <= 0) { v.crySpark = .3; const u = mates[Math.floor(Math.random() * mates.length)];
       if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
     if ((v.cryPulse = (v.cryPulse == null ? 3 : v.cryPulse) - dt) <= 0) { v.cryPulse = 8; v.raiseT = .8; v.pulseT = 0; }
