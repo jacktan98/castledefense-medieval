@@ -1186,3 +1186,6 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
   .hsDh b{font-size:16px} .hsDh small{margin-top:1px} .hsDesc{font-size:13px} .modal.tome .hsLearn{height:30px} .hsNote{min-height:30px}
   .heroSheet .hRosHead{margin:6px 0 4px} .hRoster{justify-content:flex-start} .modal.tome .hRos{flex:0 0 100px;max-width:100px;padding:4px 4px!important} .hRos .hrPic{width:40px;height:40px}   /* narrow cards: room for six (Jack) */
 }
+/* Second wind: the hero portrait's health bar pulses while it mends him */
+#heroBar .hpb.mend i{animation:mendPulse .8s ease-in-out infinite alternate}
+@keyframes mendPulse{from{filter:brightness(1)}to{filter:brightness(1.6) drop-shadow(0 0 3px #b8ffc8)}}
