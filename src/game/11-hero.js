@@ -223,7 +223,7 @@ function heroXp(n) {
   HERO.xp += n; let up = false;
   while (HERO.lv < HERO_MAX && HERO.xp >= heroNeed()) { HERO.xp -= heroNeed(); HERO.lv++; HERO.pts += lvPts(HERO.lv); up = true; }
   if (HERO.lv >= HERO_MAX) HERO.xp = 0;
-  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } const g = lvPts(HERO.lv); banner(`${heroName()} · Lv ${HERO.lv}`, g > 1 ? `${g} skill points` : 'Skill point'); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('star'); }
+  if (up) { if (hero) { hero.maxHp = heroHp(); hero.hp = hero.maxHp; } banner(`${heroName()} · Lv ${HERO.lv}`, ''); log(`<b>${heroName()}</b> · Lv ${HERO.lv}`, 'good'); sfx('achieve'); if (hero && hero.g.visible) hero.lvUpT = LVUP_T; }
   saveHero(); heroKey = '';
 }
 // XP (hurtEnemy): the Heir's own kills count most, any raider slain while they stand a little
@@ -399,7 +399,8 @@ function heroRing(k, r, color, op) {
   return m;
 }
 const eagleM = mat('#5a3d22');
-let eagle = null, eagleA = 0, eagleK = 0;
+let eagle = null, eagleA = 0, eagleK = 0, lvBeam = null;
+const LVUP_T = 1.8;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
   // Inspire
@@ -439,6 +440,27 @@ function heroLooks(dt, now) {
     const fl = Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
   } else if (eagle) eagle.g.visible = false;
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
+  // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
+  // and the hero hops with the weapon raised (Jack)
+  if (v && v.lvUpT > 0) {
+    v.lvUpT -= dt; const f = Math.min(1, 1 - v.lvUpT / LVUP_T), y = walkY(v.rx, v.rz), H = v.cav ? 3.4 : 2.8;
+    if (!lvBeam) {
+      const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 64, 0, 0);
+      gr.addColorStop(0, 'rgba(255,220,110,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.55)'); gr.addColorStop(1, 'rgba(255,214,90,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64);
+      lvBeam = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, 1, 24, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), color: '#ffd24a', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false }));
+      lvBeam.renderOrder = 7; lvBeam.frustumCulled = false;
+    }
+    if (!lvBeam.parent) scene.add(lvBeam);
+    const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
+    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .85 * k;
+    if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
+      for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
+    const m = heroRing('lvup', 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
+    if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
+    if (!(v.attackT > 0)) { const h = Math.sin(Math.PI * Math.min(1, f / .5)); if (!v.cav) v.g.position.y += .22 * h;
+      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * Math.sin(Math.PI * f); }
+    if (v.lvUpT <= 0) { v.lvGlint = false; if (lvBeam) lvBeam.visible = false; }
+  } else { if (lvBeam) lvBeam.visible = false; heroRing('lvup', 2.4, '#ffd24a', 0); }
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
   const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0));
   if (v && v.windOn > 0) v.windOn -= dt;
