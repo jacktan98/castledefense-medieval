@@ -1125,6 +1125,12 @@ function galPose(p, t, dt) {
     if (p.kit === 3) swordPose(p, at, sw);
     else if ((p.raider && SPEARS(p.raider)) || p.kit) spearPose(p, at, sw);
     else swordPose(p, at, sw);
+    // shield bearers block between their strikes, as in a fight (Jack: show the shield block in the gallery too)
+    if (shieldOf(p)) {
+      const now = performance.now(), c = gWalk ? 0 : (t + p.seed) % 1.6, prev = p.prevBc == null ? c : p.prevBc; p.prevBc = c;
+      if (prev < .85 && c >= .85) { p.blockAt = now; p.blockFx = w => sparkBurst(w.x, w.y, w.z, '#ffe9a8', 7); }
+      const bq = blockK(p, now); if (bq) shieldUp(p, bq); else shieldDown(p);
+    }
     return;
   }
   // the log as the game's woodcutters carry it home (Jack: the gallery's hand went through the log): `updateVillagers`' pose
