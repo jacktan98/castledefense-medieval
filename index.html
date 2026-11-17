@@ -9538,6 +9538,9 @@ function heroLooks(dt, now) {
     const fl = Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
   } else if (eagle) eagle.g.visible = false;
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
+  // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
+  const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? 1.05 : .72, '#ffd24a', on && heroSel ? .75 + .2 * Math.sin(now / 260) : 0);
+  heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .72 : 1.05, '#ffd24a', 0); sr.material.blending = THREE.NormalBlending;
   // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
   // and the hero hops with the weapon raised (Jack)
   if (v && v.lvUpT > 0) {
@@ -9550,7 +9553,7 @@ function heroLooks(dt, now) {
     }
     if (!lvBeam.parent) scene.add(lvBeam);
     const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
-    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .85 * k;
+    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
     if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
       for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
     const m = heroRing('lvup', 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
@@ -11923,7 +11926,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '152743dd5b'; var updateWait = false, updateT = 0;
+const BUILD = 'e5a7f89cb5'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
