@@ -6394,7 +6394,9 @@ function roundShield(r, faceM) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(r, .014, 4, 18), M.iron); rim.rotation.y = Math.PI / 2; g.add(rim);
   return g;
 }
-function armShield(p, sh) { sh.userData.shield = true; sh.position.set(-.09, -.2, .02); p.arms[0].add(sh); return sh; }
+// worn on the outside of the forearm, turned partway to the front (Jack: so it turns less when it comes up to block)
+var SH_REST = { y: .85, x: -.09, z: .06 };
+function armShield(p, sh) { sh.userData.shield = true; sh.position.set(SH_REST.x, -.2, SH_REST.z); sh.rotation.y = SH_REST.y; p.arms[0].add(sh); return sh; }
 // spears are held level at the hip, point forward; a strike (attackT .35 → 0) pushes the spear straight out and draws it back:
 // the arm lifts as the tool tilts back by the same angle (the shaft stays level) and the grip slides down the shaft
 // a strike is three beats over SPEAR_T: draw the spear back, drive it out 0.45 m with a small lunge (body steps in and leans), recover
@@ -12246,7 +12248,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '779721796a'; var updateWait = false, updateT = 0;
+const BUILD = 'c70f3a8fbc'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

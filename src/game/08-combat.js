@@ -64,7 +64,9 @@ function roundShield(r, faceM) {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(r, .014, 4, 18), M.iron); rim.rotation.y = Math.PI / 2; g.add(rim);
   return g;
 }
-function armShield(p, sh) { sh.userData.shield = true; sh.position.set(-.09, -.2, .02); p.arms[0].add(sh); return sh; }
+// worn on the outside of the forearm, turned partway to the front (Jack: so it turns less when it comes up to block)
+var SH_REST = { y: .85, x: -.09, z: .06 };
+function armShield(p, sh) { sh.userData.shield = true; sh.position.set(SH_REST.x, -.2, SH_REST.z); sh.rotation.y = SH_REST.y; p.arms[0].add(sh); return sh; }
 // spears are held level at the hip, point forward; a strike (attackT .35 → 0) pushes the spear straight out and draws it back:
 // the arm lifts as the tool tilts back by the same angle (the shaft stays level) and the grip slides down the shaft
 // a strike is three beats over SPEAR_T: draw the spear back, drive it out 0.45 m with a small lunge (body steps in and leans), recover
