@@ -440,8 +440,8 @@ function heroLooks(dt, now) {
   } else if (eagle) eagle.g.visible = false;
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
-  const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .85 : .55, '#ffd24a', on && heroSel ? .42 + .1 * Math.sin(now / 260) : 0);
-  heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .55 : .85, '#ffd24a', 0); sr.material.blending = THREE.NormalBlending;
+  const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .8 : .5, '#f2d98a', on && heroSel ? .26 + .05 * Math.sin(now / 320) : 0);
+  heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .5 : .8, '#f2d98a', 0); sr.material.blending = THREE.NormalBlending;
   // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
   // and the hero hops with the weapon raised (Jack)
   if (v && v.lvUpT > 0) {
@@ -507,9 +507,14 @@ function heroTick(dt) {
 // taps (tap): Move's spot first, then the Heir themself (with nothing being built)
 function heroTap(e) {
   if (!heroOn()) return false;
+  // (Jack: after tapping a spot the hero stayed picked, ring and card, but the next tap on the ground did nothing, so it was unclear
+  // what was being controlled): a spot sends the hero there and lets go of them, card and ring gone, the flag showing until they
+  // arrive; a tap on the hero again while picked lets go too; tapping the hero picks them again for the next move
   if (heroMove) {
-    const pt = pick(e); if (!pt || !canStand(pt.x, pt.z, 1)) { setHint('Blocked', 'bad'); return true; }
-    heroMove = false; setHeroFlag(pt); sfx('click'); setHint('Moving'); heroKey = ''; return true;
+    const pt = pick(e);
+    if (pt && hero && Math.hypot(pt.x - hero.rx, pt.z - hero.rz) < (hero.cav ? 1.2 : .9)) { heroRelease(); sfx('click'); setHint('Select a building'); return true; }
+    if (!pt || !canStand(pt.x, pt.z, 1)) { setHint('Blocked', 'bad'); return true; }
+    setHeroFlag(pt); heroRelease(); flagFocus = 'hero'; sfx('click'); setHint('Moving'); return true;
   }
   if (!hero || !hero.g.visible || (tool && tool !== 'select')) return false;
   // a tap on the hero (within 1.6 m, more on a horse: Jack, easier to hit on a phone) opens the card and goes straight to Move, as the
@@ -518,6 +523,7 @@ function heroTap(e) {
     heroSelect(); heroMove = true; rallyFor = null; volleyAim = false; setHint('Tap a spot'); heroKey = ''; return true; }
   return false;
 }
+function heroRelease() { heroMove = false; heroSel = false; heroKey = ''; heroUI(); }
 function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
 // ---- on screen: the portrait (and the Heir's skills at night) under the top panel; the Heir's card in the dock ----
 // the skills' pictures (Jack: game-icons.net icons, CC BY 3.0, coloured by part with the upgrades' thick dark outline):
@@ -585,10 +591,10 @@ document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-hact]'); if (!b || !heroOn()) return;
   const a = b.dataset.hact;
   // a tap on the portrait goes straight to moving the Heir (Jack: no need to press Move on the card); a second tap cancels it
-  if (a === 'sel') { const was = heroMove; heroSelect(); heroMove = !!hero && !was; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
+  if (a === 'sel') { if (heroSel) { heroRelease(); sfx('click'); setHint('Select a building'); } else { heroSelect(); heroMove = !!hero; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; } }
   else if (a === 'close') { heroSel = false; heroMove = false; heroKey = ''; flagFocus = null; }
   else if (a === 'move') { heroMove = !heroMove; if (heroMove) { rallyFor = null; volleyAim = false; } setHint(heroMove ? 'Tap a spot' : 'Select a building'); heroKey = ''; }
-  else if (a === 'recall') { setHeroFlag(null); heroMove = false; setHint('Recalled'); heroKey = ''; }
+  else if (a === 'recall') { setHeroFlag(null); heroRelease(); flagFocus = null; setHint('Recalled'); }
   else if (a === 'learn') heroLearn(b.dataset.k);
   else if (a === 'sk') { hpSkSel = b.dataset.k; renderHeroPick(); }
   else if (a === 'reset') heroReset();
