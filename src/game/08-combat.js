@@ -65,8 +65,12 @@ function roundShield(r, faceM) {
   return g;
 }
 // worn on the outside of the forearm, turned partway to the front (Jack: so it turns less when it comes up to block)
-var SH_REST = { y: .85, x: -.09, z: .06 };
-function armShield(p, sh) { sh.userData.shield = true; sh.position.set(SH_REST.x, -.2, SH_REST.z); sh.rotation.y = SH_REST.y; p.arms[0].add(sh); return sh; }
+var SH_REST = { y: .85 };
+// the shield is held by its grip: its middle straight out from the hand, its back just touching the knuckles (Jack: it floated beside
+// the arm, and when it came up the hand went through it); SH_GAP is the hand's radius and half the shield's thickness
+const SH_HAND = new THREE.Vector3(-.012, -.33, 0), SH_GAP = .072, _shN = new THREE.Vector3();
+function shieldSpot(q, out) { return out.copy(SH_HAND).addScaledVector(_shN.set(-1, 0, 0).applyQuaternion(q), SH_GAP); }   // the face is the shield's −x
+function armShield(p, sh) { sh.userData.shield = true; sh.rotation.y = SH_REST.y; shieldSpot(sh.quaternion, sh.position); p.arms[0].add(sh); return sh; }
 // spears are held level at the hip, point forward; a strike (attackT .35 → 0) pushes the spear straight out and draws it back:
 // the arm lifts as the tool tilts back by the same angle (the shaft stays level) and the grip slides down the shaft
 // a strike is three beats over SPEAR_T: draw the spear back, drive it out 0.45 m with a small lunge (body steps in and leans), recover
@@ -1172,7 +1176,7 @@ function updateDropped(dt) {
 }
 // the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
 // top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
-var SHB = { ry: Math.PI / 2, x: -1.35, z: .5, fx: .25, fy: -.25, fz: .33 };
+var SHB = { ry: Math.PI / 2, x: -1.35, z: .5 };
 const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
 function shieldUp(p, k) {
   if (!k) return; const a = p.arms[0];
@@ -1182,7 +1186,7 @@ function shieldUp(p, k) {
   if (!sh.userData.rest) sh.userData.rest = { p: sh.position.clone(), q: sh.quaternion.clone() };
   const r = sh.userData.rest; a.updateMatrix();
   SH_FRONT.setFromAxisAngle(_shY, SHB.ry); _shQ.copy(_shA.setFromRotationMatrix(_shM.extractRotation(a.matrix)).invert()).multiply(SH_FRONT);   // face forward, top up, in the arm's frame
-  _shP.set(a.position.x * SHB.fx, a.position.y + SHB.fy, a.position.z + SHB.fz).applyMatrix4(_shM.copy(a.matrix).invert());   // in front of the chest
+  shieldSpot(_shQ, _shP);   // the hand behind its middle
   sh.quaternion.copy(r.q).slerp(_shQ, k); sh.position.copy(r.p).lerp(_shP, k);
   sh.userData.up = true;
 }
