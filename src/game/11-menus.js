@@ -1017,7 +1017,7 @@ function buildGallery() {
   const people = (title, list) => (row(title, 1.2, zc => list.forEach((P, i) => {
     const x = 6 + i * 3.3, p = P.hero ? makePerson({ hair: hairs[HERO_DEFS[P.hero].hair % hairs.length] }) : P.raider ? makeRaider(P.raider, P.rt) : P.guard ? makePerson({ tool: P.xbow ? 'crossbow' : 'bow' }) : makePerson({});
     // a hero in their own kit (the Heir mounted too, as with Royal horse)
-    if (P.hero) { const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = P.cav ? 3 : 0; p.rk = P.rk; heroKit(p, P.hero, !P.cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = P.hero; }
+    if (P.hero) { const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = P.cav ? 3 : 0; p.rk = P.rk; p.rkSk = 'horse'; heroKit(p, P.hero, !P.cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = P.hero; }
     else if (P.kit) soldierKit(p, P.kit, P.cav);
     else if (P.guard) armour(p, P.guard);
     else if (!P.raider) { p.plainHat = !P.tool; p.outfitTier = P.tier || 3; addLoads(p); giveTool(p, P.tool || null); dress(p, P.tool || null); if (P.carry === 'log') p.carryLog.visible = true; if (P.carry === 'stone') p.carryStone.visible = true; }
@@ -1039,10 +1039,10 @@ function buildGallery() {
     [1, 2, 3].map(k => ({ name: `Horse sword ${k}`, raider: 'rider', rt: k }))));
   // each hero skill's look and each hero's level-up, on a loop (Jack: easier to see them here), the hero side-on with raiders to
   // strike or shoot at: galDemo in 11-hero.js drives them
-  const galHeroFig = (id, cav, rk) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 3 : 0; p.rk = rk; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
+  const galHeroFig = (id, cav, rk, sk) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 3 : 0; p.rk = rk; p.rkSk = sk; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
   const dummy = (kind, x, z, face, P) => { const d = makeRaider(kind, 1); d.g.position.set(x, 0, z); d.g.rotation.y = face; gScene.add(d.g); Object.assign(d, { raider: kind, rt: 1, seed: Math.random() * 2, home: new THREE.Vector3(x, 0, z), kb: 0 }, P); gPeople.push(d); return d; };
   const demoRow = (title, list, rk) => row(title, 3.2, zc => list.forEach(([name, id, demo, cav], i) => {
-    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav, rk);
+    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav, rk, demo);
     p.g.position.set(x, 0, z); p.g.rotation.y = fw; gScene.add(p.g); Object.assign(p, { demo, cav: !!cav, seed: i * .37 }); gPeople.push(p);
     p.foes = [];
     if (['flurry', 'firm', 'sweep'].includes(demo)) p.foes.push(dummy('sword', x + fx * 1.15, z + fz * 1.15, fw + Math.PI));
