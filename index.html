@@ -10071,7 +10071,9 @@ function galDemo(p, t, dt) {
   }
   if (d === 'firm') {                                             // Deflect: now and then a blow glances off, steel sparks and the share in grey
     blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
-    if (crossed(prev, c, 1.1)) { sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
+    if (crossed(prev, c, 1.1)) { p.blockAt = now; sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
+    // the shield snapped up across the body as the blow glances off, as in the game (Jack couldn't see it in the gallery)
+    { const bq = blockK(p, now); if (bq) p.arms[0].rotation.x += (-1.5 - p.arms[0].rotation.x) * bq; }
     return;
   }
   if (d === 'sweep') {                                            // Sweeping blow: a blow, then the spin with a steel trail, dust, raiders knocked back
@@ -12224,7 +12226,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '6a0d62d9b6'; var updateWait = false, updateT = 0;
+const BUILD = 'f70fdf2e23'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
