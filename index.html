@@ -4592,6 +4592,9 @@ function resTex(kind, n) {
   if (im.complete && im.naturalWidth) texCache[key] = tx;
   return tx;
 }
+// effects go into the gallery's scene while it is open (its hero skill demos), else the game's
+function fxScene() { return galleryOn && gScene ? gScene : scene; }
+const unparent = o => { if (o.parent) o.parent.remove(o); };
 // life: seconds it lasts (fading all the way) and rises at .9 m/s; a long one (life > 2) rises slowly and holds before it fades
 function floatRes(kind, n, x, y, z, life = 1.8) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: resTex(kind, n), depthTest: false, transparent: true, toneMapped: false }));
@@ -4599,7 +4602,7 @@ function floatRes(kind, n, x, y, z, life = 1.8) {
 }
 function floatText(s, color, x, y, z) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(s, color), depthTest: false, transparent: true, toneMapped: false }));
-  sp.scale.set(2.6, .65, 1); sp.position.set(x, y, z); sp.renderOrder = 30; scene.add(sp); floats.push({ sp, t: 0 });
+  sp.scale.set(2.6, .65, 1); sp.position.set(x, y, z); sp.renderOrder = 30; fxScene().add(sp); floats.push({ sp, t: 0 });
 }
 
 // ---------- night lights: a fixed pool of warm point lights moved to the torches and posts nearest the camera ----------
@@ -4759,6 +4762,9 @@ function emitSmoke(dt) {
     sp.position.set(B.group.position.x + cx, B.group.position.y + ch[1], B.group.position.z + cz); sp.scale.setScalar(.3);
     scene.add(sp); puffs.push({ sp, t: 0, life: 3 + Math.random() * 1.5, dx: (Math.random() - .3) * .25 });
   }
+  updatePuffs(dt);
+}
+function updatePuffs(dt) {
   for (let n = puffs.length - 1; n >= 0; n--) {
     const p = puffs[n]; p.t += dt; const f = p.t / p.life;
     if (p.spray) {                                         // river spray: a thin mist that rises a little and drifts with the current
@@ -4769,7 +4775,7 @@ function emitSmoke(dt) {
       p.sp.position.y += dt * (p.dust ? .3 : .55); p.sp.position.x += p.dx * dt; p.sp.scale.setScalar((p.dust ? .25 + f * .8 : .3 + f * 1.3) * (p.k || 1));
       p.sp.material.opacity = Math.min(1, f * 6) * (1 - f) * (p.dust ? .55 : .45);
     }
-    if (f >= 1) { scene.remove(p.sp); p.sp.material.dispose(); puffs.splice(n, 1); }
+    if (f >= 1) { unparent(p.sp); p.sp.material.dispose(); puffs.splice(n, 1); }
   }
 }
 
@@ -5112,7 +5118,7 @@ function dustAt(x, y, z) {
   if (puffs.length > 160) return;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: '#b9a582', transparent: true, depthWrite: false, opacity: 0 }));
   sp.position.set(x + (Math.random() - .5) * .4, y + .1, z + (Math.random() - .5) * .4); sp.scale.setScalar(.25);
-  scene.add(sp); puffs.push({ sp, t: 0, life: 1.1 + Math.random() * .6, dx: (Math.random() - .5) * .4, dust: true });
+  fxScene().add(sp); puffs.push({ sp, t: 0, life: 1.1 + Math.random() * .6, dx: (Math.random() - .5) * .4, dust: true });
 }
 function removeScaffold(B) { if (B.scaffold) { scene.remove(B.scaffold); B.scaffold = null; } }
 // repairs are free but take builder-time; a building's own workers mend it themselves, pausing their gathering
@@ -6269,7 +6275,6 @@ function updateVillagers(dt, now) {
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
-    if (v.soldier) { const bq = blockK(v, now); if (bq) L += (-1.5 - L) * bq; }   // the shield up across the body
     // a hungry villager trudging home droops, a hand on the belly (Jack)
     const starving = v.hungry && !v.sleeping && !carrying && !v.soldier && !v.changing && !cheer;
     if (starving) { lean += .17; L = -.8 + swing * .1; }
@@ -7173,7 +7178,7 @@ function updateEnemies(dt) {
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
       const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
-      { const bq = blockK(e, now); if (bq) { e.arms[0].rotation.x += (-1.5 - e.arms[0].rotation.x) * bq; e.arms[0].rotation.z += (-.5 - e.arms[0].rotation.z) * bq; } }
+
       blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);
@@ -9305,10 +9310,11 @@ const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z -
 function heroTake(d, v) {
   if (v.hero && HERO.sk.firm) {
     const k = HERO_SK.firm.k[HERO.sk.firm - 1]; d *= 1 - k;
-    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the shield up, the share it took off in grey
+    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the share it took off in grey (the shield no longer
+    // snaps up: Jack found the move bad)
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
-      v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
+      v.deflAt = now; const y = walkY(v.rx, v.rz);
       sparkBurst(v.rx, y + .95 * UNIT_K, v.rz, '#eef4ff', 9); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.35;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
@@ -9436,18 +9442,18 @@ function heroBurst(v, sk, n, quick, at) {
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
 const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
-const SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
+const BOW_LINE = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, .35, 0)], SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
 function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
   for (let i = 0; i < n && puffs.length < 170; i++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
     sp.position.set(x + (Math.random() - .5) * .2, y + Math.random() * .15, z + (Math.random() - .5) * .2); sp.scale.setScalar(.07);
-    scene.add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
+    fxScene().add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
   }
 }
 // a soft star that swells and fades where a weapon glints (follow: a function giving its place each frame)
 function glintAt(at, color, follow) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, toneMapped: false }));
-  sp.position.copy(at); sp.renderOrder = 25; scene.add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
+  sp.position.copy(at); sp.renderOrder = 25; fxScene().add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
 }
 function flurryStart(v) {
   const tip = () => v.pivot ? v.pivot.localToWorld(SWORD_LINE[1].clone()) : new THREE.Vector3(v.x, 1, v.z);
@@ -9472,9 +9478,9 @@ function heroTrail(v, line, color, on) {
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 6), 3)); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 6), 3));
     for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
     const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-    m.frustumCulled = false; m.renderOrder = 6; scene.add(m); T = { m, N, pts: [] }; heroTrails.set(v, T);
+    m.frustumCulled = false; m.renderOrder = 6; fxScene().add(m); T = { m, N, pts: [] }; heroTrails.set(v, T);
   }
-  if (!T.m.parent) scene.add(T.m);
+  if (!T.m.parent) fxScene().add(T.m);
   const now = performance.now(), LIFE = 230;
   if (on && v.pivot && v.g.visible) { v.pivot.updateWorldMatrix(true, false); T.pts.unshift({ a: v.pivot.localToWorld(line[0].clone()), b: v.pivot.localToWorld(line[1].clone()), t: now }); }
   while (T.pts.length > T.N || (T.pts.length && now - T.pts[T.pts.length - 1].t > LIFE)) T.pts.pop();
@@ -9490,18 +9496,18 @@ function heroTrail(v, line, color, on) {
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
 // the portrait's health bar pulsing and a slow breath every few seconds
 const heroRings = {};
-function heroRing(k, r, color, op) {
+function heroRing(k, r, color, op, at) {
   let m = heroRings[k];
-  if (!m || m.userData.r !== r) { if (m) { scene.remove(m); m.geometry.dispose(); }
+  if (!m || m.userData.r !== r) { if (m) { unparent(m); m.geometry.dispose(); }
     m = heroRings[k] = new THREE.Mesh(new THREE.RingGeometry(r - .1, r, 72), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.AdditiveBlending }));
-    m.rotation.x = -Math.PI / 2; m.renderOrder = 4; m.userData.r = r; m.userData.op = 0; scene.add(m); }
-  if (!m.parent) scene.add(m);
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 4; m.userData.r = r; m.userData.op = 0; fxScene().add(m); }
+  if (!m.parent) fxScene().add(m);
   m.userData.op += ((op || 0) - m.userData.op) * .15; m.material.opacity = m.userData.op; m.visible = m.userData.op > .01;
-  if (hero) m.position.set(hero.rx, walkY(hero.rx, hero.rz) + .07, hero.rz);
+  const w = at || hero; if (w) m.position.set(w.rx, at ? .07 : walkY(w.rx, w.rz) + .07, w.rz);
   return m;
 }
 const eagleM = mat('#5a3d22');
-let eagle = null, eagleA = 0, eagleK = 0, lvBeam = null;
+let eagle = null, eagleA = 0, eagleK = 0;
 const LVUP_T = 1.8;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
@@ -9542,28 +9548,7 @@ function heroLooks(dt, now) {
   heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .5 : .8, '#f2d98a', 0); sr.material.blending = THREE.NormalBlending;
   // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
   // and the hero hops with the weapon raised (Jack)
-  if (v && v.lvUpT > 0) {
-    v.lvUpT -= dt; const f = Math.min(1, 1 - v.lvUpT / LVUP_T), y = walkY(v.rx, v.rz), H = v.cav ? 3.4 : 2.8;
-    if (!lvBeam) {
-      const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 64, 0, 0);
-      gr.addColorStop(0, 'rgba(255,220,110,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.55)'); gr.addColorStop(1, 'rgba(255,214,90,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64);
-      lvBeam = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, 1, 24, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), color: '#ffd24a', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false }));
-      lvBeam.renderOrder = 7; lvBeam.frustumCulled = false;
-    }
-    if (!lvBeam.parent) scene.add(lvBeam);
-    const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
-    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
-    if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
-      for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
-    const m = heroRing('lvup', 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
-    if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
-    // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
-    if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
-      if (!v.cav && u > 0 && u < 1) v.g.position.y += .26 * 4 * u * (1 - u);
-      const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
-      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
-    if (v.lvUpT <= 0) { v.lvGlint = false; if (lvBeam) lvBeam.visible = false; }
-  } else { if (lvBeam) lvBeam.visible = false; heroRing('lvup', 2.4, '#ffd24a', 0); }
+  if (v) lvUpFx(v, dt, now, HERO_ID, 'lvup'); else heroRing('lvup', 2.4, '#ffd24a', 0);
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
   const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0));
   if (v && v.windOn > 0) v.windOn -= dt;
@@ -9572,6 +9557,32 @@ function heroLooks(dt, now) {
     if (v.breathT > 0) { v.breathT -= dt; const k = Math.sin(Math.PI * Math.max(0, 1 - v.breathT / .9)); v.body.position.y += .03 * k; v.arms[0].rotation.z += .12 * k; v.arms[1].rotation.z -= .12 * k; }
   }
 }
+// a level gained (the game's hero, or a gallery figure: at = the figure, standing on the gallery's flat lawn, key its own ring)
+function lvUpFx(v, dt, now, id, key, at) {
+  if (v.lvUpT > 0) {
+    v.lvUpT -= dt; const f = Math.min(1, 1 - v.lvUpT / LVUP_T), y = at ? 0 : walkY(v.rx, v.rz), H = v.cav ? 3.4 : 2.8;
+    let lvBeam = v.lvBeam;
+    if (!lvBeam) {
+      const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 64, 0, 0);
+      gr.addColorStop(0, 'rgba(255,220,110,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.55)'); gr.addColorStop(1, 'rgba(255,214,90,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64);
+      lvBeam = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, 1, 24, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), color: '#ffd24a', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false }));
+      lvBeam.renderOrder = 7; lvBeam.frustumCulled = false; v.lvBeam = lvBeam;
+    }
+    if (!lvBeam.parent) fxScene().add(lvBeam);
+    const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
+    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
+    if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
+      for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
+    const m = heroRing(key, 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0, at); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
+    if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((id === 'captain' ? HAMMER_LINE : id === 'ranger' ? BOW_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
+    // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
+    if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
+      if (!v.cav && u > 0 && u < 1) v.g.position.y += .26 * 4 * u * (1 - u);
+      const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
+      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
+    if (v.lvUpT <= 0) { v.lvGlint = false; lvBeam.visible = false; }
+  } else { if (v.lvBeam) v.lvBeam.visible = false; heroRing(key, 2.4, '#ffd24a', 0, at); }
+}
 function heroFx(dt) {
   heroLooks(dt, performance.now());
   if (hero) {
@@ -9579,15 +9590,19 @@ function heroFx(dt) {
       hero.attackT > 0 && (hero.quickHit || hero.strike === 'sweep'));
     if (hero.fanT > 0) hero.fanT -= dt;
   }
-  for (const [v, T] of heroTrails) if (v !== hero) { scene.remove(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
-  for (let n = heroSprites.length - 1; n >= 0; n--) {
-    const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
-    if (f >= 1) { scene.remove(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
-    if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
-  }
+  for (const [v, T] of heroTrails) if (v !== hero) { unparent(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
+  heroSpriteTick(dt);
   for (let n = glowArrows.length - 1; n >= 0; n--) { const m = glowArrows[n];
     if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
     sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1); }
+}
+// the glints (the game's and the gallery's)
+function heroSpriteTick(dt) {
+  for (let n = heroSprites.length - 1; n >= 0; n--) {
+    const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
+    if (f >= 1) { unparent(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
+    if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
+  }
 }
 // the hero mends slowly once out of a fight for 5 s, day or night (Jack; it was by day only): no foe and no hit taken
 function heroMend(v, dt, foe) {
@@ -9816,6 +9831,112 @@ $('#adHeroReset').addEventListener('click', () => {
   HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
 });
 syncHeroAdmin();
+
+// ---- the gallery's hero demos (Jack: each skill's look and each hero's level-up on a loop, easier to see than in a fight) ----
+// galPose hands any figure with `demo` here; the effects are the game's own (sparks, glints, trails, rings, the level-up column),
+// put into the gallery's scene while it is open (fxScene); arrows are the gallery's own, flown by galFxTick
+const galArrows = [];
+function galArrow(from, to, glow) {
+  const m = new THREE.Mesh(arrowGeo, glow ? glowArrowM : arrowMat); m.position.copy(from); gScene.add(m);
+  galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / 20), glow });
+}
+function galFxTick(dt) {
+  updatePuffs(dt); updateFloats(dt); heroSpriteTick(dt);
+  for (let n = galArrows.length - 1; n >= 0; n--) {
+    const a = galArrows[n]; a.t += dt / a.dur; const k = Math.min(1, a.t), m = a.m, p = m.position.clone();
+    m.position.lerpVectors(a.from, a.to, k); m.position.y += .35 * 4 * k * (1 - k); m.lookAt(m.position.clone().add(m.position.clone().sub(p)));
+    if (a.glow) sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1);
+    if (k >= 1) { sparkBurst(a.to.x, a.to.y, a.to.z, a.glow ? '#ffd36a' : '#e8d8b0', 3); unparent(m); galArrows.splice(n, 1); }
+  }
+}
+const crossed = (prev, now, at) => prev < at && now >= at;
+function galDemo(p, t, dt) {
+  const id = p.heroId, d = p.demo, x0 = p.g.position.x, z0 = p.g.position.z, fw = p.g.rotation.y, fx = Math.sin(fw), fz = Math.cos(fw), now = t * 1000;
+  p.rx = p.x = x0; p.rz = p.z = z0; p.g.position.y = 0; p.g.rotation.x = 0;
+  p.arms[0].rotation.x = -.55; if (p.cape) capeWave(p, t, .15);
+  const T = (t + p.seed), chest = .8 * UNIT_K, foeAt = e => new THREE.Vector3(e.g.position.x, chest, e.g.position.z);
+  const blow = c => swordPose(p, Math.max(0, SWORD_T - c), 0);
+  const bowAt = () => { p.g.updateMatrixWorld(true); return (p.pivot || p.arms[0]).getWorldPosition(new THREE.Vector3()); };
+  // knocked-back raiders drift back to where they stood
+  for (const e of p.foes || []) if (e.home) { e.kb = Math.max(0, e.kb - dt * .6); e.g.position.set(e.home.x + fx * e.kb, 0, e.home.z + fz * e.kb); }
+  if (d === 'lv') {                                               // a level gained, every 3.2 s
+    if ((p.lvC = (p.lvC == null ? .6 : p.lvC) - dt) <= 0) { p.lvC = 3.2; p.lvUpT = LVUP_T; p.lvGlint = false; }
+    if (id === 'ranger') bowPose(p, false, false, -.35, 0); else blow(0);
+    lvUpFx(p, dt, now, id, 'g-lv' + p.seed, p); return;
+  }
+  if (d === 'cry') {                                              // Inspire: gold sparks on the troops' weapons beside the Heir
+    blow(T % 1.6);
+    if ((p.sparkT = (p.sparkT || 0) - dt) <= 0) { p.sparkT = .3; const u = p.mates[Math.floor(Math.random() * p.mates.length)];
+      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
+    return;
+  }
+  if (d === 'flurry') {                                           // two blows, then the burst: a glint, ×3, three quick blows with a trail
+    const c = T % 3.2, ci = Math.floor(T / 3.2), prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    let quick = false;
+    if (c < 1.6) blow(c % .8);
+    else { const q = c - 1.6, n = Math.floor(q / .3), cq = q - n * .3;
+      if (n < 3) { quick = true; swordPose(p, Math.max(0, SWORD_T * (1 - cq / .3)), 0);
+        if (crossed(prev - 1.6 - n * .3, cq, .16) && p.foes[0]) { const w = foeAt(p.foes[0]); sparkBurst(w.x, w.y + .1, w.z, '#ffe9a8', 6); } }
+      else blow(0); }
+    if (p.burstCi !== ci && c >= 1.5) { p.burstCi = ci; const tip = () => p.pivot.localToWorld(SWORD_LINE[1].clone()); glintAt(tip(), '#fff4c0', tip); floatText('×3', '#ffd768', x0 + .7, 1.25, z0); }
+    heroTrail(p, SWORD_LINE, '#ffd24a', quick); return;
+  }
+  if (d === 'horse') {                                            // Royal horse: dust behind the hooves, the flaps flutter, a rear-up
+    blow(0);
+    if ((p.hoofT = (p.hoofT || 0) - dt) <= 0) { p.hoofT = .07; dustAt(x0 - fx * .7, 0, z0 - fz * .7); }
+    if (p.flaps) p.flaps.forEach((h, i) => { h.rotation.z = h.userData.flap * (.35 + Math.sin(now / 90 + i * 1.7) * .12); });
+    const c = T % 4; if (c < 1.3) { const k = Math.sin(Math.PI * c / 1.3); p.g.rotation.order = 'YXZ'; p.g.rotation.x = -.5 * k; p.g.position.y = .25 * k; }
+    return;
+  }
+  if (d === 'twin' || d === 'eye' || d === 'quick') {            // the Ranger: a shot every 1.8 s at the raider ahead
+    const per = d === 'quick' ? 5 : 1.8, c = T % per, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    let nk = p.pivot && p.pivot.userData.nock;
+    if (p.pivot && !nk) { nk = p.pivot.userData.nock = new THREE.Group(); for (const x of [-.018, .018]) nk.add(box(.012, .6, .012, arrowWoodM, x, -.18, 0), box(.006, .09, .05, fletchM, x, .08, 0)); p.pivot.add(nk); }
+    if (d === 'quick' && c >= 3.6) {                              // Quick draw's burst: a glint, then four glowing arrows a quarter second apart
+      const q = c - 3.6, n = Math.floor(q / .25), cq = q - n * .25;
+      bowPose(p, n < 4 && cq < .08, n < 4 && cq >= .08, -.35, 0);
+      if (n < 4 && crossed(prev - 3.6 - n * .25, cq, .08)) { galArrow(bowAt(), foeAt(p.foes[0]), true); p.fanT = .2; }
+    } else {
+      const cc = c % 1.8, pc = prev % 1.8;
+      bowPose(p, cc > .6 && cc < 1.05, cc >= 1.05 && cc < 1.4, -.35, 0);
+      if (crossed(pc, cc, 1.05)) {
+        const b = bowAt();
+        if (d === 'twin') { glintAt(b, '#ffffff'); for (const e of p.foes) galArrow(b, foeAt(e)); }
+        else galArrow(b, foeAt(p.foes[0]));
+      }
+      if (d === 'quick' && crossed(prev, c, 3.45)) { const b = bowAt(); glintAt(b, '#fff4c0'); }
+      if (nk) nk.visible = d === 'twin' && cc > .6 && cc < 1.05;
+    }
+    if (nk && d !== 'twin') nk.visible = false;
+    if (p.fanT > 0) { p.fanT -= dt; const f = 1 - p.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; p.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
+    if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
+      if (!p.eagle) { p.eagle = makeBird(); p.eagle.g.traverse(o => { if (o.isMesh) o.material = eagleM; }); gScene.add(p.eagle.g); }
+      const a = t * .55; p.eagle.g.position.set(x0 + Math.cos(a) * 1.6, 3.2 + Math.sin(a * 2) * .2, z0 + Math.sin(a) * 1.6);
+      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(1.1);
+      const fl = Math.sin(t * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; p.eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
+      heroRing('g-eye' + p.seed, 2, '#8fc1db', .45, p);
+    }
+    return;
+  }
+  if (d === 'firm') {                                             // Deflect: now and then a blow glances off, steel sparks and the share in grey
+    blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    if (crossed(prev, c, 1.1)) { sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
+    return;
+  }
+  if (d === 'sweep') {                                            // Sweeping blow: a blow, then the spin with a steel trail, dust, raiders knocked back
+    const c = T % 2.6, prev = p.prevC == null ? c : p.prevC; p.prevC = c; const sw = c >= 1.2 && c < 1.2 + SWEEP_T;
+    if (sw) { sweepPose(p, (SWEEP_T - (c - 1.2)) * SWORD_T / SWEEP_T, 0); if (p.cape) p.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; }); }
+    else blow(c < .9 ? c : 0);
+    if (crossed(prev, c, 1.6)) { const cx = x0 + fx * .9, cz = z0 + fz * .9; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; dustAt(cx + Math.cos(a) * .75, 0, cz + Math.sin(a) * .75); }
+      for (const e of p.foes) e.kb = .5; }
+    heroTrail(p, HAMMER_LINE, '#eef4ff', sw); return;
+  }
+  if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
+    blow(0);
+    if ((p.windFx = (p.windFx || 0) - dt) <= 0) { p.windFx = .16; const a = Math.random() * 6.283; sparkBurst(x0 + Math.cos(a) * .22, .3 + Math.random() * .6, z0 + Math.sin(a) * .22, '#d6ffd9', 1); }
+    const c = T % 4, k = c < .9 ? Math.sin(Math.PI * c / .9) : 0; p.body.position.y += .03 * k; p.arms[0].rotation.z = .12 * k; p.arms[1].rotation.z = -.12 * k;
+  }
+}
 // ---------- the town's buildings for this game: one of each pair for the economy and the defences, any five decor ----------
 const LOAD_SLOTS = {
   eco: [['food', ['farm', 'farmhouse']], ['wood', ['lodge', 'forester']], ['stone', ['quarry', 'mine']]],
@@ -10850,6 +10971,24 @@ function buildGallery() {
     { name: 'Rider', kit: 1, cav: 1 }, { name: 'Lancer', kit: 2, cav: 1 }, { name: 'Knight', kit: 3, cav: 1 }]);
   // the three heroes (Jack: to look at their models up close)
   people('Heroes', [{ name: 'The Heir', hero: 'heir' }, { name: 'Heir, mounted', hero: 'heir', cav: 1 }, { name: 'The Ranger', hero: 'ranger' }, { name: 'The Captain', hero: 'captain' }]);
+  // each hero skill's look and each hero's level-up, on a loop (Jack: easier to see them here), the hero side-on with raiders to
+  // strike or shoot at: galDemo in 11-hero.js drives them
+  const galHeroFig = (id, cav) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 1 : 0; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
+  const dummy = (kind, x, z, face, P) => { const d = makeRaider(kind, 1); d.g.position.set(x, 0, z); d.g.rotation.y = face; gScene.add(d.g); Object.assign(d, { raider: kind, rt: 1, seed: Math.random() * 2, home: new THREE.Vector3(x, 0, z), kb: 0 }, P); gPeople.push(d); return d; };
+  const demoRow = (title, list) => row(title, 3.2, zc => list.forEach(([name, id, demo, cav], i) => {
+    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav);
+    p.g.position.set(x, 0, z); p.g.rotation.y = fw; gScene.add(p.g); Object.assign(p, { demo, cav: !!cav, seed: i * .37 }); gPeople.push(p);
+    p.foes = [];
+    if (['flurry', 'firm', 'sweep'].includes(demo)) p.foes.push(dummy('sword', x + fx * 1.15, z + fz * 1.15, fw + Math.PI));
+    if (demo === 'firm' || demo === 'sweep') p.foes.push(dummy('spear', x + fx * .9 - fz * .9, z + fz * .9 + fx * .9, fw + Math.PI + .6));
+    if (['twin', 'eye', 'quick'].includes(demo)) for (const s of demo === 'twin' ? [-.75, .75] : [0]) p.foes.push(dummy('spear', x + fx * 3 - fz * s, z + fz * 3 + fx * s, fw + Math.PI));
+    if (demo === 'cry') p.mates = [-1, 1].map(s => { const m = makePerson({}); soldierKit(m, 3); m.g.position.set(x + fx * .2 - fz * s * .9, 0, z + fz * .2 + fx * s * .9); m.g.rotation.y = fw; gScene.add(m.g); Object.assign(m, { kit: 3, seed: s > 0 ? .8 : 0 }); gPeople.push(m); return m; });
+    galLabel(name, '#ffe9a8', x, zc + 1.7, false, .75);
+  }));
+  demoRow('Hero skills', [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
+    ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind']]);
+  gRows[gRows.length - 1].n = 9;
+  demoRow('Level up', [['The Heir', 'heir', 'lv'], ['Heir, mounted', 'heir', 'lv', 1], ['The Ranger', 'ranger', 'lv'], ['The Captain', 'captain', 'lv']]);
   // raiders by tier: the same look for every kind (plain red shirt; red gambeson and iron helm; mail, red surcoat, great helm)
   for (const rt of [1, 2, 3]) people(`Raiders ${rt}`, ['spear', 'sword', 'archer', 'xbow', 'lancer', 'rider'].map(k => ({ name: `${RAIDER_NAME[k]} ${rt}`, raider: k, rt })));
   // the bosses, drawn at their own size
@@ -10898,12 +11037,13 @@ function galPose(p, t, dt) {
     if (ENG_LOAD[p.kind] && p.crewReady && p.load >= 1) { p.load = 0; p.fireT = .35; }   // loose as soon as it is wound
     animEngine(p, dt, 0); return;
   }
-  const ease = (o, v) => o + (v - o) * Math.min(1, dt * 14), walking = gWalk || p.carry || (!p.work && !p.guard && !p.raider && !p.kit);
+  const ease = (o, v) => o + (v - o) * Math.min(1, dt * 14), walking = gWalk || p.carry || (!p.work && !p.guard && !p.raider && !p.kit && !p.demo) || p.demo === 'horse';
   const ph = t * 9 + p.seed, sw = walking ? Math.sin(ph) * .6 : 0;
   if (p.horseLegs) horseGait(p.horseLegs, ph, walking ? 1 : 0);
   else { p.legs[0].rotation.x = sw; p.legs[1].rotation.x = -sw; }
   p.body.position.y = p.horseLegs ? SADDLE : walking ? Math.abs(Math.sin(ph)) * .05 : 0;   // a rider stays in the saddle
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
+  if (p.demo) { galDemo(p, t, dt); return; }                     // a hero skill or level-up shown on a loop (11-hero.js)
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
     // every other blow is the hero's second strike: the Heir's thrust, the Captain's sweep
@@ -10944,6 +11084,7 @@ function updateGallery(dt, now) {
     animHorses(g, t);
   }
   for (const p of gPeople) galPose(p, t, dt);
+  galFxTick(dt);
 }
 $('#adGallery').addEventListener('click', openGallery);
 // Reset campaign (Jack): tap twice within 3 s; clears stars, best times, crowns, the save, the tutorial and tips seen and the
@@ -11931,7 +12072,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '51130c494d'; var updateWait = false, updateT = 0;
+const BUILD = '5a93d028f3'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -12291,7 +12432,10 @@ function tick(dt, now) {
     const c = center(B);
     B.bar.grp.visible = B.hp < B.max && (selected === B || barOn(B.hitT)); B.bar.set(B.hp / B.max); B.bar.grp.position.set(c.x, B.group.position.y + barTop(B), c.z);
   }
-  for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { scene.remove(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
+  updateFloats(dt);
+}
+function updateFloats(dt) {
+  for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { unparent(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
 }
 // the window's size watched every frame (Jack: turned sideways, paused, then turned upright quickly, the game was drawn stretched: iOS
 // can report the turn before the page has its new size, so the resize handlers ran on the old one): the 3D view is put right as soon

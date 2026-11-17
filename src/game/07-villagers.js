@@ -1032,7 +1032,6 @@ function updateVillagers(dt, now) {
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
-    if (v.soldier) { const bq = blockK(v, now); if (bq) L += (-1.5 - L) * bq; }   // the shield up across the body
     // a hungry villager trudging home droops, a hand on the belly (Jack)
     const starving = v.hungry && !v.sleeping && !carrying && !v.soldier && !v.changing && !cheer;
     if (starving) { lean += .17; L = -.8 + swing * .1; }

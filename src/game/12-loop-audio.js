@@ -915,7 +915,10 @@ function tick(dt, now) {
     const c = center(B);
     B.bar.grp.visible = B.hp < B.max && (selected === B || barOn(B.hitT)); B.bar.set(B.hp / B.max); B.bar.grp.position.set(c.x, B.group.position.y + barTop(B), c.z);
   }
-  for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { scene.remove(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
+  updateFloats(dt);
+}
+function updateFloats(dt) {
+  for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { unparent(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
 }
 // the window's size watched every frame (Jack: turned sideways, paused, then turned upright quickly, the game was drawn stretched: iOS
 // can report the turn before the page has its new size, so the resize handlers ran on the old one): the 3D view is put right as soon

@@ -865,7 +865,7 @@ function updateEnemies(dt) {
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
       const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
-      { const bq = blockK(e, now); if (bq) { e.arms[0].rotation.x += (-1.5 - e.arms[0].rotation.x) * bq; e.arms[0].rotation.z += (-.5 - e.arms[0].rotation.z) * bq; } }
+
       blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);

@@ -240,7 +240,7 @@ function dustAt(x, y, z) {
   if (puffs.length > 160) return;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: '#b9a582', transparent: true, depthWrite: false, opacity: 0 }));
   sp.position.set(x + (Math.random() - .5) * .4, y + .1, z + (Math.random() - .5) * .4); sp.scale.setScalar(.25);
-  scene.add(sp); puffs.push({ sp, t: 0, life: 1.1 + Math.random() * .6, dx: (Math.random() - .5) * .4, dust: true });
+  fxScene().add(sp); puffs.push({ sp, t: 0, life: 1.1 + Math.random() * .6, dx: (Math.random() - .5) * .4, dust: true });
 }
 function removeScaffold(B) { if (B.scaffold) { scene.remove(B.scaffold); B.scaffold = null; } }
 // repairs are free but take builder-time; a building's own workers mend it themselves, pausing their gathering

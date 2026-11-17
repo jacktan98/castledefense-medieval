@@ -84,6 +84,9 @@ function resTex(kind, n) {
   if (im.complete && im.naturalWidth) texCache[key] = tx;
   return tx;
 }
+// effects go into the gallery's scene while it is open (its hero skill demos), else the game's
+function fxScene() { return galleryOn && gScene ? gScene : scene; }
+const unparent = o => { if (o.parent) o.parent.remove(o); };
 // life: seconds it lasts (fading all the way) and rises at .9 m/s; a long one (life > 2) rises slowly and holds before it fades
 function floatRes(kind, n, x, y, z, life = 1.8) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: resTex(kind, n), depthTest: false, transparent: true, toneMapped: false }));
@@ -91,7 +94,7 @@ function floatRes(kind, n, x, y, z, life = 1.8) {
 }
 function floatText(s, color, x, y, z) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(s, color), depthTest: false, transparent: true, toneMapped: false }));
-  sp.scale.set(2.6, .65, 1); sp.position.set(x, y, z); sp.renderOrder = 30; scene.add(sp); floats.push({ sp, t: 0 });
+  sp.scale.set(2.6, .65, 1); sp.position.set(x, y, z); sp.renderOrder = 30; fxScene().add(sp); floats.push({ sp, t: 0 });
 }
 
 // ---------- night lights: a fixed pool of warm point lights moved to the torches and posts nearest the camera ----------
@@ -251,6 +254,9 @@ function emitSmoke(dt) {
     sp.position.set(B.group.position.x + cx, B.group.position.y + ch[1], B.group.position.z + cz); sp.scale.setScalar(.3);
     scene.add(sp); puffs.push({ sp, t: 0, life: 3 + Math.random() * 1.5, dx: (Math.random() - .3) * .25 });
   }
+  updatePuffs(dt);
+}
+function updatePuffs(dt) {
   for (let n = puffs.length - 1; n >= 0; n--) {
     const p = puffs[n]; p.t += dt; const f = p.t / p.life;
     if (p.spray) {                                         // river spray: a thin mist that rises a little and drifts with the current
@@ -261,7 +267,7 @@ function emitSmoke(dt) {
       p.sp.position.y += dt * (p.dust ? .3 : .55); p.sp.position.x += p.dx * dt; p.sp.scale.setScalar((p.dust ? .25 + f * .8 : .3 + f * 1.3) * (p.k || 1));
       p.sp.material.opacity = Math.min(1, f * 6) * (1 - f) * (p.dust ? .55 : .45);
     }
-    if (f >= 1) { scene.remove(p.sp); p.sp.material.dispose(); puffs.splice(n, 1); }
+    if (f >= 1) { unparent(p.sp); p.sp.material.dispose(); puffs.splice(n, 1); }
   }
 }
 

@@ -1032,6 +1032,24 @@ function buildGallery() {
     { name: 'Rider', kit: 1, cav: 1 }, { name: 'Lancer', kit: 2, cav: 1 }, { name: 'Knight', kit: 3, cav: 1 }]);
   // the three heroes (Jack: to look at their models up close)
   people('Heroes', [{ name: 'The Heir', hero: 'heir' }, { name: 'Heir, mounted', hero: 'heir', cav: 1 }, { name: 'The Ranger', hero: 'ranger' }, { name: 'The Captain', hero: 'captain' }]);
+  // each hero skill's look and each hero's level-up, on a loop (Jack: easier to see them here), the hero side-on with raiders to
+  // strike or shoot at: galDemo in 11-hero.js drives them
+  const galHeroFig = (id, cav) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 1 : 0; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
+  const dummy = (kind, x, z, face, P) => { const d = makeRaider(kind, 1); d.g.position.set(x, 0, z); d.g.rotation.y = face; gScene.add(d.g); Object.assign(d, { raider: kind, rt: 1, seed: Math.random() * 2, home: new THREE.Vector3(x, 0, z), kb: 0 }, P); gPeople.push(d); return d; };
+  const demoRow = (title, list) => row(title, 3.2, zc => list.forEach(([name, id, demo, cav], i) => {
+    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav);
+    p.g.position.set(x, 0, z); p.g.rotation.y = fw; gScene.add(p.g); Object.assign(p, { demo, cav: !!cav, seed: i * .37 }); gPeople.push(p);
+    p.foes = [];
+    if (['flurry', 'firm', 'sweep'].includes(demo)) p.foes.push(dummy('sword', x + fx * 1.15, z + fz * 1.15, fw + Math.PI));
+    if (demo === 'firm' || demo === 'sweep') p.foes.push(dummy('spear', x + fx * .9 - fz * .9, z + fz * .9 + fx * .9, fw + Math.PI + .6));
+    if (['twin', 'eye', 'quick'].includes(demo)) for (const s of demo === 'twin' ? [-.75, .75] : [0]) p.foes.push(dummy('spear', x + fx * 3 - fz * s, z + fz * 3 + fx * s, fw + Math.PI));
+    if (demo === 'cry') p.mates = [-1, 1].map(s => { const m = makePerson({}); soldierKit(m, 3); m.g.position.set(x + fx * .2 - fz * s * .9, 0, z + fz * .2 + fx * s * .9); m.g.rotation.y = fw; gScene.add(m.g); Object.assign(m, { kit: 3, seed: s > 0 ? .8 : 0 }); gPeople.push(m); return m; });
+    galLabel(name, '#ffe9a8', x, zc + 1.7, false, .75);
+  }));
+  demoRow('Hero skills', [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
+    ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind']]);
+  gRows[gRows.length - 1].n = 9;
+  demoRow('Level up', [['The Heir', 'heir', 'lv'], ['Heir, mounted', 'heir', 'lv', 1], ['The Ranger', 'ranger', 'lv'], ['The Captain', 'captain', 'lv']]);
   // raiders by tier: the same look for every kind (plain red shirt; red gambeson and iron helm; mail, red surcoat, great helm)
   for (const rt of [1, 2, 3]) people(`Raiders ${rt}`, ['spear', 'sword', 'archer', 'xbow', 'lancer', 'rider'].map(k => ({ name: `${RAIDER_NAME[k]} ${rt}`, raider: k, rt })));
   // the bosses, drawn at their own size
@@ -1080,12 +1098,13 @@ function galPose(p, t, dt) {
     if (ENG_LOAD[p.kind] && p.crewReady && p.load >= 1) { p.load = 0; p.fireT = .35; }   // loose as soon as it is wound
     animEngine(p, dt, 0); return;
   }
-  const ease = (o, v) => o + (v - o) * Math.min(1, dt * 14), walking = gWalk || p.carry || (!p.work && !p.guard && !p.raider && !p.kit);
+  const ease = (o, v) => o + (v - o) * Math.min(1, dt * 14), walking = gWalk || p.carry || (!p.work && !p.guard && !p.raider && !p.kit && !p.demo) || p.demo === 'horse';
   const ph = t * 9 + p.seed, sw = walking ? Math.sin(ph) * .6 : 0;
   if (p.horseLegs) horseGait(p.horseLegs, ph, walking ? 1 : 0);
   else { p.legs[0].rotation.x = sw; p.legs[1].rotation.x = -sw; }
   p.body.position.y = p.horseLegs ? SADDLE : walking ? Math.abs(Math.sin(ph)) * .05 : 0;   // a rider stays in the saddle
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
+  if (p.demo) { galDemo(p, t, dt); return; }                     // a hero skill or level-up shown on a loop (11-hero.js)
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
     // every other blow is the hero's second strike: the Heir's thrust, the Captain's sweep
@@ -1126,6 +1145,7 @@ function updateGallery(dt, now) {
     animHorses(g, t);
   }
   for (const p of gPeople) galPose(p, t, dt);
+  galFxTick(dt);
 }
 $('#adGallery').addEventListener('click', openGallery);
 // Reset campaign (Jack): tap twice within 3 s; clears stars, best times, crowns, the save, the tutorial and tips seen and the

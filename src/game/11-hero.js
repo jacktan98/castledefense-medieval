@@ -203,10 +203,11 @@ const heroBuff = v => hero && HERO.sk.cry && v && Math.hypot(v.x - hero.x, v.z -
 function heroTake(d, v) {
   if (v.hero && HERO.sk.firm) {
     const k = HERO_SK.firm.k[HERO.sk.firm - 1]; d *= 1 - k;
-    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the shield up, the share it took off in grey
+    // now and then a blow is seen to glance off: steel sparks, a ringing clang, the share it took off in grey (the shield no longer
+    // snaps up: Jack found the move bad)
     const now = performance.now();
     if (now - (v.deflAt || 0) > 3500 && Math.random() < .5) {   // at most every 3.5 s: in a crowd it cluttered
-      v.deflAt = now; v.blockAt = now; const y = walkY(v.rx, v.rz);
+      v.deflAt = now; const y = walkY(v.rx, v.rz);
       sparkBurst(v.rx, y + .95 * UNIT_K, v.rz, '#eef4ff', 9); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.35;
       floatText('−' + Math.round(k * 100) + '%', '#c9ced6', v.rx + .5, y + 1.5, v.rz);
     }
@@ -334,18 +335,18 @@ function heroBurst(v, sk, n, quick, at) {
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
 const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
-const SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
+const BOW_LINE = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, .35, 0)], SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
 function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
   for (let i = 0; i < n && puffs.length < 170; i++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
     sp.position.set(x + (Math.random() - .5) * .2, y + Math.random() * .15, z + (Math.random() - .5) * .2); sp.scale.setScalar(.07);
-    scene.add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
+    fxScene().add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
   }
 }
 // a soft star that swells and fades where a weapon glints (follow: a function giving its place each frame)
 function glintAt(at, color, follow) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, toneMapped: false }));
-  sp.position.copy(at); sp.renderOrder = 25; scene.add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
+  sp.position.copy(at); sp.renderOrder = 25; fxScene().add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
 }
 function flurryStart(v) {
   const tip = () => v.pivot ? v.pivot.localToWorld(SWORD_LINE[1].clone()) : new THREE.Vector3(v.x, 1, v.z);
@@ -370,9 +371,9 @@ function heroTrail(v, line, color, on) {
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 6), 3)); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 6), 3));
     for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
     const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-    m.frustumCulled = false; m.renderOrder = 6; scene.add(m); T = { m, N, pts: [] }; heroTrails.set(v, T);
+    m.frustumCulled = false; m.renderOrder = 6; fxScene().add(m); T = { m, N, pts: [] }; heroTrails.set(v, T);
   }
-  if (!T.m.parent) scene.add(T.m);
+  if (!T.m.parent) fxScene().add(T.m);
   const now = performance.now(), LIFE = 230;
   if (on && v.pivot && v.g.visible) { v.pivot.updateWorldMatrix(true, false); T.pts.unshift({ a: v.pivot.localToWorld(line[0].clone()), b: v.pivot.localToWorld(line[1].clone()), t: now }); }
   while (T.pts.length > T.N || (T.pts.length && now - T.pts[T.pts.length - 1].t > LIFE)) T.pts.pop();
@@ -388,18 +389,18 @@ function heroTrail(v, line, color, on) {
 // over the Ranger while he has a target and his reach ring while picked; Deflect's glancing blows (heroTake); Second wind's specks,
 // the portrait's health bar pulsing and a slow breath every few seconds
 const heroRings = {};
-function heroRing(k, r, color, op) {
+function heroRing(k, r, color, op, at) {
   let m = heroRings[k];
-  if (!m || m.userData.r !== r) { if (m) { scene.remove(m); m.geometry.dispose(); }
+  if (!m || m.userData.r !== r) { if (m) { unparent(m); m.geometry.dispose(); }
     m = heroRings[k] = new THREE.Mesh(new THREE.RingGeometry(r - .1, r, 72), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.AdditiveBlending }));
-    m.rotation.x = -Math.PI / 2; m.renderOrder = 4; m.userData.r = r; m.userData.op = 0; scene.add(m); }
-  if (!m.parent) scene.add(m);
+    m.rotation.x = -Math.PI / 2; m.renderOrder = 4; m.userData.r = r; m.userData.op = 0; fxScene().add(m); }
+  if (!m.parent) fxScene().add(m);
   m.userData.op += ((op || 0) - m.userData.op) * .15; m.material.opacity = m.userData.op; m.visible = m.userData.op > .01;
-  if (hero) m.position.set(hero.rx, walkY(hero.rx, hero.rz) + .07, hero.rz);
+  const w = at || hero; if (w) m.position.set(w.rx, at ? .07 : walkY(w.rx, w.rz) + .07, w.rz);
   return m;
 }
 const eagleM = mat('#5a3d22');
-let eagle = null, eagleA = 0, eagleK = 0, lvBeam = null;
+let eagle = null, eagleA = 0, eagleK = 0;
 const LVUP_T = 1.8;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
@@ -440,28 +441,7 @@ function heroLooks(dt, now) {
   heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .5 : .8, '#f2d98a', 0); sr.material.blending = THREE.NormalBlending;
   // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
   // and the hero hops with the weapon raised (Jack)
-  if (v && v.lvUpT > 0) {
-    v.lvUpT -= dt; const f = Math.min(1, 1 - v.lvUpT / LVUP_T), y = walkY(v.rx, v.rz), H = v.cav ? 3.4 : 2.8;
-    if (!lvBeam) {
-      const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 64, 0, 0);
-      gr.addColorStop(0, 'rgba(255,220,110,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.55)'); gr.addColorStop(1, 'rgba(255,214,90,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64);
-      lvBeam = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, 1, 24, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), color: '#ffd24a', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false }));
-      lvBeam.renderOrder = 7; lvBeam.frustumCulled = false;
-    }
-    if (!lvBeam.parent) scene.add(lvBeam);
-    const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
-    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
-    if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
-      for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
-    const m = heroRing('lvup', 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
-    if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
-    // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
-    if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
-      if (!v.cav && u > 0 && u < 1) v.g.position.y += .26 * 4 * u * (1 - u);
-      const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
-      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
-    if (v.lvUpT <= 0) { v.lvGlint = false; if (lvBeam) lvBeam.visible = false; }
-  } else { if (lvBeam) lvBeam.visible = false; heroRing('lvup', 2.4, '#ffd24a', 0); }
+  if (v) lvUpFx(v, dt, now, HERO_ID, 'lvup'); else heroRing('lvup', 2.4, '#ffd24a', 0);
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
   const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0));
   if (v && v.windOn > 0) v.windOn -= dt;
@@ -470,6 +450,32 @@ function heroLooks(dt, now) {
     if (v.breathT > 0) { v.breathT -= dt; const k = Math.sin(Math.PI * Math.max(0, 1 - v.breathT / .9)); v.body.position.y += .03 * k; v.arms[0].rotation.z += .12 * k; v.arms[1].rotation.z -= .12 * k; }
   }
 }
+// a level gained (the game's hero, or a gallery figure: at = the figure, standing on the gallery's flat lawn, key its own ring)
+function lvUpFx(v, dt, now, id, key, at) {
+  if (v.lvUpT > 0) {
+    v.lvUpT -= dt; const f = Math.min(1, 1 - v.lvUpT / LVUP_T), y = at ? 0 : walkY(v.rx, v.rz), H = v.cav ? 3.4 : 2.8;
+    let lvBeam = v.lvBeam;
+    if (!lvBeam) {
+      const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'), gr = x.createLinearGradient(0, 64, 0, 0);
+      gr.addColorStop(0, 'rgba(255,220,110,1)'); gr.addColorStop(.35, 'rgba(255,214,90,.55)'); gr.addColorStop(1, 'rgba(255,214,90,0)'); x.fillStyle = gr; x.fillRect(0, 0, 4, 64);
+      lvBeam = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, 1, 24, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), color: '#ffd24a', transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false }));
+      lvBeam.renderOrder = 7; lvBeam.frustumCulled = false; v.lvBeam = lvBeam;
+    }
+    if (!lvBeam.parent) fxScene().add(lvBeam);
+    const up = Math.min(1, f / .2), k = v.lvUpT > 0 ? up * (f < .55 ? 1 : 1 - (f - .55) / .45) : 0;
+    lvBeam.visible = k > .01; lvBeam.scale.set(1 - .25 * f, H * up, 1 - .25 * f); lvBeam.position.set(v.rx, y + H * up / 2, v.rz); lvBeam.material.opacity = .5 * k;
+    if (f < .8 && (v.lvSpark = (v.lvSpark || 0) - dt) <= 0) { v.lvSpark = .03; const a = now / 120 + Math.random() * .6, r = .55;
+      for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
+    const m = heroRing(key, 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0, at); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
+    if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((id === 'captain' ? HAMMER_LINE : id === 'ranger' ? BOW_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
+    // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
+    if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
+      if (!v.cav && u > 0 && u < 1) v.g.position.y += .26 * 4 * u * (1 - u);
+      const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
+      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
+    if (v.lvUpT <= 0) { v.lvGlint = false; lvBeam.visible = false; }
+  } else { if (v.lvBeam) v.lvBeam.visible = false; heroRing(key, 2.4, '#ffd24a', 0, at); }
+}
 function heroFx(dt) {
   heroLooks(dt, performance.now());
   if (hero) {
@@ -477,15 +483,19 @@ function heroFx(dt) {
       hero.attackT > 0 && (hero.quickHit || hero.strike === 'sweep'));
     if (hero.fanT > 0) hero.fanT -= dt;
   }
-  for (const [v, T] of heroTrails) if (v !== hero) { scene.remove(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
-  for (let n = heroSprites.length - 1; n >= 0; n--) {
-    const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
-    if (f >= 1) { scene.remove(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
-    if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
-  }
+  for (const [v, T] of heroTrails) if (v !== hero) { unparent(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
+  heroSpriteTick(dt);
   for (let n = glowArrows.length - 1; n >= 0; n--) { const m = glowArrows[n];
     if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
     sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1); }
+}
+// the glints (the game's and the gallery's)
+function heroSpriteTick(dt) {
+  for (let n = heroSprites.length - 1; n >= 0; n--) {
+    const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
+    if (f >= 1) { unparent(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
+    if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
+  }
 }
 // the hero mends slowly once out of a fight for 5 s, day or night (Jack; it was by day only): no foe and no hit taken
 function heroMend(v, dt, foe) {
@@ -714,3 +724,109 @@ $('#adHeroReset').addEventListener('click', () => {
   HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
 });
 syncHeroAdmin();
+
+// ---- the gallery's hero demos (Jack: each skill's look and each hero's level-up on a loop, easier to see than in a fight) ----
+// galPose hands any figure with `demo` here; the effects are the game's own (sparks, glints, trails, rings, the level-up column),
+// put into the gallery's scene while it is open (fxScene); arrows are the gallery's own, flown by galFxTick
+const galArrows = [];
+function galArrow(from, to, glow) {
+  const m = new THREE.Mesh(arrowGeo, glow ? glowArrowM : arrowMat); m.position.copy(from); gScene.add(m);
+  galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / 20), glow });
+}
+function galFxTick(dt) {
+  updatePuffs(dt); updateFloats(dt); heroSpriteTick(dt);
+  for (let n = galArrows.length - 1; n >= 0; n--) {
+    const a = galArrows[n]; a.t += dt / a.dur; const k = Math.min(1, a.t), m = a.m, p = m.position.clone();
+    m.position.lerpVectors(a.from, a.to, k); m.position.y += .35 * 4 * k * (1 - k); m.lookAt(m.position.clone().add(m.position.clone().sub(p)));
+    if (a.glow) sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1);
+    if (k >= 1) { sparkBurst(a.to.x, a.to.y, a.to.z, a.glow ? '#ffd36a' : '#e8d8b0', 3); unparent(m); galArrows.splice(n, 1); }
+  }
+}
+const crossed = (prev, now, at) => prev < at && now >= at;
+function galDemo(p, t, dt) {
+  const id = p.heroId, d = p.demo, x0 = p.g.position.x, z0 = p.g.position.z, fw = p.g.rotation.y, fx = Math.sin(fw), fz = Math.cos(fw), now = t * 1000;
+  p.rx = p.x = x0; p.rz = p.z = z0; p.g.position.y = 0; p.g.rotation.x = 0;
+  p.arms[0].rotation.x = -.55; if (p.cape) capeWave(p, t, .15);
+  const T = (t + p.seed), chest = .8 * UNIT_K, foeAt = e => new THREE.Vector3(e.g.position.x, chest, e.g.position.z);
+  const blow = c => swordPose(p, Math.max(0, SWORD_T - c), 0);
+  const bowAt = () => { p.g.updateMatrixWorld(true); return (p.pivot || p.arms[0]).getWorldPosition(new THREE.Vector3()); };
+  // knocked-back raiders drift back to where they stood
+  for (const e of p.foes || []) if (e.home) { e.kb = Math.max(0, e.kb - dt * .6); e.g.position.set(e.home.x + fx * e.kb, 0, e.home.z + fz * e.kb); }
+  if (d === 'lv') {                                               // a level gained, every 3.2 s
+    if ((p.lvC = (p.lvC == null ? .6 : p.lvC) - dt) <= 0) { p.lvC = 3.2; p.lvUpT = LVUP_T; p.lvGlint = false; }
+    if (id === 'ranger') bowPose(p, false, false, -.35, 0); else blow(0);
+    lvUpFx(p, dt, now, id, 'g-lv' + p.seed, p); return;
+  }
+  if (d === 'cry') {                                              // Inspire: gold sparks on the troops' weapons beside the Heir
+    blow(T % 1.6);
+    if ((p.sparkT = (p.sparkT || 0) - dt) <= 0) { p.sparkT = .3; const u = p.mates[Math.floor(Math.random() * p.mates.length)];
+      if (u.pivot) { const w = u.pivot.getWorldPosition(new THREE.Vector3()); sparkBurst(w.x, w.y - .1, w.z, '#ffd24a', 1); } }
+    return;
+  }
+  if (d === 'flurry') {                                           // two blows, then the burst: a glint, ×3, three quick blows with a trail
+    const c = T % 3.2, ci = Math.floor(T / 3.2), prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    let quick = false;
+    if (c < 1.6) blow(c % .8);
+    else { const q = c - 1.6, n = Math.floor(q / .3), cq = q - n * .3;
+      if (n < 3) { quick = true; swordPose(p, Math.max(0, SWORD_T * (1 - cq / .3)), 0);
+        if (crossed(prev - 1.6 - n * .3, cq, .16) && p.foes[0]) { const w = foeAt(p.foes[0]); sparkBurst(w.x, w.y + .1, w.z, '#ffe9a8', 6); } }
+      else blow(0); }
+    if (p.burstCi !== ci && c >= 1.5) { p.burstCi = ci; const tip = () => p.pivot.localToWorld(SWORD_LINE[1].clone()); glintAt(tip(), '#fff4c0', tip); floatText('×3', '#ffd768', x0 + .7, 1.25, z0); }
+    heroTrail(p, SWORD_LINE, '#ffd24a', quick); return;
+  }
+  if (d === 'horse') {                                            // Royal horse: dust behind the hooves, the flaps flutter, a rear-up
+    blow(0);
+    if ((p.hoofT = (p.hoofT || 0) - dt) <= 0) { p.hoofT = .07; dustAt(x0 - fx * .7, 0, z0 - fz * .7); }
+    if (p.flaps) p.flaps.forEach((h, i) => { h.rotation.z = h.userData.flap * (.35 + Math.sin(now / 90 + i * 1.7) * .12); });
+    const c = T % 4; if (c < 1.3) { const k = Math.sin(Math.PI * c / 1.3); p.g.rotation.order = 'YXZ'; p.g.rotation.x = -.5 * k; p.g.position.y = .25 * k; }
+    return;
+  }
+  if (d === 'twin' || d === 'eye' || d === 'quick') {            // the Ranger: a shot every 1.8 s at the raider ahead
+    const per = d === 'quick' ? 5 : 1.8, c = T % per, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    let nk = p.pivot && p.pivot.userData.nock;
+    if (p.pivot && !nk) { nk = p.pivot.userData.nock = new THREE.Group(); for (const x of [-.018, .018]) nk.add(box(.012, .6, .012, arrowWoodM, x, -.18, 0), box(.006, .09, .05, fletchM, x, .08, 0)); p.pivot.add(nk); }
+    if (d === 'quick' && c >= 3.6) {                              // Quick draw's burst: a glint, then four glowing arrows a quarter second apart
+      const q = c - 3.6, n = Math.floor(q / .25), cq = q - n * .25;
+      bowPose(p, n < 4 && cq < .08, n < 4 && cq >= .08, -.35, 0);
+      if (n < 4 && crossed(prev - 3.6 - n * .25, cq, .08)) { galArrow(bowAt(), foeAt(p.foes[0]), true); p.fanT = .2; }
+    } else {
+      const cc = c % 1.8, pc = prev % 1.8;
+      bowPose(p, cc > .6 && cc < 1.05, cc >= 1.05 && cc < 1.4, -.35, 0);
+      if (crossed(pc, cc, 1.05)) {
+        const b = bowAt();
+        if (d === 'twin') { glintAt(b, '#ffffff'); for (const e of p.foes) galArrow(b, foeAt(e)); }
+        else galArrow(b, foeAt(p.foes[0]));
+      }
+      if (d === 'quick' && crossed(prev, c, 3.45)) { const b = bowAt(); glintAt(b, '#fff4c0'); }
+      if (nk) nk.visible = d === 'twin' && cc > .6 && cc < 1.05;
+    }
+    if (nk && d !== 'twin') nk.visible = false;
+    if (p.fanT > 0) { p.fanT -= dt; const f = 1 - p.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; p.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
+    if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
+      if (!p.eagle) { p.eagle = makeBird(); p.eagle.g.traverse(o => { if (o.isMesh) o.material = eagleM; }); gScene.add(p.eagle.g); }
+      const a = t * .55; p.eagle.g.position.set(x0 + Math.cos(a) * 1.6, 3.2 + Math.sin(a * 2) * .2, z0 + Math.sin(a) * 1.6);
+      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(1.1);
+      const fl = Math.sin(t * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; p.eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
+      heroRing('g-eye' + p.seed, 2, '#8fc1db', .45, p);
+    }
+    return;
+  }
+  if (d === 'firm') {                                             // Deflect: now and then a blow glances off, steel sparks and the share in grey
+    blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    if (crossed(prev, c, 1.1)) { sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
+    return;
+  }
+  if (d === 'sweep') {                                            // Sweeping blow: a blow, then the spin with a steel trail, dust, raiders knocked back
+    const c = T % 2.6, prev = p.prevC == null ? c : p.prevC; p.prevC = c; const sw = c >= 1.2 && c < 1.2 + SWEEP_T;
+    if (sw) { sweepPose(p, (SWEEP_T - (c - 1.2)) * SWORD_T / SWEEP_T, 0); if (p.cape) p.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; }); }
+    else blow(c < .9 ? c : 0);
+    if (crossed(prev, c, 1.6)) { const cx = x0 + fx * .9, cz = z0 + fz * .9; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; dustAt(cx + Math.cos(a) * .75, 0, cz + Math.sin(a) * .75); }
+      for (const e of p.foes) e.kb = .5; }
+    heroTrail(p, HAMMER_LINE, '#eef4ff', sw); return;
+  }
+  if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
+    blow(0);
+    if ((p.windFx = (p.windFx || 0) - dt) <= 0) { p.windFx = .16; const a = Math.random() * 6.283; sparkBurst(x0 + Math.cos(a) * .22, .3 + Math.random() * .6, z0 + Math.sin(a) * .22, '#d6ffd9', 1); }
+    const c = T % 4, k = c < .9 ? Math.sin(Math.PI * c / .9) : 0; p.body.position.y += .03 * k; p.arms[0].rotation.z = .12 * k; p.arms[1].rotation.z = -.12 * k;
+  }
+}
