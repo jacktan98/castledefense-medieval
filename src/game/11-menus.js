@@ -1017,7 +1017,7 @@ function buildGallery() {
   const people = (title, list) => (row(title, 1.2, zc => list.forEach((P, i) => {
     const x = 6 + i * 3.3, p = P.hero ? makePerson({ hair: hairs[HERO_DEFS[P.hero].hair % hairs.length] }) : P.raider ? makeRaider(P.raider, P.rt) : P.guard ? makePerson({ tool: P.xbow ? 'crossbow' : 'bow' }) : makePerson({});
     // a hero in their own kit (the Heir mounted too, as with Royal horse)
-    if (P.hero) { const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = P.cav ? 1 : 0; heroKit(p, P.hero, !P.cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = P.hero; }
+    if (P.hero) { const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = P.cav ? 3 : 0; p.rk = P.rk; heroKit(p, P.hero, !P.cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = P.hero; }
     else if (P.kit) soldierKit(p, P.kit, P.cav);
     else if (P.guard) armour(p, P.guard);
     else if (!P.raider) { p.plainHat = !P.tool; p.outfitTier = P.tier || 3; addLoads(p); giveTool(p, P.tool || null); dress(p, P.tool || null); if (P.carry === 'log') p.carryLog.visible = true; if (P.carry === 'stone') p.carryStone.visible = true; }
@@ -1033,12 +1033,16 @@ function buildGallery() {
     { name: 'Rider', kit: 1, cav: 1 }, { name: 'Lancer', kit: 2, cav: 1 }, { name: 'Knight', kit: 3, cav: 1 }]);
   // the three heroes (Jack: to look at their models up close)
   people('Heroes', [{ name: 'The Heir', hero: 'heir' }, { name: 'Heir, mounted', hero: 'heir', cav: 1 }, { name: 'The Ranger', hero: 'ranger' }, { name: 'The Captain', hero: 'captain' }]);
+  // horses side by side (Jack: the town's horses dressed by tier like the raiders'): the stables' riders by tier, the Heir's horse by
+  // Royal horse's rank, the raiders' horse swords by tier
+  people('Horses', [1, 2, 3].map(k => ({ name: ['Rider', 'Lancer', 'Knight'][k - 1], kit: k, cav: 1 })).concat([1, 2, 3].map(k => ({ name: `Royal horse ${k}`, hero: 'heir', cav: 1, rk: k })),
+    [1, 2, 3].map(k => ({ name: `Horse sword ${k}`, raider: 'rider', rt: k }))));
   // each hero skill's look and each hero's level-up, on a loop (Jack: easier to see them here), the hero side-on with raiders to
   // strike or shoot at: galDemo in 11-hero.js drives them
-  const galHeroFig = (id, cav) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 1 : 0; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
+  const galHeroFig = (id, cav, rk) => { const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); const had = 'horse' in HERO.sk, h = HERO.sk.horse; HERO.sk.horse = cav ? 3 : 0; p.rk = rk; heroKit(p, id, !cav); if (had) HERO.sk.horse = h; else delete HERO.sk.horse; p.heroId = id; return p; };
   const dummy = (kind, x, z, face, P) => { const d = makeRaider(kind, 1); d.g.position.set(x, 0, z); d.g.rotation.y = face; gScene.add(d.g); Object.assign(d, { raider: kind, rt: 1, seed: Math.random() * 2, home: new THREE.Vector3(x, 0, z), kb: 0 }, P); gPeople.push(d); return d; };
-  const demoRow = (title, list) => row(title, 3.2, zc => list.forEach(([name, id, demo, cav], i) => {
-    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav);
+  const demoRow = (title, list, rk) => row(title, 3.2, zc => list.forEach(([name, id, demo, cav], i) => {
+    const x = 4 + i * 5.2, z = zc - .3, fw = 1.15, fx = Math.sin(fw), fz = Math.cos(fw), p = galHeroFig(id, cav, rk);
     p.g.position.set(x, 0, z); p.g.rotation.y = fw; gScene.add(p.g); Object.assign(p, { demo, cav: !!cav, seed: i * .37 }); gPeople.push(p);
     p.foes = [];
     if (['flurry', 'firm', 'sweep'].includes(demo)) p.foes.push(dummy('sword', x + fx * 1.15, z + fz * 1.15, fw + Math.PI));
@@ -1047,9 +1051,12 @@ function buildGallery() {
     if (demo === 'cry') p.mates = [-1, 1].map(s => { const m = makePerson({}); soldierKit(m, 3); m.g.position.set(x + fx * .2 - fz * s * .9, 0, z + fz * .2 + fx * s * .9); m.g.rotation.y = fw; gScene.add(m.g); Object.assign(m, { kit: 3, seed: s > 0 ? .8 : 0 }); gPeople.push(m); return m; });
     galLabel(name, '#ffe9a8', x, zc + 1.7, false, .75);
   }));
-  demoRow('Hero skills', [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
-    ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind']]);
-  gRows[gRows.length - 1].n = 9;
+  // every skill at ranks 1, 2 and 3, one row each (Jack: each rank's look a step showier than the last; `p.rk`, read by skR)
+  for (const rk of [1, 2, 3]) {
+    demoRow(`Hero skills · Rank ${rk}`, [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
+      ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind']], rk);
+    gRows[gRows.length - 1].n = 9;
+  }
   demoRow('Level up', [['The Heir', 'heir', 'lv'], ['Heir, mounted', 'heir', 'lv', 1], ['The Ranger', 'ranger', 'lv'], ['The Captain', 'captain', 'lv']]);
   // raiders by tier: the same look for every kind (plain red shirt; red gambeson and iron helm; mail, red surcoat, great helm)
   for (const rt of [1, 2, 3]) people(`Raiders ${rt}`, ['spear', 'sword', 'archer', 'xbow', 'lancer', 'rider'].map(k => ({ name: `${RAIDER_NAME[k]} ${rt}`, raider: k, rt })));

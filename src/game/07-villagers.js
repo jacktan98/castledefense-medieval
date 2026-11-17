@@ -1052,7 +1052,7 @@ function updateVillagers(dt, now) {
     if (v.soldier) { const bq = blockK(v, now); if (bq) shieldUp(v, bq); }   // the shield up and turned to face the foe
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     // Sweeping blow flares the cloak out behind the spin; Quick draw's hand flicks back to the quiver between shots
-    if (v.cape && v.strike === 'sweep' && v.attackT > 0) v.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; });
+    if (v.cape && v.strike === 'sweep' && v.attackT > 0 && (!v.hero || skR('sweep') >= 3)) v.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; });
     if (v.fanT > 0 && v.toolKind === 'bow') { const f = 1 - v.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; v.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)

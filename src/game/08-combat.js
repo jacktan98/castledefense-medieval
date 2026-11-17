@@ -32,6 +32,13 @@ function mountHorse(p, cloth = blanketM) {
   for (const [n, sx] of [[0, -1], [1, 1]]) { p.legs[n].rotation.x = RIDE_X; p.legs[n].rotation.z = sx * RIDE_Z; }
   p.horse = h;
 }
+// a horse's armour by tier, the town's and the raiders' alike (Jack: ally horses like the raiders'): cloths down both flanks from
+// tier 2, a plate down the face at tier 3 (on the head's pivot, so it nods and tosses with the head)
+function horseArmour(p, tier, clothM, plateM) {
+  if (!p.horse) return;
+  if (tier >= 2 && clothM) for (const sx of [-1, 1]) p.horse.add(box(.02, .26, .5, clothM, sx * .185, .8, -.05));
+  if (tier >= 3) { const ch = box(.17, .06, .34, plateM, 0, .1, .17); ch.rotation.x = .35; (p.horseHead || p.horse).add(ch); }
+}
 // a horse's gallop: each leg on its own beat (hind left, hind right, then fore left, fore right), swinging from the hip; while a leg
 // swings forward it is lifted, the foreleg's knee folding the lower leg back and the hind leg's hock folding it forward
 const GALLOP_OFF = [.55, .65, 0, .1];
@@ -143,9 +150,7 @@ function makeRaider(kind, tier = 1) {
   if (kind === 'sword' || kind === 'rider') armShield(p, roundShield(.19, tier === 3 ? raiderShieldM : M.wood));   // spearmen carry none; archers need both hands
   if (ENEMY[kind].boss) bossGear(p, kind);
   if (ENEMY[kind].mounted) {
-    mountHorse(p);
-    if (tier === 3) { const ch = box(.17, .06, .34, darkIronM, 0, 1.3, .72); ch.rotation.x = .35; p.horse.add(ch); }   // an iron plate down the horse's face
-    if (tier >= 2) for (const sx of [-1, 1]) p.horse.add(box(.02, .26, .5, raiderRed, sx * .185, .8, -.05));               // a red cloth down its flanks
+    mountHorse(p); horseArmour(p, tier, raiderRed, darkIronM);   // red cloths down its flanks from tier 2, an iron plate down its face at 3
   }
   return p;
 }
@@ -1029,7 +1034,8 @@ const ridingM = teamMat(mat('#2f4f86'), 'town', '#2f4f86');   // the town's blue
 const SQUAD = [[0, 0], [-.8, -.5], [.8, -.5], [0, -1.1]];      // where the three stand round their spot
 var respawns = [], fallen = [];                     // fallen soldiers come back as villagers after 60 s of daylight
 // the tier's armour (armour()); tier 1 militia: spear; tier 2 guard: spear and a round wooden shield; tier 3 man-at-arms: sword and a blue kite shield
-function soldierKit(v, tier, cav) {
+// hTier: the horse's own tier (the Heir's follows Royal horse's rank, heroKit; everyone else's the troop's tier)
+function soldierKit(v, tier, cav, hTier = tier) {
   if (v.kit) v.kit.forEach(o => o.parent && o.parent.remove(o));
   v.kit = []; v.kitTier = tier;
   const put = o => { o.castShadow = true; v.body.add(o); v.kit.push(o); return o; };
@@ -1039,7 +1045,7 @@ function soldierKit(v, tier, cav) {
   if (v.pivot) v.pivot.parent.remove(v.pivot);
   v.toolKind = tier === 3 ? 'sword' : 'spear'; v.pivot = makeTool(v.toolKind); v.arms[1].add(v.pivot);
   v.soldier = true; v.cav = !!cav; v.maxHp = v.hp = (cav ? RIDER : SOLDIER).hp[tier - 1];
-  if (cav && !v.horse) { mountHorse(v, ridingM); v.kit.push(v.horse); }
+  if (cav && !v.horse) { mountHorse(v, ridingM); horseArmour(v, hTier, ridingM, steelM); v.kit.push(v.horse); }
 }
 function stripKit(v) {
   if (v.kit) { v.kit.forEach(o => o.parent && o.parent.remove(o)); v.kit = null; }
