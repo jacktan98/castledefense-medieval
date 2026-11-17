@@ -9575,6 +9575,9 @@ function heroLooks(dt, now) {
   // Eagle eye: the eagle circles while the Ranger has a target; the reach ring while he is picked
   const eye = on && HERO_ID === 'ranger' && HERO.sk.eye;
   eagleK += ((eye && v.foe ? 1 : 0) - eagleK) * Math.min(1, dt * 1.5);
+  // (the eagle fades out over a second or so: with the Ranger fallen mid-fade there is no one to circle, so it goes at once;
+  // it used to read the fallen hero's place and the error stopped the whole game: Jack)
+  if (!v) eagleK = 0;
   if (eagleK > .02) {
     if (!eagle) eagle = makeEagle();
     if (!eagle.g.parent) scene.add(eagle.g);
@@ -9624,7 +9627,13 @@ function lvUpFx(v, dt, now, id, key, at) {
     if (v.lvUpT <= 0) { v.lvGlint = false; lvBeam.visible = false; }
   } else { if (v.lvBeam) v.lvBeam.visible = false; heroRing(key, 2.4, '#ffd24a', 0, at); }
 }
+let heroFxErr = false;
 function heroFx(dt) {
+  // the heroes' looks only change what is drawn: an error in them must never stop the game's loop (the Ranger falling while
+  // the eagle faded froze the game: Jack), so it is caught, logged once and the frame goes on
+  try { heroFxRun(dt); } catch (err) { if (!heroFxErr) { heroFxErr = true; console.warn('hero effects:', err); } }
+}
+function heroFxRun(dt) {
   heroLooks(dt, performance.now());
   if (hero) {
     heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? '#eef4ff' : '#ffd24a',
@@ -12115,7 +12124,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '2b2536c06e'; var updateWait = false, updateT = 0;
+const BUILD = '80a1593924'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

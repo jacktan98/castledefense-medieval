@@ -462,6 +462,9 @@ function heroLooks(dt, now) {
   // Eagle eye: the eagle circles while the Ranger has a target; the reach ring while he is picked
   const eye = on && HERO_ID === 'ranger' && HERO.sk.eye;
   eagleK += ((eye && v.foe ? 1 : 0) - eagleK) * Math.min(1, dt * 1.5);
+  // (the eagle fades out over a second or so: with the Ranger fallen mid-fade there is no one to circle, so it goes at once;
+  // it used to read the fallen hero's place and the error stopped the whole game: Jack)
+  if (!v) eagleK = 0;
   if (eagleK > .02) {
     if (!eagle) eagle = makeEagle();
     if (!eagle.g.parent) scene.add(eagle.g);
@@ -511,7 +514,13 @@ function lvUpFx(v, dt, now, id, key, at) {
     if (v.lvUpT <= 0) { v.lvGlint = false; lvBeam.visible = false; }
   } else { if (v.lvBeam) v.lvBeam.visible = false; heroRing(key, 2.4, '#ffd24a', 0, at); }
 }
+let heroFxErr = false;
 function heroFx(dt) {
+  // the heroes' looks only change what is drawn: an error in them must never stop the game's loop (the Ranger falling while
+  // the eagle faded froze the game: Jack), so it is caught, logged once and the frame goes on
+  try { heroFxRun(dt); } catch (err) { if (!heroFxErr) { heroFxErr = true; console.warn('hero effects:', err); } }
+}
+function heroFxRun(dt) {
   heroLooks(dt, performance.now());
   if (hero) {
     heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? '#eef4ff' : '#ffd24a',
