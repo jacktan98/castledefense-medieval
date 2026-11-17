@@ -440,8 +440,8 @@ function heroLooks(dt, now) {
   } else if (eagle) eagle.g.visible = false;
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
-  const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? 1.05 : .72, '#ffd24a', on && heroSel ? .75 + .2 * Math.sin(now / 260) : 0);
-  heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .72 : 1.05, '#ffd24a', 0); sr.material.blending = THREE.NormalBlending;
+  const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .85 : .55, '#ffd24a', on && heroSel ? .42 + .1 * Math.sin(now / 260) : 0);
+  heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .55 : .85, '#ffd24a', 0); sr.material.blending = THREE.NormalBlending;
   // a level gained: a column of gold light rises round the hero with sparks spiralling up, a gold ring spreads on the ground,
   // and the hero hops with the weapon raised (Jack)
   if (v && v.lvUpT > 0) {
