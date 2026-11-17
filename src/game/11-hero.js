@@ -931,7 +931,7 @@ function galDemo(p, t, dt) {
     blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
     if (crossed(prev, c, 1.1)) { p.blockAt = now; sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
     // the shield snapped up across the body as the blow glances off, as in the game (Jack couldn't see it in the gallery)
-    { const bq = blockK(p, now); if (bq) p.arms[0].rotation.x += (-1.5 - p.arms[0].rotation.x) * bq; }
+    { const bq = blockK(p, now); if (bq) shieldUp(p, bq); else shieldDown(p); }
     return;
   }
   if (d === 'sweep') {                                            // Sweeping blow: a blow, then the spin with a steel trail, dust, raiders knocked back

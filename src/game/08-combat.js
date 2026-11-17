@@ -868,7 +868,7 @@ function updateEnemies(dt) {
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
       const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
-      { const bq = blockK(e, now); if (bq) { e.arms[0].rotation.x += (-1.5 - e.arms[0].rotation.x) * bq; e.arms[0].rotation.z += (-.5 - e.arms[0].rotation.z) * bq; } }
+      { const bq = blockK(e, now); if (bq) shieldUp(e, bq); else shieldDown(e); }
       blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);
@@ -1168,6 +1168,25 @@ function updateDropped(dt) {
     else if (d.e.deadT > 1) o.position.y -= dt * .8;
   }
 }
+// the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
+// top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
+var SHB = { ry: Math.PI / 2, x: -1.35, z: .5, fx: .25, fy: -.25, fz: .33 };
+const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
+function shieldUp(p, k) {
+  if (!k) return; const a = p.arms[0];
+  if (p.blockZ0 == null) p.blockZ0 = a.rotation.z;   // put back after, or the arm creeps out
+  a.rotation.x += (SHB.x - a.rotation.x) * k; a.rotation.z += (SHB.z - a.rotation.z) * k;
+  const sh = shieldOf(p); if (!sh) return;
+  if (!sh.userData.rest) sh.userData.rest = { p: sh.position.clone(), q: sh.quaternion.clone() };
+  const r = sh.userData.rest; a.updateMatrix();
+  SH_FRONT.setFromAxisAngle(_shY, SHB.ry); _shQ.copy(_shA.setFromRotationMatrix(_shM.extractRotation(a.matrix)).invert()).multiply(SH_FRONT);   // face forward, top up, in the arm's frame
+  _shP.set(a.position.x * SHB.fx, a.position.y + SHB.fy, a.position.z + SHB.fz).applyMatrix4(_shM.copy(a.matrix).invert());   // in front of the chest
+  sh.quaternion.copy(r.q).slerp(_shQ, k); sh.position.copy(r.p).lerp(_shP, k);
+  sh.userData.up = true;
+}
+// puts a shield back on the forearm once the block is over
+function shieldDown(p) { if (p.blockZ0 != null) { p.arms[0].rotation.z = p.blockZ0; p.blockZ0 = null; }
+  const sh = shieldOf(p); if (!sh || !sh.userData.up) return; const r = sh.userData.rest; sh.position.copy(r.p); sh.quaternion.copy(r.q); sh.userData.up = false; }
 function blockK(p, now) { const d = (now - (p.blockAt || -1e9)) / 1000; return d >= 0 && d < .45 ? Math.sin(Math.min(1, d / .45) * Math.PI) : 0; }
 function tryBlock(p) {
   const sh = shieldOf(p), now = performance.now(); if (!sh || Math.random() > .3 || now - (p.blockAt || 0) < 900) return;

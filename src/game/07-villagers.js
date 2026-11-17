@@ -1032,7 +1032,7 @@ function updateVillagers(dt, now) {
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
-    if (v.soldier) { const bq = blockK(v, now); if (bq) L += (-1.5 - L) * bq; }   // the shield up across the body
+    if (v.soldier && !blockK(v, now)) shieldDown(v);   // the shield up across the body: shieldUp after the arms are set, below
     // a hungry villager trudging home droops, a hand on the belly (Jack)
     const starving = v.hungry && !v.sleeping && !carrying && !v.soldier && !v.changing && !cheer;
     if (starving) { lean += .17; L = -.8 + swing * .1; }
@@ -1049,6 +1049,7 @@ function updateVillagers(dt, now) {
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
     if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { const bq = blockK(v, now); if (bq) shieldUp(v, bq); }   // the shield up and turned to face the foe
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     // Sweeping blow flares the cloak out behind the spin; Quick draw's hand flicks back to the quiver between shots
     if (v.cape && v.strike === 'sweep' && v.attackT > 0) v.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; });

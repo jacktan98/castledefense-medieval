@@ -6290,7 +6290,7 @@ function updateVillagers(dt, now) {
     if (v.pushing && v.push) { const pr = pushRig(v.push.tier - 1); L = Rt = pr.arm; lean = pr.lean; }   // both hands on the engine's winch drum
     if (cheer) { L = -2.9 + Math.sin(now / 1000 * 9) * .2; Rt = -2.9 - Math.sin(now / 1000 * 9) * .2; lean = 0; }
     if (v.soldier) { const fq = flinchK(v, now); if (fq) { lean -= .3 * fq; L -= .45 * fq; } }   // jerked back by a blow
-    if (v.soldier) { const bq = blockK(v, now); if (bq) L += (-1.5 - L) * bq; }   // the shield up across the body
+    if (v.soldier && !blockK(v, now)) shieldDown(v);   // the shield up across the body: shieldUp after the arms are set, below
     // a hungry villager trudging home droops, a hand on the belly (Jack)
     const starving = v.hungry && !v.sleeping && !carrying && !v.soldier && !v.changing && !cheer;
     if (starving) { lean += .17; L = -.8 + swing * .1; }
@@ -6307,6 +6307,7 @@ function updateVillagers(dt, now) {
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
     if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { const bq = blockK(v, now); if (bq) shieldUp(v, bq); }   // the shield up and turned to face the foe
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     // Sweeping blow flares the cloak out behind the spin; Quick draw's hand flicks back to the quiver between shots
     if (v.cape && v.strike === 'sweep' && v.attackT > 0) v.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; });
@@ -7197,7 +7198,7 @@ function updateEnemies(dt) {
       else if (SPEARS(e.kind)) { e.arms[0].rotation.x = -.55 - sw * .2; spearPose(e, e.attackT, sw); }   // level at the hip, thrust out
       else { e.arms[0].rotation.x = -.55 - sw * .2; swordPose(e, e.attackT, sw); }
       const now = performance.now(), fq = flinchK(e, now); e.body.rotation.x -= .3 * fq; if (e.horse) e.horse.rotation.x = -.08 * fq;   // jerked back by a blow
-      { const bq = blockK(e, now); if (bq) { e.arms[0].rotation.x += (-1.5 - e.arms[0].rotation.x) * bq; e.arms[0].rotation.z += (-.5 - e.arms[0].rotation.z) * bq; } }
+      { const bq = blockK(e, now); if (bq) shieldUp(e, bq); else shieldDown(e); }
       blink(e, now);
     }
     smoothPos(e, dt, performance.now()); const y = walkY(e.rx, e.rz);
@@ -7497,6 +7498,25 @@ function updateDropped(dt) {
     else if (d.e.deadT > 1) o.position.y -= dt * .8;
   }
 }
+// the block's pose (Jack): the shield arm comes up and across the body and the shield turns on the forearm so its face is to the foe,
+// top up (worn on the arm's outside it faces sideways); worked out in the body's frame, then into the arm's; k 0–1 from blockK
+var SHB = { ry: Math.PI / 2, x: -1.35, z: .5, fx: .25, fy: -.25, fz: .33 };
+const _shQ = new THREE.Quaternion(), _shA = new THREE.Quaternion(), _shP = new THREE.Vector3(), _shM = new THREE.Matrix4(), SH_FRONT = new THREE.Quaternion(), _shY = new THREE.Vector3(0, 1, 0);
+function shieldUp(p, k) {
+  if (!k) return; const a = p.arms[0];
+  if (p.blockZ0 == null) p.blockZ0 = a.rotation.z;   // put back after, or the arm creeps out
+  a.rotation.x += (SHB.x - a.rotation.x) * k; a.rotation.z += (SHB.z - a.rotation.z) * k;
+  const sh = shieldOf(p); if (!sh) return;
+  if (!sh.userData.rest) sh.userData.rest = { p: sh.position.clone(), q: sh.quaternion.clone() };
+  const r = sh.userData.rest; a.updateMatrix();
+  SH_FRONT.setFromAxisAngle(_shY, SHB.ry); _shQ.copy(_shA.setFromRotationMatrix(_shM.extractRotation(a.matrix)).invert()).multiply(SH_FRONT);   // face forward, top up, in the arm's frame
+  _shP.set(a.position.x * SHB.fx, a.position.y + SHB.fy, a.position.z + SHB.fz).applyMatrix4(_shM.copy(a.matrix).invert());   // in front of the chest
+  sh.quaternion.copy(r.q).slerp(_shQ, k); sh.position.copy(r.p).lerp(_shP, k);
+  sh.userData.up = true;
+}
+// puts a shield back on the forearm once the block is over
+function shieldDown(p) { if (p.blockZ0 != null) { p.arms[0].rotation.z = p.blockZ0; p.blockZ0 = null; }
+  const sh = shieldOf(p); if (!sh || !sh.userData.up) return; const r = sh.userData.rest; sh.position.copy(r.p); sh.quaternion.copy(r.q); sh.userData.up = false; }
 function blockK(p, now) { const d = (now - (p.blockAt || -1e9)) / 1000; return d >= 0 && d < .45 ? Math.sin(Math.min(1, d / .45) * Math.PI) : 0; }
 function tryBlock(p) {
   const sh = shieldOf(p), now = performance.now(); if (!sh || Math.random() > .3 || now - (p.blockAt || 0) < 900) return;
@@ -10073,7 +10093,7 @@ function galDemo(p, t, dt) {
     blow(T % 1.6); const c = T % 2.2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
     if (crossed(prev, c, 1.1)) { p.blockAt = now; sparkBurst(x0, .95 * UNIT_K, z0, '#eef4ff', 9); floatText('−35%', '#c9ced6', x0 + .5, 1.5, z0); }
     // the shield snapped up across the body as the blow glances off, as in the game (Jack couldn't see it in the gallery)
-    { const bq = blockK(p, now); if (bq) p.arms[0].rotation.x += (-1.5 - p.arms[0].rotation.x) * bq; }
+    { const bq = blockK(p, now); if (bq) shieldUp(p, bq); else shieldDown(p); }
     return;
   }
   if (d === 'sweep') {                                            // Sweeping blow: a blow, then the spin with a steel trail, dust, raiders knocked back
@@ -12226,7 +12246,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'f70fdf2e23'; var updateWait = false, updateT = 0;
+const BUILD = '779721796a'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
