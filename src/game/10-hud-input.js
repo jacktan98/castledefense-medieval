@@ -361,8 +361,10 @@ function tap(e) {
   if (galleryOn) { galleryTap(e); return; }
   if (heroTap(e)) return;
   if (moveFor) {                                      // moving a catapult: tap the tile it should roll to
-    const pt = pick(e), B = moveFor; moveFor = null;
+    const pt = pick(e), B = moveFor, was = B.move && B.move.dest; moveFor = null;
     if (pt && !B.dead) startMove(B, Math.floor(pt.x / CELL), Math.floor(pt.z / CELL));
+    // (Jack: like Rally and the hero's Move) once it is on its way the catapult is let go, its blue flag showing where it rolls
+    if (B.move && B.move.dest && B.move.dest !== was && selected === B) deselect();
     refreshCard(); return;
   }
   if (rallyFor) {                                     // placing a barracks' rally flag
