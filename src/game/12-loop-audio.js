@@ -941,7 +941,7 @@ function frame(now) {
   if (paused || menuOn()) { if (!lite || fresh || (liteN = (liteN + 1) % 2) === 0) renderer.render(scene, camera); requestAnimationFrame(frame); if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); } return; }
   tick(dt, now);
   if ((hudT -= dt) <= 0) { hudT = .2; updateHud(); guideTick(); goalTick(); updatePowers(); heroUI(); updateBossBar(); }
-  heroPortraitTick(now); updateDebris(dt); updateCollapse(dt); updateOpenDoors(dt); updateRaidMarks(dt); updateHitMarks(dt, now); updateTips(dt); updateGuideSpot(now);
+  heroPortraitTick(now); heroFx(paused ? 0 : dt); updateDebris(dt); updateCollapse(dt); updateOpenDoors(dt); updateRaidMarks(dt); updateHitMarks(dt, now); updateTips(dt); updateGuideSpot(now);
   const sh = shakeOffset(dt); camera.position.add(sh);
   renderer.render(scene, camera);
   camera.position.sub(sh);

@@ -411,7 +411,8 @@ function fireArrow(from, to, onHit, arc, kind) {
   const K = SHOT[kind], m = new THREE.Mesh(K ? K.geo : arrowGeo, K && K.m || arrowMat); m.castShadow = true; m.position.copy(from); scene.add(m);
   const d = from.distanceTo(to);
   arrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.25, d / (K ? K.speed : 22)), arc: arc || Math.min(3, d * .15), onHit, spin: kind === 'stone', kind });
-  sfx(kind === 'bolt' ? 'bolt' : kind === 'qbolt' ? 'qbolt' : kind === 'stone' ? 'rockFire' : 'arrow', from);
+  const snd = sfx(kind === 'bolt' ? 'bolt' : kind === 'qbolt' ? 'qbolt' : kind === 'stone' ? 'rockFire' : 'arrow', from);
+  if (snd && shotRate) snd.playbackRate.value = shotRate;   // Quick draw's arrows twang higher
   return m;
 }
 const tv = new THREE.Vector3();

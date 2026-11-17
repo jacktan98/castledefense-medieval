@@ -63,6 +63,13 @@ function makeTool(kind) {
     const tip = cone(.04, .18, 4, M.iron, 0, -1.08, 0); tip.rotation.x = Math.PI; p.add(tip);
     return p;
   }
+  // the Captain's war hammer (Jack): a long haft, a steel head across its end with a spike behind, a pommel; held like the sword
+  if (kind === 'warhammer') {
+    p.add(box(.04, .74, .04, M.timber, 0, -.27, 0)); p.add(box(.055, .05, .055, steelM, 0, .1, 0));
+    p.add(box(.11, .12, .2, steelM, 0, -.6, .02)); p.add(box(.13, .14, .04, steelM, 0, -.6, .12));
+    const sp = new THREE.Mesh(new THREE.ConeGeometry(.04, .16, 4), steelM); sp.rotation.x = -Math.PI / 2; sp.position.set(0, -.6, -.15); sp.castShadow = true; p.add(sp);
+    p.rotation.x = -.4; return p;
+  }
   if (kind === 'sword') { p.add(box(.035, .12, .035, M.timber, 0, .03, 0)); p.add(box(.05, .035, .16, M.iron, 0, -.04, 0)); p.add(box(.025, .56, .05, M.iron, 0, -.34, 0)); p.rotation.x = -.4; return p; }
   p.add(box(.035, .64, .035, M.timber, 0, -.22, 0));
   if (kind === 'axe') p.add(box(.03, .16, .2, M.iron, 0, -.48, -.1));     // blade on the side that leads the swing
@@ -1043,6 +1050,9 @@ function updateVillagers(dt, now) {
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
     if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
+    // Sweeping blow flares the cloak out behind the spin; Quick draw's hand flicks back to the quiver between shots
+    if (v.cape && v.strike === 'sweep' && v.attackT > 0) v.cape.forEach((h, i) => { h.rotation.x = i ? .25 : 1.15; });
+    if (v.fanT > 0 && v.toolKind === 'bow') { const f = 1 - v.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; v.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
     smoothPos(v, dt, now); v.g.position.set(v.rx, walkY(v.rx, v.rz), v.rz);
     // a trader on the market's raised stone base stands on its top, not the ground under it (their legs sank into it: Jack)
     if (v.job && v.job.type === 'market' && occB[cellAt(v.rx, v.rz)] === v.job) { const pt = plinthTop('market', v.job.tier); if (pt != null) v.g.position.y = Math.max(v.g.position.y, v.job.group.position.y + pt); }

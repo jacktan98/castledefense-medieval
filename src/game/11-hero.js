@@ -24,7 +24,8 @@ const HERO_SK = {
   // the Captain's: troops round him take less, his blows sweep, he mends even in battle
   // Deflect (Jack: the Heir's old skill, now the Captain's in place of Shield wall): he takes less damage
   firm: { name: 'Deflect', line: r => `Takes ${[15, 25, 35][r]}% less damage`, k: [.15, .25, .35] },
-  sweep: { name: 'Sweeping blow', line: r => `Also hits raiders beside, ${[30, 50, 70][r]}% damage`, k: [.3, .5, .7] },
+  // Sweeping blow (Jack: every 5th blow, a spin of the war hammer)
+  sweep: { name: 'Sweeping blow', line: r => `Every 5th blow sweeps raiders beside, ${[30, 50, 70][r]}%`, k: [.3, .5, .7] },
   wind: { name: 'Second wind', line: r => `Mends ${[1, 2, 3][r]}% health a second`, k: [.01, .02, .03] },
 };
 // the three heroes (Jack: the Ranger and the Captain unlocked): one takes the field at a time, picked on the Hero screen; each keeps
@@ -128,6 +129,8 @@ function heroKit(v, id = HERO_ID, foot) {
       for (const o of v.kit.slice()) if (o.userData && o.userData.shield) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
     } else {
       put(captainHelm());
+      // a war hammer in place of the sword (Jack); it swings with the sword's strikes
+      if (v.pivot) v.pivot.parent.remove(v.pivot); v.pivot = makeTool('warhammer'); v.arms[1].add(v.pivot);
       // the cloak (Jack: make it move): four strips hinged one under the other from the shoulders, rippling like the bosses'
       // (capeWave, from the pose loop and the gallery)
       put(box(.48, .05, .1, capCloakM, 0, .88, -.13));
@@ -245,10 +248,16 @@ function updateHero(v, dt) {
   if (foe) {
     const reach = .9 + (foe.horse ? .3 : 0) + (foe.engine ? ENEMY[foe.kind].r : 0) + (v.cav ? .35 : 0), d = Math.hypot(foe.x - v.x, foe.z - v.z);
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
-    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { heroBurst(v, 'flurry', 5, .3, SWORD_T); heroStrike(v, foe); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
-      // Sweeping blow: the Captain's blow also lands on every other raider within 1.6 m of the one he strikes
-      if (HERO.sk.sweep) { const k = HERO_SK.sweep.k[HERO.sk.sweep - 1]; for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) hurtEnemy(e, dm * k, v); }
-      hurtEnemy(foe, dm, v); sfx('clash', v); } }
+    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { const b = heroBurst(v, 'flurry', 5, .3, SWORD_T); heroStrike(v, foe); const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v);
+      v.quickHit = b === 'quick';
+      if (b === 'start') flurryStart(v);
+      // Sweeping blow: every 5th blow the Captain spins and also lands on every other raider within 1.6 m of the one he strikes
+      if (v.strike === 'sweep') { const k = HERO_SK.sweep.k[HERO.sk.sweep - 1], hit = [foe];
+        for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) { hurtEnemy(e, dm * k, v); hit.push(e); }
+        sweepFx(v, hit); }
+      hurtEnemy(foe, dm, v);
+      if (v.quickHit) { sparkBurst(foe.x, walkY(foe.x, foe.z) + .8 * UNIT_K, foe.z, '#ffe08a', 7); const c = sfx('clash', v); if (c) c.playbackRate.value = 1.3; }
+      else if (v.strike !== 'sweep') sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   // mends slowly by day while nobody is fighting
@@ -266,12 +275,18 @@ function rangerStep(v, dt, home) {
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   if (!foe) { v.cool = Math.max(v.cool, 0); if (PH.kind === 'day' && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt); return; }
   v.walking = false; turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt);
+  // the bow glints just before the arrow that sets off Quick draw
+  if (HERO.sk.quick && v.hitN === 9 && v.drawing && !v.glinted && v.pivot) { v.glinted = true; glintAt(v.pivot.getWorldPosition(new THREE.Vector3()), '#fff1b8'); }
   if (v.cool > 0) return;
-  heroBurst(v, 'quick', 10, .2, .3);
+  const b = heroBurst(v, 'quick', 10, .2, .3); v.glinted = false;
+  if (b === 'start') heroIconFlash(v, 'quick');
   const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), from = bowPoint(v);
   const shoot = (e, d) => {
     const to = new THREE.Vector3(e.x, walkY(e.x, e.z) + (e.horse ? 1.2 : .8) * UNIT_K, e.z);
-    fireArrow(from, to, () => { if (!e.dead) hurtEnemy(e, d, v); });
+    // Quick draw's arrows: a quicker, higher twang, a glow and a trail of sparks, the draw hand flicking back to the quiver
+    shotRate = b === 'quick' ? 1.35 : 0;
+    const m = fireArrow(from, to, () => { if (!e.dead) hurtEnemy(e, d, v); }); shotRate = 0;
+    if (b === 'quick') { m.material = glowArrowM; glowArrows.push(m); v.fanT = .2; }
   };
   shoot(foe, dm);
   if (HERO.sk.twin) {
@@ -280,22 +295,114 @@ function rangerStep(v, dt, home) {
   }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
-// quick blows too); the Captain swings round on the spot whenever his Sweeping blow catches a raider beside his foe
+// quick blows too); the Captain swings round on the spot with his Sweeping blow every 5th blow (Jack)
 const SWEEP_T = .75;
 function heroStrike(v, foe) {
   v.strike = 'chop'; if (v.pivot) v.pivot.position.set(0, -.33, 0);   // a thrust slides the grip along the blade: put it back
   if (HERO_ID === 'heir') v.strike = (v.strikeN = (v.strikeN || 0) + 1) % 2 ? 'thrust' : 'chop';
-  else if (HERO.sk.sweep && enemies.some(e => e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6)) {
-    v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
+  else if (HERO.sk.sweep && (v.sweepN = (v.sweepN || 0) + 1) >= 5) {
+    v.sweepN = 0; v.strike = 'sweep'; v.attackT = SWEEP_T; v.atkK = SWORD_T / SWEEP_T; v.cool = Math.max(v.cool, SWEEP_T);
   }
 }
 // Flurry and Quick draw: every n-th blow or arrow (`v.hitN`) sets off a burst of quick ones (`v.burst`), each `quick` s apart, the
 // sword's swing played faster to fit (`v.atkK`, read by the pose loop)
 function heroBurst(v, sk, n, quick, at) {
   const base = heroDef().rate * (1 - decorFx(v.x, v.z, 'troopRate'));
-  if (v.burst > 0) { v.burst--; v.cool = quick; v.attackT = Math.min(at, quick); v.atkK = at / v.attackT; return; }
+  if (v.burst > 0) { v.burst--; v.cool = quick; v.attackT = Math.min(at, quick); v.atkK = at / v.attackT; return 'quick'; }
   v.cool = base; v.attackT = at; v.atkK = 1;
-  if (HERO.sk[sk] && (v.hitN = (v.hitN || 0) + 1) >= n) { v.hitN = 0; v.burst = HERO_SK[sk].k[HERO.sk[sk] - 1]; v.cool = Math.min(base, .35); }
+  if (HERO.sk[sk] && (v.hitN = (v.hitN || 0) + 1) >= n) { v.hitN = 0; v.burst = HERO_SK[sk].k[HERO.sk[sk] - 1]; v.cool = Math.min(base, .35); return 'start'; }
+  return '';
+}
+// ---------- the skills' effects (Jack: make Flurry, Quick draw and Sweeping blow show) ----------
+// Flurry: the skill's icon over the Heir, a glint at the sword's tip as the burst winds up, "×N" for the blows to come; each quick blow
+// leaves a gold trail behind the blade and sparks on the raider. Quick draw: a glint on the bow before the 10th arrow, the icon,
+// glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: the icon, a steel
+// arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
+var shotRate = 0;
+const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
+const SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
+function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
+  for (let i = 0; i < n && puffs.length < 170; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+    sp.position.set(x + (Math.random() - .5) * .2, y + Math.random() * .15, z + (Math.random() - .5) * .2); sp.scale.setScalar(.07);
+    scene.add(sp); puffs.push({ sp, t: 0, life: .25 + Math.random() * .25, dx: (Math.random() - .5) * 2, ember: true });
+  }
+}
+// a soft star that swells and fades where a weapon glints (follow: a function giving its place each frame)
+function glintAt(at, color, follow) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  sp.position.copy(at); sp.renderOrder = 25; scene.add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
+}
+// the skill's icon, on a dark round plate with a gold rim like the Hero screen's, over the hero's head for a moment
+const iconTex = {};
+function skillTex(k) {
+  if (iconTex[k]) return iconTex[k];
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d'), tx = new THREE.CanvasTexture(cv);
+  x.beginPath(); x.arc(64, 64, 58, 0, Math.PI * 2); x.fillStyle = '#20180f'; x.fill(); x.lineWidth = 6; x.strokeStyle = '#d9b04e'; x.stroke();
+  const img = new Image(); img.onload = () => { x.drawImage(img, 28, 28, 72, 72); tx.needsUpdate = true; };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(HERO_ICO[k].replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" '));
+  tx.encoding = THREE.sRGBEncoding; return iconTex[k] = tx;
+}
+function heroIconFlash(v, k) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: skillTex(k), transparent: true, depthTest: false, toneMapped: false }));
+  sp.renderOrder = 31; scene.add(sp); heroSprites.push({ sp, t: 0, life: .9, kind: 'icon', v });
+}
+function flurryStart(v) {
+  heroIconFlash(v, 'flurry');
+  const tip = () => v.pivot ? v.pivot.localToWorld(SWORD_LINE[1].clone()) : new THREE.Vector3(v.x, 1, v.z);
+  glintAt(tip(), '#fff4c0', tip);
+  floatText('×' + v.burst, '#ffd768', v.x + .7, walkY(v.x, v.z) + 1.25, v.z);
+}
+function sweepFx(v, hit) {
+  heroIconFlash(v, 'sweep');
+  const y = walkY(v.x, v.z);
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; dustAt(v.x + Math.cos(a) * .75, y, v.z + Math.sin(a) * .75); }
+  // the raiders it catches are knocked back (drawn sliding: their drawn place eases after the real one)
+  for (const e of hit) { if (e.dead || ENEMY[e.kind].engine || ENEMY[e.kind].boss) continue;
+    const d = Math.hypot(e.x - v.x, e.z - v.z) || 1, nx = e.x + (e.x - v.x) / d * .5, nz = e.z + (e.z - v.z) / d * .5;
+    if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; } }
+  const c = sfx('clash', v); if (c) c.playbackRate.value = .72; sfx('ramHit', v, .55);
+}
+// each frame: the weapon trails, the glints and icons, the glowing arrows' sparks
+const heroTrails = new Map();
+function heroTrail(v, line, color, on) {
+  let T = heroTrails.get(v);
+  if (!T) {
+    const N = 14, geo = new THREE.BufferGeometry(), idx = [];
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 6), 3)); geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 6), 3));
+    for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    m.frustumCulled = false; m.renderOrder = 6; scene.add(m); T = { m, N, pts: [] }; heroTrails.set(v, T);
+  }
+  if (!T.m.parent) scene.add(T.m);
+  const now = performance.now(), LIFE = 230;
+  if (on && v.pivot && v.g.visible) { v.pivot.updateWorldMatrix(true, false); T.pts.unshift({ a: v.pivot.localToWorld(line[0].clone()), b: v.pivot.localToWorld(line[1].clone()), t: now }); }
+  while (T.pts.length > T.N || (T.pts.length && now - T.pts[T.pts.length - 1].t > LIFE)) T.pts.pop();
+  const P = T.m.geometry.attributes.position.array, C = T.m.geometry.attributes.color.array, col = new THREE.Color(color);
+  T.pts.forEach((q, i) => { const k = Math.max(0, 1 - (now - q.t) / LIFE) * (1 - i / T.N);
+    P.set([q.a.x, q.a.y, q.a.z, q.b.x, q.b.y, q.b.z], i * 6); C.set([col.r * k * .7, col.g * k * .7, col.b * k * .7, col.r * k * 1.4, col.g * k * 1.4, col.b * k * 1.4], i * 6); });
+  T.m.geometry.setDrawRange(0, Math.max(0, T.pts.length - 1) * 6);
+  T.m.geometry.attributes.position.needsUpdate = T.m.geometry.attributes.color.needsUpdate = true;
+}
+function heroFx(dt) {
+  if (hero) {
+    // the skills' icons drawn ahead of time (an icon first drawn as its skill fires showed an empty plate)
+    if (!iconTex[HERO_ORDER[0]]) HERO_ORDER.forEach(skillTex);
+    heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? '#eef4ff' : '#ffd24a',
+      hero.attackT > 0 && (hero.quickHit || hero.strike === 'sweep'));
+    if (hero.fanT > 0) hero.fanT -= dt;
+  }
+  for (const [v, T] of heroTrails) if (v !== hero) { scene.remove(T.m); T.m.geometry.dispose(); heroTrails.delete(v); }
+  for (let n = heroSprites.length - 1; n >= 0; n--) {
+    const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
+    if (f >= 1) { scene.remove(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
+    if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
+    else { const v = s.v; s.sp.position.set(v.rx, walkY(v.rx, v.rz) + (v.cav ? 2.35 : 1.75) * UNIT_K + .35 + f * .25, v.rz);
+      s.sp.scale.setScalar(.55 * Math.min(1, f * 8)); s.sp.material.opacity = f < .7 ? 1 : (1 - f) / .3; }
+  }
+  for (let n = glowArrows.length - 1; n >= 0; n--) { const m = glowArrows[n];
+    if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
+    sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1); }
 }
 // one step of the game (tick): timers, the comeback, a night survived
 function heroTick(dt) {
