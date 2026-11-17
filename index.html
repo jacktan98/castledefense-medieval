@@ -9509,7 +9509,31 @@ function heroRing(k, r, color, op, at) {
   const w = at || hero; if (w) m.position.set(w.rx, at ? .07 : walkY(w.rx, w.rz) + .07, w.rz);
   return m;
 }
-const eagleM = mat('#5a3d22');
+const eagleM = mat('#4a3220'), eagleDarkM = mat('#2e1f14'), eagleWhiteM = mat('#f1ede2'), eagleBeakM = mat('#e7b23a');
+// Eagle eye's eagle (Jack: it looked like any bird): a bald eagle seen from below and the side: dark brown body and broad wings,
+// fingered primaries splayed at the tips, white head and fanned white tail, a hooked yellow beak and yellow talons tucked under.
+// Its forward is +z, like `makeBird`; `flap(k)` beats the wings, the outer half bending further
+function makeEagle() {
+  const g = new THREE.Group(), add = (m, ...a) => { const b = box(...a.slice(0, 3), m, ...a.slice(3)); g.add(b); return b; };
+  add(eagleM, .15, .13, .4, 0, 0, 0);                                    // body
+  add(eagleM, .12, .11, .1, 0, -.01, .22);                               // shoulders into the neck
+  add(eagleWhiteM, .11, .1, .12, 0, .03, .3);                            // the white head
+  add(eagleBeakM, .05, .05, .07, 0, .01, .39);                           // beak
+  add(eagleBeakM, .03, .04, .03, 0, -.025, .42);                         // its hooked tip
+  for (const sx of [-1, 1]) add(eagleDarkM, .012, .02, .02, sx * .056, .05, .34);   // eyes
+  for (const a of [-.35, 0, .35]) { const f = add(eagleWhiteM, .07, .02, .2, Math.sin(a) * .06, .01, -.28); f.rotation.y = a; }   // tail fan
+  for (const sx of [-1, 1]) add(eagleBeakM, .04, .05, .07, sx * .04, -.08, -.02);   // talons tucked under
+  const wings = [-1, 1].map(sx => {
+    const w = new THREE.Group(); w.position.set(sx * .07, .03, .04); g.add(w);
+    w.add(box(.34, .025, .22, eagleM, sx * .17, 0, 0));                  // inner wing
+    const o = new THREE.Group(); o.position.x = sx * .34; w.add(o);
+    o.add(box(.24, .022, .18, eagleM, sx * .12, 0, -.01));               // outer wing
+    for (let i = 0; i < 5; i++) { const f = box(.16, .015, .035, eagleDarkM, sx * .3, 0, .06 - i * .042); f.rotation.y = -sx * (i - 2) * .12; o.add(f); }   // primaries
+    w.userData.outer = o; return w;
+  });
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return { g, wings, flap: k => wings.forEach((w, i) => { const sg = i ? -1 : 1; w.rotation.z = sg * (k - .06); w.userData.outer.rotation.z = sg * (k * .7 + .04); }) };
+}
 let eagle = null, eagleA = 0, eagleK = 0;
 const LVUP_T = 1.8;
 function heroLooks(dt, now) {
@@ -9538,12 +9562,12 @@ function heroLooks(dt, now) {
   const eye = on && HERO_ID === 'ranger' && HERO.sk.eye;
   eagleK += ((eye && v.foe ? 1 : 0) - eagleK) * Math.min(1, dt * 1.5);
   if (eagleK > .02) {
-    if (!eagle) { eagle = makeBird(); eagle.g.traverse(o => { if (o.isMesh) o.material = eagleM; }); }
+    if (!eagle) eagle = makeEagle();
     if (!eagle.g.parent) scene.add(eagle.g);
     eagleA += dt * .55; const y = walkY(v.rx, v.rz) + 5.5 + 8 * (1 - eagleK);
     eagle.g.position.set(v.rx + Math.cos(eagleA) * 3.2, y + Math.sin(eagleA * 2) * .3, v.rz + Math.sin(eagleA) * 3.2);
-    eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(1.1); eagle.g.visible = true;
-    const fl = Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
+    eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(.9); eagle.g.visible = true;
+    eagle.flap(Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
   } else if (eagle) eagle.g.visible = false;
   heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
@@ -9876,9 +9900,11 @@ function galDemo(p, t, dt) {
   if (d === 'flurry') {                                           // two blows, then the burst: a glint, ×3, three quick blows with a trail
     const c = T % 3.2, ci = Math.floor(T / 3.2), prev = p.prevC == null ? c : p.prevC; p.prevC = c;
     let quick = false;
-    if (c < 1.6) blow(c % .8);
+    // the Heir's blows alternate the overhead chop and the thrust, the quick ones too, as in the game (heroStrike)
+    const hit = (n, rem) => { if (n % 2) { swordPose(p, 0, 0); thrustPose(p, rem, 0); } else { thrustPose(p, 0, 0); swordPose(p, rem, 0); } };
+    if (c < 1.6) hit(Math.floor(c / .8), Math.max(0, SWORD_T - c % .8));
     else { const q = c - 1.6, n = Math.floor(q / .3), cq = q - n * .3;
-      if (n < 3) { quick = true; swordPose(p, Math.max(0, SWORD_T * (1 - cq / .3)), 0);
+      if (n < 3) { quick = true; hit(n, Math.max(0, SWORD_T * (1 - cq / .3)));
         if (crossed(prev - 1.6 - n * .3, cq, .16) && p.foes[0]) { const w = foeAt(p.foes[0]); sparkBurst(w.x, w.y + .1, w.z, '#ffe9a8', 6); } }
       else blow(0); }
     if (p.burstCi !== ci && c >= 1.5) { p.burstCi = ci; const tip = () => p.pivot.localToWorld(SWORD_LINE[1].clone()); glintAt(tip(), '#fff4c0', tip); floatText('×3', '#ffd768', x0 + .7, 1.25, z0); }
@@ -9913,10 +9939,10 @@ function galDemo(p, t, dt) {
     if (nk && d !== 'twin') nk.visible = false;
     if (p.fanT > 0) { p.fanT -= dt; const f = 1 - p.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; p.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
     if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
-      if (!p.eagle) { p.eagle = makeBird(); p.eagle.g.traverse(o => { if (o.isMesh) o.material = eagleM; }); gScene.add(p.eagle.g); }
+      if (!p.eagle) { p.eagle = makeEagle(); gScene.add(p.eagle.g); }
       const a = t * .55; p.eagle.g.position.set(x0 + Math.cos(a) * 1.6, 3.2 + Math.sin(a * 2) * .2, z0 + Math.sin(a) * 1.6);
-      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(1.1);
-      const fl = Math.sin(t * 2.2) > .55 ? Math.sin(now / 70) * .5 : .08; p.eagle.wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * fl; });
+      p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(.9);
+      p.eagle.flap(Math.sin(t * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
       heroRing('g-eye' + p.seed, 2, '#8fc1db', .45, p);
     }
     return;
@@ -12075,7 +12101,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'f1537fc121'; var updateWait = false, updateT = 0;
+const BUILD = '507fd6f92a'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
