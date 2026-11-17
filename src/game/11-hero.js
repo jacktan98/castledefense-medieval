@@ -279,7 +279,7 @@ function rangerStep(v, dt, home) {
   if (HERO.sk.quick && v.hitN === 9 && v.drawing && !v.glinted && v.pivot) { v.glinted = true; glintAt(v.pivot.getWorldPosition(new THREE.Vector3()), '#fff1b8'); }
   if (v.cool > 0) return;
   const b = heroBurst(v, 'quick', 10, .2, .3); v.glinted = false;
-  if (b === 'start') heroIconFlash(v, 'quick');
+
   const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), from = bowPoint(v);
   const shoot = (e, d) => {
     const to = new THREE.Vector3(e.x, walkY(e.x, e.z) + (e.horse ? 1.2 : .8) * UNIT_K, e.z);
@@ -314,9 +314,9 @@ function heroBurst(v, sk, n, quick, at) {
   return '';
 }
 // ---------- the skills' effects (Jack: make Flurry, Quick draw and Sweeping blow show) ----------
-// Flurry: the skill's icon over the Heir, a glint at the sword's tip as the burst winds up, "×N" for the blows to come; each quick blow
-// leaves a gold trail behind the blade and sparks on the raider. Quick draw: a glint on the bow before the 10th arrow, the icon,
-// glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: the icon, a steel
+// (the skill's icon over the hero as it fired was dropped: Jack) Flurry: a glint at the sword's tip as the burst winds up, "×N" for the blows to come; each quick blow
+// leaves a gold trail behind the blade and sparks on the raider. Quick draw: a glint on the bow before the 10th arrow,
+// glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: a steel
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
 const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
@@ -333,28 +333,12 @@ function glintAt(at, color, follow) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: emberTex, color, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, toneMapped: false }));
   sp.position.copy(at); sp.renderOrder = 25; scene.add(sp); heroSprites.push({ sp, t: 0, life: .4, kind: 'glint', follow });
 }
-// the skill's icon, on a dark round plate with a gold rim like the Hero screen's, over the hero's head for a moment
-const iconTex = {};
-function skillTex(k) {
-  if (iconTex[k]) return iconTex[k];
-  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d'), tx = new THREE.CanvasTexture(cv);
-  x.beginPath(); x.arc(64, 64, 58, 0, Math.PI * 2); x.fillStyle = '#20180f'; x.fill(); x.lineWidth = 6; x.strokeStyle = '#d9b04e'; x.stroke();
-  const img = new Image(); img.onload = () => { x.drawImage(img, 28, 28, 72, 72); tx.needsUpdate = true; };
-  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(HERO_ICO[k].replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" '));
-  tx.encoding = THREE.sRGBEncoding; return iconTex[k] = tx;
-}
-function heroIconFlash(v, k) {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: skillTex(k), transparent: true, depthTest: false, toneMapped: false }));
-  sp.renderOrder = 31; scene.add(sp); heroSprites.push({ sp, t: 0, life: .9, kind: 'icon', v });
-}
 function flurryStart(v) {
-  heroIconFlash(v, 'flurry');
   const tip = () => v.pivot ? v.pivot.localToWorld(SWORD_LINE[1].clone()) : new THREE.Vector3(v.x, 1, v.z);
   glintAt(tip(), '#fff4c0', tip);
   floatText('×' + v.burst, '#ffd768', v.x + .7, walkY(v.x, v.z) + 1.25, v.z);
 }
 function sweepFx(v, hit) {
-  heroIconFlash(v, 'sweep');
   const y = walkY(v.x, v.z);
   for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; dustAt(v.x + Math.cos(a) * .75, y, v.z + Math.sin(a) * .75); }
   // the raiders it catches are knocked back (drawn sliding: their drawn place eases after the real one)
@@ -386,8 +370,6 @@ function heroTrail(v, line, color, on) {
 }
 function heroFx(dt) {
   if (hero) {
-    // the skills' icons drawn ahead of time (an icon first drawn as its skill fires showed an empty plate)
-    if (!iconTex[HERO_ORDER[0]]) HERO_ORDER.forEach(skillTex);
     heroTrail(hero, HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE, HERO_ID === 'captain' ? '#eef4ff' : '#ffd24a',
       hero.attackT > 0 && (hero.quickHit || hero.strike === 'sweep'));
     if (hero.fanT > 0) hero.fanT -= dt;
@@ -397,8 +379,6 @@ function heroFx(dt) {
     const s = heroSprites[n]; s.t += dt; const f = s.t / s.life;
     if (f >= 1) { scene.remove(s.sp); s.sp.material.dispose(); heroSprites.splice(n, 1); continue; }
     if (s.kind === 'glint') { if (s.follow) s.sp.position.copy(s.follow()); s.sp.scale.setScalar(.15 + .45 * Math.sin(Math.PI * f)); s.sp.material.opacity = 1 - f * f; }
-    else { const v = s.v; s.sp.position.set(v.rx, walkY(v.rx, v.rz) + (v.cav ? 2.35 : 1.75) * UNIT_K + .35 + f * .25, v.rz);
-      s.sp.scale.setScalar(.55 * Math.min(1, f * 8)); s.sp.material.opacity = f < .7 ? 1 : (1 - f) / .3; }
   }
   for (let n = glowArrows.length - 1; n >= 0; n--) { const m = glowArrows[n];
     if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
