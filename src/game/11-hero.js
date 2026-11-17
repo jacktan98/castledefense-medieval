@@ -256,8 +256,7 @@ function updateHero(v, dt) {
     if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = .16; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); } }
   if (heroDef().range) { rangerStep(v, dt, home); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
-  let foe = v.foe && !v.foe.dead && Math.hypot(v.foe.x - home.x, v.foe.z - home.z) < 10 ? v.foe : null;
-  if (!foe) { let bd = 7; for (const e of enemies) if (!e.dead && !e.dormant && (!v.skip || v.skip.e !== e)) { const d = Math.hypot(e.x - home.x, e.z - home.z); if (d < bd) { bd = d; foe = e; } } }
+  const foe = heroFoe(v, home, dt, 7, 7.5, e => Math.hypot(e.x - home.x, e.z - home.z));
   if (foe !== v.foe) v.prog = null;
   v.foe = foe; const ride = heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk'));
   if (foe) {
@@ -277,13 +276,25 @@ function updateHero(v, dt) {
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   heroMend(v, dt, foe);
 }
+// the hero's foe (Jack: the hero ran after a raider walking past while others were attacking nearby): raiders who are fighting
+// (`busyT`, set as they strike a building, a soldier or the hero) come before ones only passing by, nearer ones before further,
+// checked again every .4 s and changed only for a clearly better one (never mid-blow); a foe is given up once it is past the leash
+// from the hero's spot (`out`, 7.5 m for those who fight hand to hand: it was 10, so the hero chased walkers far from the spot)
+function heroFoe(v, home, dt, inR, outR, far) {
+  const score = e => Math.hypot(e.x - v.x, e.z - v.z) + (e.busyT > 0 ? 0 : 3);
+  let foe = v.foe && !v.foe.dead && !v.foe.dormant && far(v.foe) < outR ? v.foe : null;
+  if (foe && ((v.foePick = (v.foePick || 0) - dt) > 0 || v.attackT > 0)) return foe;
+  v.foePick = .4;
+  let best = null, bs = Infinity;
+  for (const e of enemies) if (!e.dead && !e.dormant && (!v.skip || v.skip.e !== e) && far(e) < inR) { const sc = score(e); if (sc < bs) { bs = sc; best = e; } }
+  return foe && (!best || score(foe) <= bs + 1) ? foe : best;
+}
 // the Ranger: holds the spot and shoots the nearest raider in reach (never a dormant camp's), drawing first like the towers' archers;
 // Twin shot sends a second arrow at another raider, Quick draw fires a burst of quick shots
 function rangerStep(v, dt, home) {
   const R = heroRange();
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
-  let foe = v.foe && !v.foe.dead && Math.hypot(v.foe.x - v.x, v.foe.z - v.z) < R + .5 ? v.foe : null;
-  if (!foe) { let bd = R; for (const e of enemies) if (!e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; foe = e; } } }
+  const foe = heroFoe(v, home, dt, R, R + .5, e => Math.hypot(e.x - v.x, e.z - v.z));
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
   if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3); }
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }

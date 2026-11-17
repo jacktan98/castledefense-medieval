@@ -7106,7 +7106,7 @@ function updateEnemies(dt) {
       const d = Math.hypot(foe.x - e.x, foe.z - e.z), reach = Math.max(.75, e.range) + (e.horse ? .3 : 0);
       e.running = (!e.horse || e.kind === 'warlord') && d > reach;
       if (d > reach) steer(e, foe.x, foe.z, dt, 2, reach * .9, e.running ? 1.3 : 1);
-      else { e.g.rotation.y = Math.atan2(foe.x - e.x, foe.z - e.z); if ((e.cool -= dt) <= 0) { e.cool = e.rate; e.attackT = strikeT; sfx('clash', e); hurtSoldier(foe, e.dmg); } }
+      else { e.g.rotation.y = Math.atan2(foe.x - e.x, foe.z - e.z); if ((e.cool -= dt) <= 0) { e.cool = e.rate; e.attackT = strikeT; e.busyT = 1.6; sfx('clash', e); hurtSoldier(foe, e.dmg); } }
     } else if (B) {
       const d = distRect(B, e.x, e.z), shoots = SHOOTER[e.kind] || e.kind === 'ballista' || e.kind === 'catapult';
       if (e.via && e.via.length && d > 8) {                 // waypoints first (Raider Keep's side raiders keep to the roads)
@@ -7141,14 +7141,14 @@ function updateEnemies(dt) {
         if ((e.cool -= dt) <= 0 && ad < .25 && (!ENG_LOAD[e.kind] || (e.crewReady && e.load >= 1))) {   // engines: crew at their posts, wound
           e.cool = e.rate;
           if (e.kind === 'archer') {
-            e.attackT = .35; const tgt = B, dmg = e.dmg;
+            e.attackT = .35; e.busyT = 1.6; const tgt = B, dmg = e.dmg;
             fireArrow(bowPoint(e), new THREE.Vector3(c.x, B.group.position.y + 1.2, c.z), () => hurtBuilding(tgt, dmg));
           } else if (e.kind === 'xbow') {
-            e.attackT = .35; const tgt = B, dmg = e.dmg;
+            e.attackT = .35; e.busyT = 1.6; const tgt = B, dmg = e.dmg;
             fireArrow(xbowPoint(e), new THREE.Vector3(c.x, B.group.position.y + 1.2, c.z), () => hurtBuilding(tgt, dmg), .3, 'qbolt');
           } else if (e.kind === 'ballista' || e.kind === 'catapult') engineShot(e, B, c);
-          else if (e.kind === 'ram') { e.attackT = RAM_T; e.ramHit = B; }
-          else { e.attackT = strikeT; sfx('attack', e); hurtBuilding(B, e.dmg); }
+          else if (e.kind === 'ram') { e.attackT = RAM_T; e.busyT = 1.6; e.ramHit = B; }
+          else { e.attackT = strikeT; e.busyT = 1.6; sfx('attack', e); hurtBuilding(B, e.dmg); }
         }
         if (e.cool < 0) e.cool = 0;
       }
@@ -7163,6 +7163,9 @@ function updateEnemies(dt) {
       }
     }
     e.attackT = Math.max(0, (e.attackT || 0) - dt);
+    // `busyT`: the last 1.6 s since it struck something (a building, a soldier, the hero), so the hero picks raiders who are fighting
+    // over ones only walking past (heroFoe)
+    if (e.busyT > 0) e.busyT -= dt;
     if (e.flashT !== undefined) {                          // a red flash where an arrow lands
       const on = (e.flashT -= dt) > 0, m = on ? hitFlashM : e.baseTunic;
       if (e.torso && e.torso.material !== m) { e.torso.material = m; e.arms.forEach(a => a.userData.sleeve.material = m); }
@@ -9366,8 +9369,7 @@ function updateHero(v, dt) {
     if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = .16; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); } }
   if (heroDef().range) { rangerStep(v, dt, home); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
-  let foe = v.foe && !v.foe.dead && Math.hypot(v.foe.x - home.x, v.foe.z - home.z) < 10 ? v.foe : null;
-  if (!foe) { let bd = 7; for (const e of enemies) if (!e.dead && !e.dormant && (!v.skip || v.skip.e !== e)) { const d = Math.hypot(e.x - home.x, e.z - home.z); if (d < bd) { bd = d; foe = e; } } }
+  const foe = heroFoe(v, home, dt, 7, 7.5, e => Math.hypot(e.x - home.x, e.z - home.z));
   if (foe !== v.foe) v.prog = null;
   v.foe = foe; const ride = heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk'));
   if (foe) {
@@ -9387,13 +9389,25 @@ function updateHero(v, dt) {
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   heroMend(v, dt, foe);
 }
+// the hero's foe (Jack: the hero ran after a raider walking past while others were attacking nearby): raiders who are fighting
+// (`busyT`, set as they strike a building, a soldier or the hero) come before ones only passing by, nearer ones before further,
+// checked again every .4 s and changed only for a clearly better one (never mid-blow); a foe is given up once it is past the leash
+// from the hero's spot (`out`, 7.5 m for those who fight hand to hand: it was 10, so the hero chased walkers far from the spot)
+function heroFoe(v, home, dt, inR, outR, far) {
+  const score = e => Math.hypot(e.x - v.x, e.z - v.z) + (e.busyT > 0 ? 0 : 3);
+  let foe = v.foe && !v.foe.dead && !v.foe.dormant && far(v.foe) < outR ? v.foe : null;
+  if (foe && ((v.foePick = (v.foePick || 0) - dt) > 0 || v.attackT > 0)) return foe;
+  v.foePick = .4;
+  let best = null, bs = Infinity;
+  for (const e of enemies) if (!e.dead && !e.dormant && (!v.skip || v.skip.e !== e) && far(e) < inR) { const sc = score(e); if (sc < bs) { bs = sc; best = e; } }
+  return foe && (!best || score(foe) <= bs + 1) ? foe : best;
+}
 // the Ranger: holds the spot and shoots the nearest raider in reach (never a dormant camp's), drawing first like the towers' archers;
 // Twin shot sends a second arrow at another raider, Quick draw fires a burst of quick shots
 function rangerStep(v, dt, home) {
   const R = heroRange();
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
-  let foe = v.foe && !v.foe.dead && Math.hypot(v.foe.x - v.x, v.foe.z - v.z) < R + .5 ? v.foe : null;
-  if (!foe) { let bd = R; for (const e of enemies) if (!e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; foe = e; } } }
+  const foe = heroFoe(v, home, dt, R, R + .5, e => Math.hypot(e.x - v.x, e.z - v.z));
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
   if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3); }
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
@@ -12101,7 +12115,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '507fd6f92a'; var updateWait = false, updateT = 0;
+const BUILD = '2b2536c06e'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

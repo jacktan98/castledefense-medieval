@@ -790,7 +790,7 @@ function updateEnemies(dt) {
       const d = Math.hypot(foe.x - e.x, foe.z - e.z), reach = Math.max(.75, e.range) + (e.horse ? .3 : 0);
       e.running = (!e.horse || e.kind === 'warlord') && d > reach;
       if (d > reach) steer(e, foe.x, foe.z, dt, 2, reach * .9, e.running ? 1.3 : 1);
-      else { e.g.rotation.y = Math.atan2(foe.x - e.x, foe.z - e.z); if ((e.cool -= dt) <= 0) { e.cool = e.rate; e.attackT = strikeT; sfx('clash', e); hurtSoldier(foe, e.dmg); } }
+      else { e.g.rotation.y = Math.atan2(foe.x - e.x, foe.z - e.z); if ((e.cool -= dt) <= 0) { e.cool = e.rate; e.attackT = strikeT; e.busyT = 1.6; sfx('clash', e); hurtSoldier(foe, e.dmg); } }
     } else if (B) {
       const d = distRect(B, e.x, e.z), shoots = SHOOTER[e.kind] || e.kind === 'ballista' || e.kind === 'catapult';
       if (e.via && e.via.length && d > 8) {                 // waypoints first (Raider Keep's side raiders keep to the roads)
@@ -825,14 +825,14 @@ function updateEnemies(dt) {
         if ((e.cool -= dt) <= 0 && ad < .25 && (!ENG_LOAD[e.kind] || (e.crewReady && e.load >= 1))) {   // engines: crew at their posts, wound
           e.cool = e.rate;
           if (e.kind === 'archer') {
-            e.attackT = .35; const tgt = B, dmg = e.dmg;
+            e.attackT = .35; e.busyT = 1.6; const tgt = B, dmg = e.dmg;
             fireArrow(bowPoint(e), new THREE.Vector3(c.x, B.group.position.y + 1.2, c.z), () => hurtBuilding(tgt, dmg));
           } else if (e.kind === 'xbow') {
-            e.attackT = .35; const tgt = B, dmg = e.dmg;
+            e.attackT = .35; e.busyT = 1.6; const tgt = B, dmg = e.dmg;
             fireArrow(xbowPoint(e), new THREE.Vector3(c.x, B.group.position.y + 1.2, c.z), () => hurtBuilding(tgt, dmg), .3, 'qbolt');
           } else if (e.kind === 'ballista' || e.kind === 'catapult') engineShot(e, B, c);
-          else if (e.kind === 'ram') { e.attackT = RAM_T; e.ramHit = B; }
-          else { e.attackT = strikeT; sfx('attack', e); hurtBuilding(B, e.dmg); }
+          else if (e.kind === 'ram') { e.attackT = RAM_T; e.busyT = 1.6; e.ramHit = B; }
+          else { e.attackT = strikeT; e.busyT = 1.6; sfx('attack', e); hurtBuilding(B, e.dmg); }
         }
         if (e.cool < 0) e.cool = 0;
       }
@@ -847,6 +847,9 @@ function updateEnemies(dt) {
       }
     }
     e.attackT = Math.max(0, (e.attackT || 0) - dt);
+    // `busyT`: the last 1.6 s since it struck something (a building, a soldier, the hero), so the hero picks raiders who are fighting
+    // over ones only walking past (heroFoe)
+    if (e.busyT > 0) e.busyT -= dt;
     if (e.flashT !== undefined) {                          // a red flash where an arrow lands
       const on = (e.flashT -= dt) > 0, m = on ? hitFlashM : e.baseTunic;
       if (e.torso && e.torso.material !== m) { e.torso.material = m; e.arms.forEach(a => a.userData.sleeve.material = m); }
