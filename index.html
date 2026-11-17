@@ -9555,8 +9555,11 @@ function heroLooks(dt, now) {
       for (const s of [0, Math.PI]) sparkBurst(v.rx + Math.cos(a + s) * r, y + .2 + f * H * .9, v.rz + Math.sin(a + s) * r, '#ffe27a', 1); }
     const m = heroRing('lvup', 2.4, '#ffd24a', f < .7 ? .7 * (1 - f / .7) : 0); m.scale.setScalar(Math.max(.05, Math.min(1, f / .7)));
     if (f > .08 && !v.lvGlint && v.pivot) { v.lvGlint = true; const tip = () => v.pivot.localToWorld((HERO_ID === 'captain' ? HAMMER_LINE : SWORD_LINE)[1].clone()); glintAt(tip(), '#fff4c0', tip); }
-    if (!(v.attackT > 0)) { const h = Math.sin(Math.PI * Math.min(1, f / .5)); if (!v.cav) v.g.position.y += .22 * h;
-      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * Math.sin(Math.PI * f); }
+    // a quick hop (a third of a second, a real jump's curve) and the weapon snapped up, held and lowered (Jack: slow, it looked like floating)
+    if (!(v.attackT > 0)) { const t = LVUP_T - v.lvUpT, u = (t - .05) / .34;
+      if (!v.cav && u > 0 && u < 1) v.g.position.y += .26 * 4 * u * (1 - u);
+      const a = t < .12 ? t / .12 : t < .95 ? 1 : Math.max(0, 1 - (t - .95) / .2);
+      v.arms[1].rotation.x += (-2.9 - v.arms[1].rotation.x) * a; }
     if (v.lvUpT <= 0) { v.lvGlint = false; if (lvBeam) lvBeam.visible = false; }
   } else { if (lvBeam) lvBeam.visible = false; heroRing('lvup', 2.4, '#ffd24a', 0); }
   // Second wind: the portrait's health bar pulses while it mends him; a slow breath every few seconds
@@ -11920,7 +11923,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '407380013e'; var updateWait = false, updateT = 0;
+const BUILD = '152743dd5b'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
