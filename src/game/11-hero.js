@@ -808,11 +808,7 @@ function heroTap(e) {
     if (!pt || !canStand(pt.x, pt.z, 1)) { setHint('Blocked', 'bad'); return true; }
     setHeroFlag(pt); heroRelease(); flagFocus = 'hero'; sfx('click'); setHint('Moving'); return true;
   }
-  if (!hero || !hero.g.visible || (tool && tool !== 'select')) return false;
-  // a tap on the hero (within 1.6 m, more on a horse: Jack, easier to hit on a phone) opens the card and goes straight to Move, as the
-  // portrait does
-  const pt = pick(e); if (pt && Math.hypot(pt.x - hero.rx, pt.z - hero.rz) < (hero.cav ? 2 : 1.6)) {
-    heroSelect(); heroMove = true; rallyFor = null; volleyAim = false; setHint('Tap a spot'); heroKey = ''; return true; }
+  // tapping the hero in the world no longer picks them (Jack: troops near the hero couldn't be rallied easily): only the portrait does
   return false;
 }
 function heroRelease() { heroMove = false; heroSel = false; heroKey = ''; heroUI(); }
@@ -837,7 +833,7 @@ function heroUI() {
   const on = heroShown(); bar.hidden = !on; if (!on) { card.hidden = true; return; }
   if (selected && heroSel) heroSel = false;
   // one-time tips (Jack): how to move the hero, once a day is under way and the tutorial's guide is done
-  if (hero && !guideOn && !gameOver && PH.kind === 'day') tipOnce('hero', `Tap the <b>${heroName().replace(/^The /, "")}</b> or the portrait to move them`);
+  if (hero && !guideOn && !gameOver && PH.kind === 'day') tipOnce('hero', `Tap the <b>${heroName().replace(/^The /, "")}</b>'s portrait to move them`);
   const night = PH.kind === 'night', hpf = hero ? Math.max(0, hero.hp / hero.maxHp) : 0, xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   // the portrait: a health ring, the level, a thin XP bar; greyed with the seconds left while fallen
   const key = [HERO_ID, HERO.lv, HERO.pts, ...HERO_ORDER.map(k => HERO.sk[k]), !!hero, night, heroSel, !!heroAt, heroMove].join('|');
