@@ -144,21 +144,23 @@ function heroKit(v, id = HERO_ID, foot) {
       // Inspire from rank 2: a small pennant in the town's colour on a short pole on the Heir's back, fluttering (heroLooks)
       v.pennant = null;
       if (skR('cry', v) >= 2) {
-        const pole = put(new THREE.Group()); pole.position.set(-.09, 0, -.2); pole.rotation.x = -.12;
-        pole.add(cyl(.012, .012, .95, 5, M.timber, 0, .98, 0)); pole.add(new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), heroGold)); pole.children[1].position.y = 1.47;
-        const a = new THREE.Group(), b = new THREE.Group(); a.position.y = 1.4; pole.add(a); b.position.z = -.17; a.add(b);
+        // the pole lies against the back (Jack), tilted with the torso's taper so it touches all the way, held by a leather strap
+        const pole = put(new THREE.Group()); pole.position.set(-.06, .62, -.178); pole.rotation.x = .12;
+        pole.add(cyl(.012, .012, .95, 5, M.timber, 0, .33, 0)); pole.add(new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), heroGold)); pole.children[1].position.y = .82;
+        pole.add(box(.05, .035, .03, leatherM, 0, .12, .005));
+        const a = new THREE.Group(), b = new THREE.Group(); a.position.y = .75; pole.add(a); b.position.z = -.17; a.add(b);
         a.add(box(.006, .22, .17, kiteM, 0, -.11, -.085)); b.add(box(.006, .16, .16, kiteM, 0, -.08, -.08));
         pole.traverse(m => { if (m.isMesh) m.castShadow = true; }); v.pennant = [a, b];
       }
     } else {
       put(captainHelm());
       // Deflect by rank (Jack: gear that shows the rank): the plain steel-rimmed shield; from rank 2 a steel boss and studs;
-      // at rank 3 the boss, studs and rim in gold
+      // at rank 3 a white cross on its face too (no gold: Jack)
       { const sh = v.kit.find(o => o.userData && o.userData.shield), fr = skR('firm', v);
-        if (sh && fr >= 2) { const m = fr >= 3 ? heroGold : steelM;
+        if (sh && fr >= 2) { const m = steelM;
           const boss = new THREE.Mesh(new THREE.SphereGeometry(.05, 10, 6), m); boss.scale.x = .55; boss.position.set(-.03, .04, 0); sh.add(boss);
           for (const [y, z] of [[.15, .09], [.15, -.09], [-.07, .07], [-.07, -.07]]) { const st = new THREE.Mesh(new THREE.SphereGeometry(.016, 6, 4), m); st.position.set(-.025, y, z); sh.add(st); }
-          if (fr >= 3) sh.children[0].material = heroGold;
+          if (fr >= 3) sh.add(box(.006, .34, .05, crossM, -.024, .02, 0), box(.006, .05, .24, crossM, -.024, .1, 0));
           sh.traverse(o => { if (o.isMesh) o.castShadow = true; }); } }
       // a war hammer in place of the sword (Jack); it swings with the sword's strikes
       if (v.pivot) v.pivot.parent.remove(v.pivot); v.pivot = makeTool('warhammer'); v.arms[1].add(v.pivot);
@@ -179,7 +181,7 @@ function heroKit(v, id = HERO_ID, foot) {
 // the Captain's helm (Jack's reference: a knight's close helm): a polished dome with a raised ridge from brow to nape, a pointed
 // visor whose top edge leaves a dark eye slit under the brow, three breathing slits each side of its prow (the gorget was dropped:
 // Jack); the same plain steel as the shoulder plates (Jack: the polished steel's reflections drew its faces in a darker grey)
-const capSteelM = steelM;
+const capSteelM = steelM, crossM = mat('#ece6d6');
 function captainHelm() {
   const g = new THREE.Group(), add = (o, to = g) => { o.castShadow = true; to.add(o); return o; };
   g.userData.helm = true;
@@ -471,24 +473,12 @@ function pennantWave(v, now, mv) {
   const [a, b] = v.pennant, f = mv ? 150 : 260;
   a.rotation.y = Math.sin(now / f) * (mv ? .28 : .16); b.rotation.y = Math.sin(now / (f * .7) + 1.2) * (mv ? .5 : .3);
 }
-// Quick draw's fan (rank 3): five arrows held spread in the draw hand, points forward
-function rangerFan(v, on) {
-  if (!v.fanG) { if (!on) return; const g = v.fanG = new THREE.Group(); g.position.set(0, -.34, 0); g.userData.fan = true;
-    for (let i = 0; i < 5; i++) { const a = new THREE.Group(); a.rotation.z = (i - 2) * .14; a.rotation.x = (i % 2 - .5) * .1;
-      a.add(box(.011, .55, .011, arrowWoodM, 0, -.16, 0), box(.005, .08, .045, fletchM, 0, .08, 0), box(.045, .08, .005, fletchM, 0, .08, 0));
-      const h = new THREE.Mesh(new THREE.ConeGeometry(.018, .06, 4), steelM); h.rotation.x = Math.PI; h.position.y = -.46; a.add(h); g.add(a); }
-    v.arms[1].add(g); }
-  v.fanG.visible = on;
-}
-// Second wind's breath and, at rank 3, the rest on the hammer (Jack: the legs stay still, only the body breathes): b is the
-// breath (0-1), lean how far into the rest; the shoulders' sideways turn and lift go on as changes since the last frame, as the
-// pose loop never resets them
-function windPose(v, r, b, lean) {
-  const dz = (r >= 2 ? .16 : .08) * b - (v.breathZ || 0); v.arms[0].rotation.z += dz; v.arms[1].rotation.z -= dz; v.breathZ = (v.breathZ || 0) + dz;
+// Second wind's breath (Jack: the legs stay still, only the body breathes; the arms barely move): b is the breath (0-1); the
+// shoulders' sideways turn and lift go on as changes since the last frame, as the pose loop never resets them
+function windPose(v, r, b) {
+  const dz = (r >= 2 ? .05 : .03) * b - (v.breathZ || 0); v.arms[0].rotation.z += dz; v.arms[1].rotation.z -= dz; v.breathZ = (v.breathZ || 0) + dz;
   const dy = (r >= 2 ? .025 : .012) * b - (v.breathY || 0); v.arms.forEach(a => { a.position.y += dy; }); v.breathY = (v.breathY || 0) + dy;
   v.torso.scale.y = 1 + (r >= 2 ? .06 : .03) * b;
-  if (lean > 0 && v.pivot) { v.arms[1].rotation.x += (-.55 - v.arms[1].rotation.x) * lean; v.pivot.rotation.x += (.55 - v.pivot.rotation.x) * lean;
-    v.arms[0].rotation.x += (-.3 - v.arms[0].rotation.x) * lean; }
 }
 const BOW_LINE = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, .35, 0)], SWORD_LINE = [new THREE.Vector3(0, -.12, 0), new THREE.Vector3(0, -.64, 0)], HAMMER_LINE = [new THREE.Vector3(0, -.5, 0), new THREE.Vector3(0, -.72, 0)];
 function sparkBurst(x, y, z, color = '#ffe9a8', n = 6) {
@@ -656,8 +646,6 @@ function heroLooks(dt, now) {
     if (cr >= 3) for (const u of mates) heroTrail(u, u.toolKind === 'spear' ? SPEAR_LINE : SWORD_LINE, '#a88a30', u.attackT > 0);
   }
   if (v && v.pennant) pennantWave(v, now, v.walking);
-  // Quick draw at rank 3: a fan of arrows in the draw hand as the burst comes and through it
-  if (v && HERO_ID === 'ranger') rangerFan(v, on && skR('quick') >= 3 && (v.burst > 0 || (v.hitN === 9 && v.drawing)));
   // Royal horse
   if (on && v.cav) {
     const ry = v.g.rotation.y, mv = v.walking || (v.amp || 0) > .2;
@@ -710,17 +698,15 @@ function heroLooks(dt, now) {
   const wr = HERO_ID === 'captain' ? skR('wind') : 0;
   const hb = document.querySelector('#heroBar .hpb'); if (hb) hb.classList.toggle('mend', !!(v && v.windOn > 0 && wr >= 3));
   if (v && v.windOn > 0) v.windOn -= dt;
-  // by rank: a slow breath every 4 s, a deeper and longer one with the shoulders rising at 2, and at 3 out of a fight he rests
-  // on his hammer, its head on the ground, between breaths (windPose; the body no longer lifts, so the legs stay put: Jack)
+  // by rank: a slow breath every 4 s, a deeper and longer one with the shoulders rising from 2 (windPose; the body no longer lifts,
+  // so the legs stay put, and the arms barely move: Jack; resting on the hammer at rank 3 was dropped: Jack)
   if (on && HERO_ID === 'captain') {
     const r = HERO.sk.wind ? wr : 0, D = r >= 2 ? 1.4 : .9; let b = 0;
     if (r && !(v.attackT > 0)) {
       if ((v.breathIn = (v.breathIn == null ? 4 : v.breathIn) - dt) <= 0) { v.breathIn = 4; v.breathT = D; }
       if (v.breathT > 0) { v.breathT -= dt; b = Math.sin(Math.PI * Math.max(0, 1 - v.breathT / D)); }
     } else v.breathT = 0;
-    const calm = r >= 3 && !v.foe && !v.march && !v.walking && !(v.attackT > 0);
-    v.leanK = Math.max(0, Math.min(1, (v.leanK || 0) + (calm ? 1.5 : -5) * dt));
-    windPose(v, r, b, v.leanK * v.leanK * (3 - 2 * v.leanK));
+    windPose(v, r, b);
   }
 }
 // a level gained (the game's hero, or a gallery figure: at = the figure, standing on the gallery's flat lawn, key its own ring)
@@ -1091,7 +1077,6 @@ function galDemo(p, t, dt) {
       if (nk) nk.visible = d === 'twin' && cc > .6 && cc < 1.05;
     }
     if (nk && d !== 'twin') nk.visible = false;
-    if (d === 'quick') rangerFan(p, r >= 3 && c >= 3.3 && c < 4.6);
     if (p.fanT > 0) { p.fanT -= dt; const f = 1 - p.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; p.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
     if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
       // a plain hawk circling higher at rank 1, the eagle at 2, a bigger eagle swooping over the raider at 3
@@ -1123,6 +1108,6 @@ function galDemo(p, t, dt) {
   if (d === 'wind') {                                             // Second wind: green-white specks drift up, a slow breath every 4 s
     blow(0);
     if ((p.windFx = (p.windFx || 0) - dt) <= 0) { p.windFx = [.5, .5, .25, .16][r]; const a = Math.random() * 6.283; sparkBurst(x0 + Math.cos(a) * .22, .3 + Math.random() * .6, z0 + Math.sin(a) * .22, '#d6ffd9', 1); }
-    const D = r >= 2 ? 1.4 : .9, c = T % 4, k = c < D ? Math.sin(Math.PI * c / D) : 0; windPose(p, r, k, r >= 3 ? 1 : 0);
+    const D = r >= 2 ? 1.4 : .9, c = T % 4, k = c < D ? Math.sin(Math.PI * c / D) : 0; windPose(p, r, k);
   }
 }
