@@ -510,7 +510,10 @@ function heroLooks(dt, now) {
   if (v && v.windOn > 0) v.windOn -= dt;
   if (on && HERO_ID === 'captain' && HERO.sk.wind && !(v.attackT > 0)) {
     if ((v.breathIn = (v.breathIn == null ? 4 : v.breathIn) - dt) <= 0) { v.breathIn = 4; v.breathT = .9; }
-    if (v.breathT > 0) { v.breathT -= dt; const k = Math.sin(Math.PI * Math.max(0, 1 - v.breathT / .9)); v.body.position.y += .03 * k; v.arms[0].rotation.z += .12 * k; v.arms[1].rotation.z -= .12 * k; }
+    // (each frame's breath is applied as the change since the last one: the pose loop never resets the arms' sideways turn, so
+    // adding it outright made the Captain's shield arm creep further out with every breath: Jack saw it raised after a respawn)
+    { if (v.breathT > 0) v.breathT -= dt; const k = v.breathT > 0 ? Math.sin(Math.PI * Math.max(0, 1 - v.breathT / .9)) : 0, d = .12 * k - (v.breathZ || 0);
+      v.body.position.y += .03 * k; v.arms[0].rotation.z += d; v.arms[1].rotation.z -= d; v.breathZ = .12 * k; }
   }
 }
 // a level gained (the game's hero, or a gallery figure: at = the figure, standing on the gallery's flat lawn, key its own ring)

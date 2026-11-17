@@ -138,7 +138,10 @@ function makeBird() {
   const g = new THREE.Group();
   g.add(box(.09, .07, .32, birdMat, 0, 0, 0));
   const wings = [-1, 1].map(sx => { const w = new THREE.Group(); w.position.x = sx * .04; const m = box(.42, .025, .16, birdMat, sx * .21, 0, -.02); w.add(m); g.add(w); return w; });
-  g.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.scale.setScalar(.55); scene.add(g);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  // (Jack: the passing birds must never look bigger than the Ranger's eagle; they fly much nearer the camera, so they were drawn
+  // at .55 and looked as big: now .36, a wingspan of about a third of a metre against the eagle's metre)
+  g.scale.setScalar(.36); scene.add(g);
   return { g, wings, ph: Math.random() * 6 };
 }
 function updateBirds(dt) {
