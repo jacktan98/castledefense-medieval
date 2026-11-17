@@ -430,6 +430,29 @@ function heroRing(k, r, color, op, at) {
   const w = at || hero; if (w) m.position.set(w.rx, at ? .07 : walkY(w.rx, w.rz) + .07, w.rz);
   return m;
 }
+// the Ranger's reach ring, draped over the ground like a tower's range (Jack: a flat ring at his feet sank under any higher
+// ground, so on hills only bits of it showed); its band is rebuilt only when he moves or his reach changes
+let reachR = null;
+function reachRing(v, r, op) {
+  const SEG = 128;
+  if (!reachR) {
+    const g = new THREE.BufferGeometry(), idx = [];
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SEG * 2 * 3), 3));
+    for (let i = 0; i < SEG; i++) { const a = i * 2, b = ((i + 1) % SEG) * 2; idx.push(a, a + 1, b, b, a + 1, b + 1); } g.setIndex(idx);
+    reachR = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: '#8fc1db', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.AdditiveBlending }));
+    reachR.frustumCulled = false; reachR.renderOrder = 4; reachR.userData.op = 0;
+  }
+  if (!reachR.parent) fxScene().add(reachR);
+  const u = reachR.userData; u.op += ((op || 0) - u.op) * .15; reachR.material.opacity = u.op; reachR.visible = u.op > .01;
+  if (!reachR.visible || !v) return;
+  const key = v.rx.toFixed(2) + ',' + v.rz.toFixed(2) + ',' + r + ',' + MAP;
+  if (u.key === key) return; u.key = key;
+  const p = reachR.geometry.attributes.position.array;
+  for (let i = 0; i < SEG; i++) { const a = i / SEG * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+    for (let k = 0; k < 2; k++) { const rr = r - .1 + k * .1, x = clamp(v.rx + c * rr, 0, SIZE), z = clamp(v.rz + sn * rr, 0, SIZE), j = (i * 2 + k) * 3;
+      p[j] = x; p[j + 1] = Math.max(walkY(x, z), 0) + .12; p[j + 2] = z; } }
+  reachR.geometry.attributes.position.needsUpdate = true;
+}
 const eagleM = mat('#4a3220'), eagleDarkM = mat('#2e1f14'), eagleWhiteM = mat('#f1ede2'), eagleBeakM = mat('#e7b23a');
 // Eagle eye's eagle (Jack: it looked like any bird): a bald eagle seen from below and the side: dark brown body and broad wings,
 // fingered primaries splayed at the tips, white head and fanned white tail, a hooked yellow beak and yellow talons tucked under.
@@ -506,7 +529,7 @@ function heroLooks(dt, now) {
     if (!eagle.g.visible) { eagle.g.visible = true; eaglePoof(eagle.g.position); }
     eagle.flap(Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
   } else if (eagle && eagle.g.visible) { eagle.g.visible = false; eaglePoof(eagle.g.position); }
-  heroRing('reach', HERO_ID === 'ranger' ? heroRange() : 1, '#8fc1db', on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
+  reachRing(v, HERO_ID === 'ranger' ? heroRange() : 1, on && HERO_ID === 'ranger' && heroSel ? .45 : 0);
   // a gold ring at the hero's feet while picked (Jack: so players see they are controlling them), pulsing gently; wider on a horse
   const sr = heroRing(v && v.cav ? 'selH' : 'sel', v && v.cav ? .8 : .5, '#f2d98a', on && heroSel ? .26 + .05 * Math.sin(now / 320) : 0);
   heroRing(v && v.cav ? 'sel' : 'selH', v && v.cav ? .5 : .8, '#f2d98a', 0); sr.material.blending = THREE.NormalBlending;
