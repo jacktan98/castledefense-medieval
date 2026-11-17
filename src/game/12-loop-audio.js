@@ -914,7 +914,19 @@ function tick(dt, now) {
   }
   for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { scene.remove(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
 }
+// the window's size watched every frame (Jack: turned sideways, paused, then turned upright quickly, the game was drawn stretched: iOS
+// can report the turn before the page has its new size, so the resize handlers ran on the old one): the 3D view is put right as soon
+// as the canvas and the camera disagree, and once the size has held for a quarter second every resize handler runs again
+var sizeSeen = '', sizeAt = 0, sizeDone = true;
+function watchSize(now) {
+  const sz = innerWidth + 'x' + innerHeight;
+  if (sz !== sizeSeen) { sizeSeen = sz; sizeAt = now; sizeDone = false; }
+  else if (!sizeDone && now - sizeAt > 250) { sizeDone = true; dispatchEvent(new Event('resize')); }
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (cw && ch && Math.abs(camera.aspect - cw / ch) > .005) resize();
+}
 function frame(now) {
+  watchSize(now);
   adaptResolution((now - last) / 1000);
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   keyCamera(dt);

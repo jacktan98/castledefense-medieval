@@ -8381,7 +8381,9 @@ function markTools() {
     const t = b.dataset.tool, T = DEF[t], lim = !!T && atLimit(t);
     b.classList.toggle('cant', t === 'road' ? !canAfford(PATH_COST) : !!T && (lim || !canAfford(T.cost)));
     // the one market built (or going up): its tile reads Built instead of its cost
-    if (T && ONE_ONLY.has(t) && b.dataset.lim !== String(lim)) { b.dataset.lim = String(lim); const sm = b.querySelector('small'); if (sm) { sm.innerHTML = lim ? 'Built' : costHTML(T.cost); sm.classList.toggle('built', lim); } }
+    // (Jack: "Building" while its site is still going up)
+    const ls = !lim ? '' : buildings.some(B => B.type === t && B.site && B.site.kind === 'new') ? 'Building' : 'Built';
+    if (T && ONE_ONLY.has(t) && b.dataset.lim !== ls) { b.dataset.lim = ls; const sm = b.querySelector('small'); if (sm) { sm.innerHTML = ls || costHTML(T.cost); sm.classList.toggle('built', lim); } }
   });
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { cat = b.dataset.cat; renderTools(); }));
@@ -9166,7 +9168,7 @@ function pickHero(id) {
 const heroNeed = () => 60 + 40 * HERO.lv;
 const heroSpeed = () => HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 1;
 var heroHere = false, hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
-var heroKey = '';
+var heroKey = '', heroBarKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
 // the Heir's look: the man-at-arms' mail and blue surcoat, sword and kite shield, but a gold crown for the helm
 // the Ranger: a green hood over a leather jerkin, a quiver and a bow (no cape: Jack); the Captain: the man-at-arms' kit under a closed great
@@ -9353,8 +9355,7 @@ function updateHero(v, dt) {
       else if (v.strike !== 'sweep') sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
-  // mends slowly by day while nobody is fighting
-  if (PH.kind === 'day' && !foe && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt);
+  heroMend(v, dt, foe);
 }
 // the Ranger: holds the spot and shoots the nearest raider in reach (never a dormant camp's), drawing first like the towers' archers;
 // Twin shot sends a second arrow at another raider, Quick draw fires a burst of quick shots
@@ -9366,7 +9367,8 @@ function rangerStep(v, dt, home) {
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
   if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3); }
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
-  if (!foe) { v.cool = Math.max(v.cool, 0); if (PH.kind === 'day' && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt); return; }
+  heroMend(v, dt, foe);
+  if (!foe) { v.cool = Math.max(v.cool, 0); return; }
   v.walking = false; turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt);
   // the bow glints just before the arrow that sets off Quick draw
   if (HERO.sk.quick && v.hitN === 9 && v.drawing && !v.glinted && v.pivot) { v.glinted = true; glintAt(v.pivot.getWorldPosition(new THREE.Vector3()), '#fff1b8'); }
@@ -9497,6 +9499,11 @@ function heroFx(dt) {
     if (!arrows.some(a => a.m === m)) { glowArrows.splice(n, 1); continue; }
     sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1); }
 }
+// the hero mends slowly once out of a fight for 5 s, day or night (Jack; it was by day only): no foe and no hit taken
+function heroMend(v, dt, foe) {
+  if (foe || performance.now() - (v.hitAt || 0) < 5000) { v.calmT = 0; return; }
+  if ((v.calmT = (v.calmT || 0) + dt) >= 5 && v.hp < v.maxHp) v.hp = Math.min(v.maxHp, v.hp + v.maxHp * .02 * dt);
+}
 // one step of the game (tick): timers, the comeback, a night survived
 function heroTick(dt) {
   if (!heroOn()) { if (hero) removeHero(); return; }
@@ -9513,7 +9520,10 @@ function heroTap(e) {
     heroMove = false; setHeroFlag(pt); sfx('click'); setHint('Moving'); heroKey = ''; return true;
   }
   if (!hero || !hero.g.visible || (tool && tool !== 'select')) return false;
-  const pt = pick(e); if (pt && Math.hypot(pt.x - hero.x, pt.z - hero.z) < 1.1) { heroSelect(); return true; }
+  // a tap on the hero (within 1.6 m, more on a horse: Jack, easier to hit on a phone) opens the card and goes straight to Move, as the
+  // portrait does
+  const pt = pick(e); if (pt && Math.hypot(pt.x - hero.rx, pt.z - hero.rz) < (hero.cav ? 2 : 1.6)) {
+    heroSelect(); heroMove = true; rallyFor = null; volleyAim = false; setHint('Tap a spot'); heroKey = ''; return true; }
   return false;
 }
 function heroSelect() { if (selected) deselect(); flagFocus = 'hero'; heroSel = true; heroKey = ''; sfx('click'); heroUI(); }
@@ -9539,10 +9549,17 @@ function heroUI() {
   const night = PH.kind === 'night', hpf = hero ? Math.max(0, hero.hp / hero.maxHp) : 0, xpf = HERO.lv >= HERO_MAX ? 1 : HERO.xp / heroNeed();
   // the portrait: a health ring, the level, a thin XP bar; greyed with the seconds left while fallen
   const key = [HERO_ID, HERO.lv, HERO.pts, ...HERO_ORDER.map(k => HERO.sk[k]), !!hero, night, heroSel, !!heroAt, heroMove].join('|');
+  // the portrait is built only when the hero, its level or its fall change (Jack: rebuilt on every tap, its picture went blank and
+  // its gold ring restarted); being picked only toggles a class
+  const bk = [HERO_ID, HERO.lv, !!hero].join('|');
+  if (bk !== heroBarKey || !bar.firstChild) {
+    heroBarKey = bk;
+    bar.innerHTML = `<button class="heroPort${hero ? '' : ' down'}" data-hact="sel" aria-label="${heroName()}"><span class="face"><canvas class="heroCv" width="96" height="96"></canvas></span><b class="lv">${HERO.lv}</b><span class="hpb"><i></i></span><span class="xp"><i></i></span><b class="cd"></b></button>`;
+    hpDrawn = 0;
+  }
+  const port = bar.querySelector('.heroPort'); if (port) port.classList.toggle('sel', heroSel);
   if (key !== heroKey) {
     heroKey = key;
-    let h = `<button class="heroPort${hero ? '' : ' down'}${heroSel ? ' sel' : ''}" data-hact="sel" aria-label="${heroName()}"><span class="face"><canvas class="heroCv" width="96" height="96"></canvas></span><b class="lv">${HERO.lv}</b><span class="hpb"><i></i></span><span class="xp"><i></i></span><b class="cd"></b></button>`;
-    bar.innerHTML = h;
     // the card: name and level, Move and Recall, health, XP, stats and the three skills with a + while points are left
     if (heroSel) {
       // the skills, read only: learnt on the campaign's Hero screen
@@ -11818,7 +11835,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '06faea88ff'; var updateWait = false, updateT = 0;
+const BUILD = 'd34501608c'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -12177,7 +12194,19 @@ function tick(dt, now) {
   }
   for (let n = floats.length - 1; n >= 0; n--) { const f = floats[n]; const L = f.life || 1.8; f.t += dt; f.sp.position.y += dt * (L > 2 ? .25 : .9); f.sp.material.opacity = L > 2 ? 1 - sstep(L - 1.5, L, f.t) : 1 - f.t / L; if (f.t > L) { scene.remove(f.sp); f.sp.material.dispose(); floats.splice(n, 1); } }
 }
+// the window's size watched every frame (Jack: turned sideways, paused, then turned upright quickly, the game was drawn stretched: iOS
+// can report the turn before the page has its new size, so the resize handlers ran on the old one): the 3D view is put right as soon
+// as the canvas and the camera disagree, and once the size has held for a quarter second every resize handler runs again
+var sizeSeen = '', sizeAt = 0, sizeDone = true;
+function watchSize(now) {
+  const sz = innerWidth + 'x' + innerHeight;
+  if (sz !== sizeSeen) { sizeSeen = sz; sizeAt = now; sizeDone = false; }
+  else if (!sizeDone && now - sizeAt > 250) { sizeDone = true; dispatchEvent(new Event('resize')); }
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (cw && ch && Math.abs(camera.aspect - cw / ch) > .005) resize();
+}
 function frame(now) {
+  watchSize(now);
   adaptResolution((now - last) / 1000);
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   keyCamera(dt);
