@@ -282,7 +282,7 @@ function resumeGame() {
   // camp raiders slain before the save stay slain (they used to come back); the hero heads back to their Move spot
   if (S.camp) { const live = new Set(S.camp);
     for (let n = enemies.length - 1; n >= 0; n--) { const e = enemies[n]; if (e.campId == null || live.has(e.campId)) continue; scene.remove(e.g); scene.remove(e.bar.grp); burnOff(e); dropClear(e); enemies.splice(n, 1); } }
-  if (S.hero) { setHeroFlag(S.hero); flagFocus = null; }
+  if (S.hero && heroOn()) { setHeroFlag(S.hero); flagFocus = null; }
   refreshWalls(); rebuildRoads(); regionDirty = true;
   Object.assign(res, S.res); stats = { ...S.stats, t0: performance.now() - (S.stats.playT || 0) * 1000 }; goalsMet = S.goalsMet || {}; guideDone = !!S.guideDone; guideOn = !!S.guideOn; guideMark();
   if (S.cats) { Object.assign(CATS, S.cats); renderTools(); }

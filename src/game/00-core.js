@@ -1,8 +1,5 @@
 (() => {
 const $ = s => document.querySelector(s);
-// the heroes (the Heir, the Ranger, the Captain): off for the App Store's version 1.1 (Jack: build 4 ships without them); true brings
-// back the hero on the map, the portrait, the Hero screen and its campaign button, and the three hero achievements. Saved levels are kept either way
-const HEROES_ON = false;
 // colour management: colours are written in sRGB, converted to linear for lighting, and the renderer converts back with filmic tone mapping
 { const P = THREE.Color.prototype, sH = P.setHex, sS = P.setStyle, sL = P.setHSL;
   P.setHex = function (h) { sH.call(this, h); return this.convertSRGBToLinear(); };
@@ -16,6 +13,10 @@ let KX = 19, KZ = 27;                  // castle site: Meadow cells 8â€“10, 12â€
 // the address's test switches (?debug, ?map=, ?gallery, ?nomerge): the public demo ignores them all (Jack: ?debug opened every stage
 // and colour, and ?map= started any stage, so anyone could play the full game in the browser); the private beta keeps them
 var URLQ = window.MTD_DEMO && !window.MTD_BETA ? '' : location.search;
+// the heroes (the Heir, the Ranger, the Captain): off in the App Store's version 1.1, the itch.io demo and a plain local page (Jack: build 4
+// ships without them), on in the private beta (Jack: it keeps them) and with ?heroes (the public demo ignores the address). On, they bring
+// back the hero on the map, the portrait, the Hero screen and its campaign button, and the three hero achievements. Saved levels are kept either way
+const HEROES_ON = !!window.MTD_BETA || /[?&]heroes\b/.test(URLQ);
 // MAP: 'meadow' (the original map) or 'isle' (the castle on an island ringed by a river, three fixed bridges); ?map=isle skips the picker
 var MAP = (URLQ.match(/[?&]map=(meadow|isle|pass|vale|bridge|cross|watch|dune|bend|crag|ford|mere|plains|keep|hold)\b/) || [])[1] || 'vale';
 // river isle: the river's centre line wobbles round the castle; ISLE.r is its mean radius in metres

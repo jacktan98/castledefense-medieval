@@ -1,5 +1,6 @@
 // Plays the real game headless and checks it still works (Playwright + Chromium; see tools/render/README.md for setup).
 //   node tools/test/run.js            every check, every stage (a few minutes)
+//   node tools/test/run.js --heroes   with the heroes on (as the beta has them); combines with the others
 //   node tools/test/run.js --quick    the menus and three stages only (under a minute or two)
 //   node tools/test/run.js vale keep  just these stages (and the menus)
 // Each stage is started on a fixed seed and played fast through the game's own tick() (no drawing): a house and a tower are
@@ -7,6 +8,8 @@
 // fails the run. Exits 1 if anything failed, so run it before a push alongside tools/check.js.
 const { openGame } = require('../render/serve');
 const args = process.argv.slice(2), quick = args.includes('--quick');
+// --heroes: the same runs with the heroes on, as in the private beta (the App Store's 1.1 and the demo have them off)
+const HQ = args.includes('--heroes') ? '&heroes' : '', HQ1 = HQ ? '?heroes' : '';
 const STAGES = ['vale', 'bridge', 'cross', 'watch', 'dune', 'bend', 'crag', 'ford', 'mere', 'plains', 'keep', 'hold', 'meadow', 'isle', 'pass'];
 const pick = args.filter(a => STAGES.includes(a)), stages = pick.length ? pick : quick ? ['vale', 'ford', 'keep'] : STAGES;
 let fails = 0;
@@ -17,7 +20,7 @@ const ok = (cond, what, more) => { if (!cond) fails++; console.log(`${cond ? '  
   // 1) the plain page: the title, with no errors; the campaign, a stage and the upgrades open
   {
     console.log('title and menus');
-    const g = await openGame('index.html', { title: true, viewport: { width: 390, height: 844 }, settle: 1500 }), p = g.page;
+    const g = await openGame('index.html' + HQ1, { title: true, viewport: { width: 390, height: 844 }, settle: 1500 }), p = g.page;
     ok(await p.evaluate(() => !document.getElementById('mapPick').hidden), 'title screen shows');
     await p.click('#campBtn'); await p.waitForTimeout(800);
     ok(await p.evaluate(() => !document.getElementById('campaign').hidden && document.querySelectorAll('.cCard').length === 15), 'campaign opens with 15 stages (12 and 3 bonus)');
@@ -26,7 +29,7 @@ const ok = (cond, what, more) => { if (!cond) fails++; console.log(`${cond ? '  
     ok(!g.errors.length, 'no page errors', g.errors.join(' | ')); await g.close();
   }
   // 2) every stage, played fast
-  const g = await openGame('index.html?debug&map=vale', { viewport: { width: 320, height: 240 }, settle: 1000 }), p = g.page;
+  const g = await openGame('index.html?debug&map=vale' + HQ, { viewport: { width: 320, height: 240 }, settle: 1000 }), p = g.page;
   const G = s => p.evaluate(s => window.G(s), s);
   await G(`window.SEEN = new Set(); window.SIM = secs => { paused = true; let t = performance.now(); const n = Math.round(secs * 20);
     for (let i = 0; i < n; i++) { t += 50; tick(.05, t); for (const e of enemies) if (!e.sp0 && !e.dormant) { e.sp0 = { x: e.x, z: e.z }; SEEN.add(e); }
