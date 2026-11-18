@@ -639,12 +639,6 @@ function makeEagle(hawk) {
   return { g, wings, hawk: !!hawk, flap: k => wings.forEach((w, i) => { const sg = i ? -1 : 1; w.rotation.z = sg * (k - .06); w.userData.outer.rotation.z = sg * (k * .7 + .04); }) };
 }
 let eagle = null, eagleA = 0, eagleK = 0;
-// Eagle eye at rank 3: every 7 s the eagle dives from its circle to just over the target's head and climbs back (c: s into the 7)
-function eagleSwoop(E, foe, dt, c, gy) {
-  if (c > 1.6) return;
-  const k = Math.sin(Math.PI * c / 1.6), fy = (gy == null ? walkY(foe.x, foe.z) : gy) + 1.6;
-  E.g.position.x += (foe.x - E.g.position.x) * k; E.g.position.z += (foe.z - E.g.position.z) * k; E.g.position.y += (fy - E.g.position.y) * k;
-}
 const EAGLE_K = .6;
 // a puff of white and brown feathers where the eagle appears or vanishes
 // a puff of white feathers (Twin shot's hits at rank 3): small pale wisps that drift and fade
@@ -702,15 +696,15 @@ function heroLooks(dt, now) {
   // up to size, rather than flying down and fading; with the Ranger fallen it goes at once)
   if (!v) eagleK = 0;
   if (eagleK > .02) {
-    // by rank (Jack): a plain brown hawk circling high at rank 1, the bald eagle at 2, at 3 a bigger eagle that now and then swoops low
-    // over the Ranger's target
+    // by rank (Jack): a plain brown hawk circling high at rank 1, the bald eagle at 2, a bigger eagle at 3
     const er = skR('eye'), hawk = er < 2;
     if (eagle && eagle.hawk !== hawk) { unparent(eagle.g); eagle = null; }
     if (!eagle) eagle = makeEagle(hawk);
     if (!eagle.g.parent) scene.add(eagle.g);
     eagleA += dt * .55; const y = walkY(v.rx, v.rz) + (hawk ? 6 : 5);
     eagle.g.position.set(v.rx + Math.cos(eagleA) * 3, y + Math.sin(eagleA * 2) * .3, v.rz + Math.sin(eagleA) * 3);
-    if (er >= 3 && v.foe) { const s0 = v.swoopT || 0; eagleSwoop(eagle, v.foe, dt, (v.swoopT = (s0 + dt) % 7)); if (v.swoopT < s0) sfx('eagle', eagle.g.position); }
+    // now and then it cries as it circles (Jack: no dive at the raiders any more, it only circles the Ranger)
+    if ((v.cryT = (v.cryT == null ? 8 + Math.random() * 10 : v.cryT) - dt) <= 0) { v.cryT = 12 + Math.random() * 12; sfx('eagle', eagle.g.position); }
     eagle.g.rotation.set(0, -eagleA, .35); eagle.g.scale.setScalar(EAGLE_K * [.75, .75, 1, 1.15][er] * Math.min(1, eagleK * 4));
     if (!eagle.g.visible) { eagle.g.visible = true; eaglePoof(eagle.g.position); sfx('eagle', eagle.g.position); }
     eagle.flap(Math.sin(now / 1000 * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
@@ -1111,10 +1105,9 @@ function galDemo(p, t, dt) {
     if (nk && d !== 'twin') nk.visible = false;
     if (p.fanT > 0) { p.fanT -= dt; const f = 1 - p.fanT / .2, k = f < .5 ? f * 2 : (1 - f) * 2; p.arms[1].rotation.set(-1.42 - 1.9 * k, 0, -.62 + .5 * k); }
     if (d === 'eye') {                                            // Eagle eye: the eagle circling over the Ranger, his reach ring in blue
-      // a plain hawk circling higher at rank 1, the eagle at 2, a bigger eagle swooping over the raider at 3
+      // a plain hawk circling higher at rank 1, the eagle at 2, a bigger eagle at 3
       if (!p.eagle) { p.eagle = makeEagle(r < 2); gScene.add(p.eagle.g); }
       const a = t * .55; p.eagle.g.position.set(x0 + Math.cos(a) * 1.6, (r < 2 ? 3.8 : 3.2) + Math.sin(a * 2) * .2, z0 + Math.sin(a) * 1.6);
-      if (r >= 3 && p.foes[0]) { const f = p.foes[0].g.position; eagleSwoop(p.eagle, { x: f.x, z: f.z }, dt, T % 7, 0); }
       p.eagle.g.rotation.set(0, -a, .35); p.eagle.g.scale.setScalar(EAGLE_K * [.75, .75, 1, 1.15][r]);
       p.eagle.flap(Math.sin(t * 2.2) > .55 ? Math.sin(now / 110) * .45 : 0);
       heroRing('g-eye' + p.seed + '-' + r, 2, '#8fc1db', .45, p);
