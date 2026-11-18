@@ -85,8 +85,8 @@ Raider Keep, and all twelve main stages, a moment after the campaign shows again
 ## Sending a build to TestFlight / the App Store
 
 1. In Xcode, pick **Any iOS Device (arm64)** at the top.
-2. Raise the **Build** number by one (App target → **General** → Identity). Every upload needs a new build number;
-   **Version** (1.0) only changes for a new release.
+2. Check the **Version** and **Build** (App target → **General** → Identity). Every upload needs a higher build number,
+   and once a version is released the next upload needs a new version too (1.0 build 3 is released; 1.1 is build 4).
 3. **Product → Archive**. When it finishes, the Organizer window opens: **Distribute App → App Store Connect → Upload**.
 4. A few minutes later the build shows in App Store Connect under **TestFlight**, ready to install on your phone with
    the TestFlight app, or to submit for review.
