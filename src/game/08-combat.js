@@ -1174,6 +1174,9 @@ function dropGear(e) {
     droppedGear.push({ o, e, vx: (Math.random() - .5) * 1.2, vy: .8 + Math.random(), vz: (Math.random() - .5) * 1.2, sx: (Math.random() - .5) * 7, sz: (Math.random() - .5) * 7, rest: false }); }
 }
 function dropClear(e) { for (let i = droppedGear.length - 1; i >= 0; i--) if (droppedGear[i].e === e) { scene.remove(droppedGear[i].o); droppedGear.splice(i, 1); } }
+// every dropped weapon and shield, at once (a new game or the admin's Win clears the raiders without letting them sink:
+// a dead archer's bow stayed lying on the next game's ground, Jack)
+function dropAll() { for (const d of droppedGear) scene.remove(d.o); droppedGear.length = 0; }
 function updateDropped(dt) {
   for (const d of droppedGear) {
     const o = d.o, g = hAt(o.position.x, o.position.z) + .05;
