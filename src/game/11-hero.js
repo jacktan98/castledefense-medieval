@@ -187,7 +187,7 @@ const capSteelM = steelM;
 // the Captain's helm (Jack's reference, drafted with him): the old helm's dome and straight drum and its ridge over the top, cut open in
 // front in a T, the eyes showing under the brow and a slot down over the nose and mouth between two cheek plates, with white edging
 // round the opening and the rim (straight runs with a ball at each corner, so no gaps) and four white rivets
-const capTrimM = mat('#eef0f2'), capInM = new THREE.MeshLambertMaterial({ color: '#25282d', side: THREE.BackSide });
+const RID0 = .45, capTrimM = mat('#eef0f2'), capInM = new THREE.MeshLambertMaterial({ color: '#25282d', side: THREE.BackSide });
 function captainHelm() {
   const S = Math.PI, R = .158, YB = .92, YT = 1.12, E1 = 1.02, KY = .95, W = .7, SL = .17, TR = .0075;
   const g = new THREE.Group(), add = (o, to = g) => { o.castShadow = true; to.add(o); return o; };
@@ -199,8 +199,8 @@ function captainHelm() {
   for (const sx of [-1, 1]) drum(sx > 0 ? SL : -W, W - SL, YB, E1);
   drum(0, 2 * S, YB, YT, capInM, .965);
   const din = add(new THREE.Mesh(new THREE.SphereGeometry(R * .965, 16, 8, 0, 2 * S, 0, S / 2), capInM)); din.position.y = YT; din.scale.y = KY;
-  // the ridge in the town's colour (Jack)
-  const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(R + .014, R + .014, .026, 18, 1, false, 0, S), kiteM)); ridge.rotation.z = S / 2; ridge.position.y = YT; ridge.scale.x = KY;
+  // the ridge, white like the edging (Jack), starting a little above the brow (Jack: it ran down to the eye opening)
+  const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(R + .014, R + .014, .026, 18, 1, false, RID0, S - RID0), capTrimM)); ridge.rotation.z = S / 2; ridge.position.y = YT; ridge.scale.x = KY;
   const run = (A, n = 8) => { const P = []; for (let i = 0; i <= n; i++) P.push(A(i / n));
     add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(P), n * 2, TR, 6, false), capTrimM)); };
   const ball = p => { const b = add(new THREE.Mesh(new THREE.SphereGeometry(TR * 1.05, 8, 6), capTrimM)); b.position.copy(p); };
