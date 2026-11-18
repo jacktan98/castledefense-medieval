@@ -12,19 +12,21 @@ const HERO_SK = {
   // desc: one line that never changes; vals: each rank's figure, shown as three steps on the Hero screen (Jack: the line and a
   // "Next" line repeated each other and the rows grew uneven)
   // line: the full text of a rank (the Hero screen shows the next rank's, Jack: no boxes of figures)
-  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[10, 20, 30][r]}% harder`, desc: 'Troops nearby hit harder', vals: ['+10%', '+20%', '+30%'], req: [1, 3, 5], k: [.1, .2, .3] },
+  // (Jack's second balance pass, the heroes were far too strong at level 10: Inspire 5/10/15%, Royal horse adds speed and health
+  // as flat figures, Eagle eye +1/2/3 m, Quick draw after 5 arrows 2/3/4 quick shots, Deflect 10/20/30%)
+  cry: { name: 'Inspire', line: r => `Troops nearby hit ${[5, 10, 15][r]}% harder`, desc: 'Troops nearby hit harder', vals: ['+5%', '+10%', '+15%'], req: [1, 3, 5], k: [.05, .1, .15] },
   // (Jack, after a balance check: it gave nothing in a fight, so the horse's armour adds health too, hp)
-  horse: { name: 'Royal horse', line: r => r ? `Rides ×${[2, 2.3, 2.6][r]} faster, +${[10, 20, 30][r]}% health` : 'Rides a horse, ×2 faster, +10% health', desc: 'Rides a horse, faster', vals: ['×2', '×2.3', '×2.6'], req: [2, 4, 6], k: [2, 2.3, 2.6], hp: [.1, .2, .3] },
+  horse: { name: 'Royal horse', line: r => `Rides a horse, +${[.5, 1, 1.5][r]} speed, +${[20, 50, 100][r]} health`, desc: 'Rides a horse, faster', vals: ['+0.5', '+1', '+1.5'], req: [2, 4, 6], k: [.5, 1, 1.5], hp: [20, 50, 100] },
   // Flurry (Jack: after every 5 slashes, a burst of 2/3/4 quick strikes)
   flurry: { name: 'Flurry', line: r => `After 5 slashes, strikes ${[2, 3, 4][r]} quick blows`, k: [2, 3, 4] },
   // the Ranger's: a second arrow, a longer reach, a faster bow
   twin: { name: 'Twin shot', line: r => `Shoots a second raider, ${[40, 70, 100][r]}% damage`, k: [.4, .7, 1] },
-  eye: { name: 'Eagle eye', line: r => `Shoots ${[1.5, 3, 4.5][r]} m further`, k: [1.5, 3, 4.5] },
-  // Quick draw (Jack: after every 10 arrows, a burst of 4/6/8 quick shots)
-  quick: { name: 'Quick draw', line: r => `After 10 arrows, fires ${[4, 6, 8][r]} quick shots`, k: [4, 6, 8] },
+  eye: { name: 'Eagle eye', line: r => `Shoots ${[1, 2, 3][r]} m further`, k: [1, 2, 3] },
+  // Quick draw (Jack: after every 5 arrows, a burst of 2/3/4 quick shots; it was 10 arrows, 4/6/8)
+  quick: { name: 'Quick draw', line: r => `After 5 arrows, fires ${[2, 3, 4][r]} quick shots`, k: [2, 3, 4] },
   // the Captain's: troops round him take less, his blows sweep, he mends even in battle
   // Deflect (Jack: the Heir's old skill, now the Captain's in place of Shield wall): he takes less damage
-  firm: { name: 'Deflect', line: r => `Takes ${[15, 25, 35][r]}% less damage`, k: [.15, .25, .35] },
+  firm: { name: 'Deflect', line: r => `Takes ${[10, 20, 30][r]}% less damage`, k: [.1, .2, .3] },
   // Sweeping blow (Jack: every 5th blow, a spin of the war hammer)
   // (Jack, after a balance check: 50/75/100% beside, it was 30/50/70%: the Captain dealt half the others' damage)
   sweep: { name: 'Sweeping blow', line: r => `Every 5th blow sweeps raiders beside, ${[50, 75, 100][r]}%`, k: [.5, .75, 1] },
@@ -38,9 +40,10 @@ const skR = (k, v) => v && v.rk != null ? (!v.rkSk || v.rkSk === k ? v.rk : 0) :
 // the three heroes (Jack: the Ranger and the Captain unlocked): one takes the field at a time, picked on the Hero screen; each keeps
 // its own level, XP and skills (mtd-hero for the Heir, as before; mtd-hero-ranger, mtd-hero-captain), the pick in mtd-hero-pick
 const HERO_DEFS = {
-  heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [260, 30], dmg: [12, 2], rate: .8, hair: 1 },
-  ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'eye', 'quick'], hp: [170, 20], dmg: [8, 2], rate: 1.1, range: 8, hair: 0 },
-  captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [340, 35], dmg: [9, 2], rate: 1, hair: 3 },
+  // (Jack's second balance pass) level 1, then what each level adds; rate is seconds between blows or arrows; spd the walk speed
+  heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [250, 15], dmg: [15, 1], rate: 1, spd: [1, 0], hair: 1 },
+  ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'eye', 'quick'], hp: [150, 10], dmg: [10, 1], rate: 1, range: 7, spd: [1.05, .05], hair: 0 },
+  captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [350, 25], dmg: [10, 1], rate: 1, spd: [1, 0], hair: 3 },
 };
 const HERO_KEY = id => id === 'heir' ? 'mtd-hero' : 'mtd-hero-' + id;
 var HERO_ID = (() => { try { const id = localStorage.getItem('mtd-hero-pick'); return HERO_DEFS[id] ? id : 'heir'; } catch (e) { return 'heir'; } })();
@@ -66,7 +69,7 @@ function loadHero(id = HERO_ID) {
 }
 var HERO = loadHero();
 const saveHero = () => { try { localStorage.setItem(HERO_KEY(HERO_ID), JSON.stringify(HERO)); } catch (e) {} };
-const heroHp = () => Math.round((heroDef().hp[0] + heroDef().hp[1] * (HERO.lv - 1)) * (1 + (HERO_ID === 'heir' && HERO.sk.horse ? HERO_SK.horse.hp[HERO.sk.horse - 1] : 0))), heroDmg = () => heroDef().dmg[0] + heroDef().dmg[1] * (HERO.lv - 1);
+const heroHp = () => heroDef().hp[0] + heroDef().hp[1] * (HERO.lv - 1) + (HERO_ID === 'heir' && HERO.sk.horse ? HERO_SK.horse.hp[HERO.sk.horse - 1] : 0), heroDmg = () => heroDef().dmg[0] + heroDef().dmg[1] * (HERO.lv - 1);
 // the Ranger's reach, Eagle eye added
 const heroRange = () => (heroDef().range || 0) + (HERO.sk.eye ? HERO_SK.eye.k[HERO.sk.eye - 1] : 0);
 // pick another hero (the Hero screen's Heroes row): the one in the field, if any, stands down for the next game's
@@ -78,7 +81,8 @@ function pickHero(id) {
   sfx('click'); syncHeroBadge();
 }
 const heroNeed = () => 60 + 40 * HERO.lv;
-const heroSpeed = () => HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 1;
+// walk speed: the hero's own, what each level adds, and Royal horse's (Jack's second balance pass)
+const heroSpeed = () => Math.round((heroDef().spd[0] + heroDef().spd[1] * (HERO.lv - 1) + (HERO.sk.horse ? HERO_SK.horse.k[HERO.sk.horse - 1] : 0)) * 100) / 100;
 var heroHere = false, hero = null, heroDownT = 0, heroAt = null, heroFlag = null, heroMove = false, heroSel = false, heroWasNight = false;
 var heroKey = '', heroBarKey = '';
 const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .35;
@@ -334,7 +338,7 @@ function updateHero(v, dt) {
   if (v.march) {
     if (Math.hypot(home.x - v.x, home.z - v.z) > .4 && (v.marchT -= dt) > 0) {
       v.foe = null; v.drawing = false;
-      if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * (heroDef().range ? 1 : heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk'))));
+      if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk')));
       heroMend(v, dt, null); return;
     }
     v.march = false;
@@ -383,13 +387,13 @@ function rangerStep(v, dt, home) {
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
   const foe = heroFoe(v, home, dt, R, R + .5, e => Math.hypot(e.x - v.x, e.z - v.z));
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
-  if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3); }
+  if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * heroSpeed()); }
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   heroMend(v, dt, foe);
   if (!foe) { v.cool = Math.max(v.cool, 0); return; }
   v.walking = false; turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt);
   if (v.cool > 0) return;
-  const b = heroBurst(v, 'quick', 10, .2, .3); v.glinted = false;
+  const b = heroBurst(v, 'quick', 5, .2, .3); v.glinted = false;
 
   const dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), from = bowPoint(v);
   const tr = HERO.sk.twin ? skR('twin') : 0;
@@ -436,7 +440,7 @@ function heroBurst(v, sk, n, quick, at) {
 }
 // ---------- the skills' effects (Jack: make Flurry, Quick draw and Sweeping blow show) ----------
 // (the skill's icon over the hero as it fired was dropped: Jack) Flurry: a glint at the sword's tip as the burst winds up, "×N" for the blows to come; each quick blow
-// leaves a gold trail behind the blade and sparks on the raider. Quick draw: a glint on the bow before the 10th arrow,
+// leaves a gold trail behind the blade and sparks on the raider. Quick draw: a glint on the bow before the 5th arrow,
 // glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: a steel
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
@@ -837,7 +841,7 @@ const HERO_ICO = new Proxy(HERO_ICO_SRC, { get: (t, k) => {
   return (t[k] || '').replace(/(id="|url\(#)(h[a-zA-Z0-9]+)/g, `$1$2_${n}`).replace(/#9cc5ff/g, lt).replace(/#2f5faf/g, TEAM_PAL[TEAM.town]);
 } });
 // health, then damage (a bow for the Ranger, with the reach), then the Heir's speed
-const heroStats = (hp, bad) => STAT('hp', hp, bad ? 'bad' : '') + (heroDef().range ? STAT('bow', `${heroDmg()}`) + STAT('range', `${heroRange()} m`) : STAT('sword', `${heroDmg()}`)) + (HERO_ID === 'heir' ? STAT('speed', `×${heroSpeed()}`) : '');
+const heroStats = (hp, bad) => STAT('hp', hp, bad ? 'bad' : '') + (heroDef().range ? STAT('bow', `${heroDmg()}`) + STAT('range', `${heroRange()} m`) : STAT('sword', `${heroDmg()}`)) + STAT('speed', `${heroSpeed()}`);
 const heroShown = () => heroOn() && !gameOver && !menuOn() && !galleryOn && !showcaseBuilt && !!castleB();
 function heroUI() {
   const bar = $('#heroBar'), card = $('#heroCard'); if (!bar) return;

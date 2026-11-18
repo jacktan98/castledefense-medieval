@@ -1075,8 +1075,8 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroSheet .hpStats .stat[data-name="Walk speed"] .ico{width:22px;height:22px;margin:-2px 0}
 .heroSheet .hpXp{font-size:14px}
 .heroSheet .hXpBar{height:7px}
-.heroSheet .hpStats{font-size:16px;gap:16px}
-.heroSheet .hpStats .stat{gap:4px;font-size:16px} .heroSheet .hSkHead .hsRs .rsT{font:700 12px var(--body);color:inherit} .heroSheet .hSkHead .hsPts{font-size:15px} .hpSk .hsReq{font-size:13px} .heroSheet .hpStats .stat .ico{width:19px;height:19px} .heroSheet .hpStats .ico svg{width:100%;height:100%}
+.heroSheet .hpStats{font-size:16px;gap:9px;flex-wrap:wrap;row-gap:4px} .heroSheet .hpStats .stat{white-space:nowrap}
+.heroSheet .hpStats .stat{gap:3px;font-size:16px} .heroSheet .hSkHead .hsRs .rsT{font:700 12px var(--body);color:inherit} .heroSheet .hSkHead .hsPts{font-size:15px} .hpSk .hsReq{font-size:13px} .heroSheet .hpStats .stat .ico{width:19px;height:19px} .heroSheet .hpStats .ico svg{width:100%;height:100%}
 .hpSk{display:flex;align-items:center;gap:9px;padding:7px 9px;margin-bottom:7px;border-radius:10px;border:1px solid rgba(212,168,78,.55);background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))}
 .hpSk.off .hsIco,.hpSk.off .hsTx{opacity:.6}
 .hpSk .hsIco{width:38px;height:38px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 35%,#34507e,#121c33);border:2px solid #9fd1ff;position:relative}
