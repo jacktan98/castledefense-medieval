@@ -1112,7 +1112,10 @@ function galPose(p, t, dt) {
   else { p.legs[0].rotation.x = sw; p.legs[1].rotation.x = -sw; }
   p.body.position.y = p.horseLegs ? SADDLE : walking ? Math.abs(Math.sin(ph)) * .05 : 0;   // a rider stays in the saddle
   let L = -sw * .8, R = sw * .8, tilt = -.2, lean = 0;
-  if (p.demo) { galDemo(p, t, dt); return; }                     // a hero skill or level-up shown on a loop (11-hero.js)
+  // the Heir's Inspire standard (rank 2+) is held in the left hand on every gallery figure that has one, not only the Inspire demo
+  // (Jack: on the Heroes and Level up rows it stood up out of the crown)
+  const holdStd = () => { if (p.pennant) { standardHold(p); pennantWave(p, performance.now(), false); } };
+  if (p.demo) { galDemo(p, t, dt); holdStd(); return; }          // a hero skill or level-up shown on a loop (11-hero.js)
   if (p.heroId) {                                                 // heroes: the Ranger shoots like an archer, the others strike with the sword
     if (p.heroId === 'ranger') { const c = (t + p.seed) % 1.8; bowPose(p, c > .6 && c < 1.05, c >= 1.05 && c < 1.4, -.35 - sw * .3, -sw * .6); return; }
     // every other blow is the hero's second strike: the Heir's thrust, the Captain's sweep
@@ -1120,7 +1123,7 @@ function galPose(p, t, dt) {
     if (n && p.heroId === 'heir') thrustPose(p, Math.max(0, SWORD_T - c), sw);
     else if (n && p.heroId === 'captain') sweepPose(p, Math.max(0, SWEEP_T - c) * SWORD_T / SWEEP_T, sw);
     else { thrustPose(p, 0, sw); sweepPose(p, 0, sw); swordPose(p, gWalk ? 0 : Math.max(0, SWORD_T - c), sw); }
-    return;
+    holdStd(); return;
   }
   if (p.xbow || p.raider === 'xbow') { xbowPose(p, (t + p.seed) % 1.4 > .7); return; }   // crossbowmen: level and shoot, then down to reload
   if (p.guard || p.raider === 'archer') {                        // loose a shot every 1.8 s: idle, draw with both hands, loose
