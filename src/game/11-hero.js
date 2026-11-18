@@ -135,6 +135,8 @@ function heroKit(v, id = HERO_ID, foot) {
       const c = head(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .118, .055, Math.cos(a) * .118); c.add(p); }
       c.position.y = 1.12; put(c);
+      // the Heir's shoulder plates in the crown's gold (Jack)
+      for (const o of (v.armour || []).concat(v.kit)) if (o.userData && o.userData.pauldron) o.material = heroGold;
       if (v.horse && hr >= 2) { v.flaps = [-1, 1].map(sx => { const h = new THREE.Group(); h.position.set(sx * .2, .98, 0); h.userData.flap = sx; v.horse.add(h);
         const c = box(.02, .36, .56, capCloakM, sx * .01, -.18, -.04); c.castShadow = true; h.add(c);
         if (hr >= 3) { const t = box(.026, .045, .58, heroGold, sx * .012, -.36, -.04); h.add(t); }   // gold trim along the hem
@@ -174,8 +176,6 @@ function heroKit(v, id = HERO_ID, foot) {
     }
   }
   if (v.hatG) v.hatG.visible = false;
-  // the Captain's helm sits low and closed: the hair would show through its dome
-  // under the Captain's closed helm neither the hair nor the eyes show (Jack: the eyes poked through as two dots over the slit)
   // the Captain's hair is hidden under the helm; his eyes show through its open face (Jack)
   if (v.headParts) { v.headParts[1].visible = true; v.headParts[2].visible = id !== 'captain'; }
   v.maxHp = v.hp = heroHp();

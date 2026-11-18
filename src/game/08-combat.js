@@ -1024,7 +1024,7 @@ function armour(p, tier) {
   if (tier === 2) { put(cyl(.205, .228, .13, 10, gambesonM, 0, .37, 0)); put(cyl(.196, .196, .045, 6, leatherM, 0, .5, 0)); put(makeHelm('skullcap')).userData.helm = true; }
   if (tier === 3) {
     put(cyl(.158, .218, .42, 6, kiteM, 0, .62, 0)); put(cyl(.2, .2, .05, 6, leatherM, 0, .55, 0)); put(makeHelm('soldier')).userData.helm = true;
-    for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), steelM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .75, 1.1); }
+    for (const sx of [-1, 1]) { const pl = put(new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 5, 0, Math.PI * 2, 0, Math.PI * .5), steelM)); pl.position.set(sx * .19, .86, 0); pl.scale.set(1, .75, 1.1); pl.userData.pauldron = true; }
   }
   return p.armour;
 }
