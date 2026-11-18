@@ -192,6 +192,7 @@ const strawM = mat('#d2b56a'), leatherM = mat('#5a4630'), featherM = mat('#b8452
 const apronM = (() => { const m = mat('#b9ae96'); m.side = THREE.DoubleSide; return m; })(), apronHemM = (() => { const m = mat('#ddd5c2'); m.side = THREE.DoubleSide; return m; })();
 // workers dress by their workplace's tier: 1 their own clothes (the tool says the job), 2 the work tunic and a cloth cap,
 // 3 the full outfit (hat, apron or belt); builders always wear theirs (v.outfitTier overrides, for the gallery)
+const coifMats = new Map(), coifM = m => { let c = coifMats.get(m); if (!c) { c = m.clone(); c.side = THREE.DoubleSide; coifMats.set(m, c); } return c; };
 function dress(v, kind) {
   const tier = v.outfitTier || (kind === 'hammer' || !v.job ? 3 : v.job.tier); v.dressT = tier;
   const O0 = OUTFIT[kind], O = O0 && tier === 3 ? O0 : null, tun = O0 && tier >= 2 ? O0.tunic : v.baseTunic;
@@ -210,12 +211,21 @@ function dress(v, kind) {
     h.add(cyl(.142, .142, .05, 12, leatherM, 0, 1.115, 0));
     const top = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 6), O.hatM); top.scale.set(1, .38, 1); top.position.set(.03, 1.17, -.01); top.rotation.z = -.16; top.castShadow = true; h.add(top);
   }
-  else if (O.hat === 'coif') {             // herder: a close linen coif over the hair, tied under the chin
-    const cf = new THREE.Mesh(new THREE.SphereGeometry(.15, 12, 7, 0, Math.PI * 2, 0, Math.PI * .62), O.hatM); cf.position.y = 1.035; cf.castShadow = true; h.add(cf);
-    h.add(box(.2, .025, .04, O.hatM, 0, .93, .08));
+  else if (O.hat === 'coif') {             // herder: a close linen coif (Jack: the old one, a .15 ball down to the jaw all round, read as a helmet)
+    // one dome hugging the head (.134 over its .13), open over the face above the brow, down over the ears and lower at the nape;
+    // the hair is hidden under it (v.coif, read in dress) and its inside is drawn too, so no gap shows at its rim; no chin ties (Jack)
+    const R = .134, T = Math.PI * .66, g = new THREE.SphereGeometry(R, 12, 8, 0, Math.PI * 2, 0, T), q = g.attributes.position;
+    for (let i = 0; i < q.count; i++) {
+      const x = q.getX(i), y = q.getY(i), z = q.getZ(i), th = Math.acos(Math.max(-1, Math.min(1, y / R))), c = Math.cos(Math.atan2(x, z));
+      const op = Math.max(0, Math.min(1, (c - .3) / .45)), sm = op * op * (3 - 2 * op), tMax = Math.PI * (c > 0 ? .62 - .25 * sm : .62 + .1 * -c), t2 = th / T * tMax, r = Math.hypot(x, z) || 1e-9;
+      q.setXYZ(i, Math.sin(t2) * x / r * R, Math.cos(t2) * R, Math.sin(t2) * z / r * R);
+    }
+    g.computeVertexNormals(); const cf = new THREE.Mesh(g, coifM(O.hatM)); cf.position.y = 1.035; cf.castShadow = true; h.add(cf);
   }
   else if (O.hat === 'felt') { h.add(cyl(.2, .2, .03, 10, O.hatM, 0, 1.12, 0)); h.add(cyl(.12, .13, .11, 10, O.hatM, 0, 1.19, 0)); }
   v.body.add(h); v.hatG = h;
+  // the herder's coif covers the hair (it showed through it); any other outfit shows it again
+  if (v.headParts && v.headParts[2] && !v.hero) v.headParts[2].visible = !(O && O.hat === 'coif');
   if (O && O.apron) {                       // mason's canvas apron: curved round the front of the body, waist tie and a chalk-pale hem
     v.apron = new THREE.Group();
     const cloth = new THREE.Mesh(new THREE.CylinderGeometry(.17, .216, .4, 12, 1, true, -Math.PI / 3, Math.PI * 2 / 3), apronM); cloth.position.y = .56; cloth.castShadow = true; v.apron.add(cloth);
