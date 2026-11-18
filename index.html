@@ -1054,7 +1054,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 /* the hero (testing, behind the admin's Heroes switch): the portrait under the top panel, the Heir's card, the campaign's Hero screen */
 .heroBar{position:absolute;z-index:5;display:flex;gap:8px;align-items:center}
 .heroPort{position:relative;width:54px;height:54px;min-height:0!important;padding:0!important;border:0!important;background:none!important;border-radius:50%!important;cursor:pointer;touch-action:manipulation}
-.heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:2px solid #d9b04e;overflow:hidden}
+.heroPort .face{position:absolute;inset:2px;box-shadow:0 3px 10px rgba(0,0,0,.55);border-radius:50%;background:radial-gradient(circle at 50% 30%,var(--hbgL,#3d5a8c),var(--hbgD,#1a2742));border:2px solid #d9b04e;overflow:hidden}
 .heroPort .face canvas,.heroCard .heroIco canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .heroPort .lv{z-index:2;position:absolute;right:-4px;bottom:-3px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(#f2d27a,#b8862f);color:#2a1c08;font:700 12px/17px var(--body);text-align:center;border:1.5px solid #fff1c4;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* health over XP under the portrait (Jack: the health ring round it was dropped) */
@@ -1066,7 +1066,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .heroPort.down .cd{display:flex} .heroPort.down .face{filter:grayscale(1) brightness(.7)}
 .heroPort.sel .face{border-color:#fff1c4;box-shadow:0 0 0 3px rgba(240,201,90,.55)}
 .heroCard{width:min(270px,100%)!important}
-.heroCard .heroIco{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3d5a8c,#1a2742);border:1.5px solid #d9b04e;position:relative}
+.heroCard .heroIco{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 30%,var(--hbgL,#3d5a8c),var(--hbgD,#1a2742));border:1.5px solid #d9b04e;position:relative}
 
 .hXp,.hpXp{display:flex;align-items:center;gap:6px;font-size:11px;color:#9fd1ff}
 .hXpBar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}.hXpBar i{display:block;height:100%;background:#9fd1ff}
@@ -1075,7 +1075,7 @@ body.dockMini .barTop{padding-bottom:0;border-bottom:0}
 .hSkMini svg{width:20px;height:20px;fill:none;stroke:#dff0ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hsPips{display:flex;gap:3px}.hsPips i{width:8px;height:8px;border-radius:50%;border:1.5px solid #9fd1ff}.hsPips i.on{background:#9fd1ff}
 .heroSheet .hpBody{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
-.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3d3520,#16120a 72%);border:2px solid #d9b04e;overflow:hidden}
+.heroSheet .hpStage{width:112px;height:112px;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 30%,var(--hbgL,#3d5a8c),var(--hbgD,#1a2742));border:2px solid #d9b04e;overflow:hidden}
 .heroSheet .hpView{width:100%;height:100%;display:block}
 .heroSheet .hpInfo{flex:1;display:flex;flex-direction:column;gap:7px}
 .heroSheet .hpName{font:400 22px/1 var(--display);color:#ffe2a0}
@@ -1132,7 +1132,7 @@ body:has(.modal.tome:not([hidden])) #powers,body:has(#campaign:not([hidden])) #p
 .hRoster{display:flex;gap:10px;justify-content:center;width:100%}
 .modal.tome .hRos{flex:1 1 0;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px 8px!important;border-radius:10px!important;border:1px solid rgba(212,168,78,.55)!important;background:linear-gradient(rgba(44,34,18,.95),rgba(26,20,11,.95))!important;color:#ffe2a0!important;min-height:0!important;box-shadow:none!important}
 .modal.tome .hRos.on{border:2px solid #f0c95a!important;box-shadow:0 0 12px rgba(240,201,90,.35)!important}
-.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 40%,#3d3520,#16120a 72%)}
+.hRos .hrPic{position:relative;width:58px;height:58px;border-radius:50%;overflow:hidden;border:2px solid #d9b04e;background:radial-gradient(circle at 50% 30%,var(--hbgL,#3d5a8c),var(--hbgD,#1a2742))}
 .hRos.soon .hrPic{border-color:#6d5a34}
 .hRos .hrCv{width:100%;height:100%;display:block}
 .hRos.soon .hrCv{filter:grayscale(.7) brightness(.72)}
@@ -2520,7 +2520,12 @@ function teamMat(m, side, def, quilt) {
   if (quilt) m.map = quiltTex(teamColor(quilt[0], side), teamColor(quilt[1], side)); else m.color.set(teamColor(def, side));
   return m;
 }
+// the hero portraits' circle in a dark shade of the town's colour (Jack: it was always blue, which fought a red town); the same
+// blue as before for a blue town, from the old two stops through teamColor
+function heroBgVars() { const r = document.documentElement.style; r.setProperty('--hbgL', teamColor('#3d5a8c', 'town')); r.setProperty('--hbgD', teamColor('#1a2742', 'town')); }
+heroBgVars();
 function applyTeams() {
+  heroBgVars();
   for (const t of teamMats) {
     if (t.quilt) { const old = t.m.map; t.m.map = quiltTex(teamColor(t.quilt[0], t.side), teamColor(t.quilt[1], t.side)); if (old) old.dispose(); }
     else t.m.color.set(teamColor(t.def, t.side));
@@ -12497,7 +12502,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'b3a33e7d47'; var updateWait = false, updateT = 0;
+const BUILD = 'c19c45bcf9'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

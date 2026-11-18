@@ -263,7 +263,12 @@ function teamMat(m, side, def, quilt) {
   if (quilt) m.map = quiltTex(teamColor(quilt[0], side), teamColor(quilt[1], side)); else m.color.set(teamColor(def, side));
   return m;
 }
+// the hero portraits' circle in a dark shade of the town's colour (Jack: it was always blue, which fought a red town); the same
+// blue as before for a blue town, from the old two stops through teamColor
+function heroBgVars() { const r = document.documentElement.style; r.setProperty('--hbgL', teamColor('#3d5a8c', 'town')); r.setProperty('--hbgD', teamColor('#1a2742', 'town')); }
+heroBgVars();
 function applyTeams() {
+  heroBgVars();
   for (const t of teamMats) {
     if (t.quilt) { const old = t.m.map; t.m.map = quiltTex(teamColor(t.quilt[0], t.side), teamColor(t.quilt[1], t.side)); if (old) old.dispose(); }
     else t.m.color.set(teamColor(t.def, t.side));
