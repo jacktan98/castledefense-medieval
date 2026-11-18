@@ -43,7 +43,7 @@ const HERO_DEFS = {
   // (Jack's second balance pass) level 1, then what each level adds; rate is seconds between blows or arrows; spd the walk speed
   heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [265, 15], dmg: [16, 1], rate: 1, spd: [1, 0], hair: 1 },
   ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'quick', 'eye'], hp: [160, 10], dmg: [6, 1], rate: 1, range: 5, spd: [1.05, .05], hair: 0 },
-  captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [375, 25], dmg: [11, .5], rate: 1, spd: [1, 0], hair: 3 },
+  captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [375, 25], dmg: [10.5, .5], rate: 1, spd: [1, 0], hair: 3 },
 };
 const HERO_KEY = id => id === 'heir' ? 'mtd-hero' : 'mtd-hero-' + id;
 var HERO_ID = (() => { try { const id = localStorage.getItem('mtd-hero-pick'); return HERO_DEFS[id] ? id : 'heir'; } catch (e) { return 'heir'; } })();
