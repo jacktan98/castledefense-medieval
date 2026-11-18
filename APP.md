@@ -71,6 +71,17 @@ The Simulator can buy from a **StoreKit test file** that lives only on the Mac: 
 Only runs started from Xcode use the test file; TestFlight and App Store builds always use the real App Store. Before
 testing the real purchase on your iPhone, set step 2 back to **None**, or the phone buys from the test file too.
 
+### The rating pop-up (version 1.1)
+
+The game asks Apple for its "Enjoying Castle Defense?" pop-up once each after three wins: Stage 3 with 2 or 3 stars,
+Raider Keep, and all twelve main stages, a moment after the campaign shows again (after the next stage's unlock).
+- Run from Xcode (on the Simulator or your iPhone), the pop-up always shows, but tapping a star sends nothing.
+- In TestFlight it never shows: that is Apple's rule, not a bug.
+- In the App Store version Apple decides whether it shows, at most 3 times a year per person.
+- To see it again while testing, use **Reset campaign** in Settings (it forgets which moments were asked).
+- After changing `plugins/store`, run `npm run app` and check the app still builds in Xcode (the plugin's Swift can't be
+  compiled off the Mac).
+
 ## Sending a build to TestFlight / the App Store
 
 1. In Xcode, pick **Any iOS Device (arm64)** at the top.

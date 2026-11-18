@@ -8408,6 +8408,7 @@ function endGame(won) {
     nextStage = won && st >= 0 ? (unlockNext ? unlockNext[0] : Math.min(st + 1, CAMPAIGN.length - 1)) : st; }
   if (!hardOn && n > (STARS[MAP] || 0)) { STARS[MAP] = n; try { localStorage.setItem('mtd-stars', JSON.stringify(STARS)); } catch (e) {} }
   if (won && hardOn && !CROWNS[MAP]) { CROWNS[MAP] = 1; try { localStorage.setItem('mtd-crowns', JSON.stringify(CROWNS)); } catch (e) {} }
+  reviewMoment(won);   // a big win: the App Store's rating pop-up once back on the campaign (11-store.js)
   // achievements of the win itself, then the ones the stars and crowns now earn
   if (won) { if (!stats.lostB) achFlag('flawless'); if (C && C.hp < C.max * .1) achFlag('laststand'); } achCheck();
   if (won && hardOn) $('#sumText').innerHTML = `All ${NIGHTS} waves held · <b class="hardTag">Hard</b>`;
@@ -11211,6 +11212,7 @@ function openCampaign(i) {
   cSel = i !== undefined ? i : cCur; cDrag = 0; layoutDeck(false); openStage(cSel);
   // the full game was bought or restored away from the campaign (its thank-you card already shown there): the reveal plays now
   if (pendingReveal) { pendingReveal = false; revealStart(); revealSweep(); }
+  reviewSoon(1800);   // a big win's rating pop-up, once any unlock has finished (11-store.js)
 }
 $('#campBtn').addEventListener('click', () => { sfx('click'); openCampaign(); });
 // a stage just unlocked by the last win (Jack): its card starts grey with the padlock, the padlock springs open and fades, and the
@@ -11571,7 +11573,7 @@ $('#adGallery').addEventListener('click', openGallery);
 let campResetT = 0;
 for (const b of document.querySelectorAll('.campReset')) b.addEventListener('click', () => {
   if (performance.now() > campResetT) { campResetT = performance.now() + 3000; b.style.minWidth = b.offsetWidth + 'px'; b.classList.add('armed'); b.innerHTML = PICO.tick.replace('<svg ', '<svg class="bIco" '); setTimeout(() => { if (performance.now() > campResetT) { b.classList.remove('armed'); b.textContent = 'Reset campaign'; b.style.minWidth = ''; } }, 3100); return; }
-  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards', 'hero', 'hero-ranger', 'hero-captain', 'hero-pick']) localStorage.removeItem('mtd-' + k); } catch (e) {}
+  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards', 'hero', 'hero-ranger', 'hero-captain', 'hero-pick', 'review']) localStorage.removeItem('mtd-' + k); } catch (e) {}
   location.reload();
 });
 $('#moveBtn').addEventListener('click', () => { if (paused) return setHint('Paused', 'bad'); if (!selected) return; moveFor = moveFor === selected ? null : selected; setHint(moveFor ? 'Tap a tile' : 'Select a building'); refreshCard(); });
@@ -11788,6 +11790,32 @@ if (STORE) {
 }
 
 syncTitleCrown();
+// ---------- the App Store rating pop-up (Jack, version 1.1) ----------
+// Apple's own "Enjoying Castle Defense?" pop-up, asked once each at three big wins: Stage 3 won with 2 or 3 stars (the end of the
+// free stages), Raider Keep won (the first boss), and all twelve main stages won. Never at a defeat, mid-game or over the summary:
+// endGame notes the moment (reviewMoment) and the game asks once the campaign is up again, after any stage's unlock and any
+// purchase reveal have finished (reviewSoon). Only in the app (STORE.review, plugins/store); Apple decides whether it shows, at most
+// 3 times a year. Moments asked are kept in mtd-review (Reset campaign clears it)
+var reviewDue = null, reviewTimer = 0;
+const reviewAsked = () => { try { return JSON.parse(localStorage.getItem('mtd-review')) || []; } catch (e) { return []; } };
+function reviewMoment(won) {
+  if (!won || !STORE || typeof STORE.review !== 'function' || !CAMP_MAPS[MAP] || CAMP_MAPS[MAP].bonus) return;
+  const done = reviewAsked();
+  const k = !done.includes('all12') && mainWon() ? 'all12' : MAP === 'keep' && !done.includes('keep') ? 'keep'
+    : MAP === 'cross' && (STARS.cross || 0) >= 2 && !done.includes('stage3') ? 'stage3' : null;
+  if (k) reviewDue = k;
+}
+function reviewSoon(ms) {
+  clearTimeout(reviewTimer); if (!reviewDue) return;
+  reviewTimer = setTimeout(() => {
+    // only on the campaign, with nothing unlocking or being revealed; else it waits (or for the next time the campaign opens)
+    if ($('#campaign').hidden || !reviewDue) return;
+    if (revealLock || !$('#fullWrap').hidden || !$('#offerWrap').hidden || document.querySelector('.cCard.unlocking, .cCard.preUnlock')) { reviewSoon(1500); return; }
+    const k = reviewDue; reviewDue = null;
+    try { localStorage.setItem('mtd-review', JSON.stringify(reviewAsked().concat(k))); } catch (e) {}
+    try { const p = STORE.review(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+  }, ms);
+}
 // ---------- star upgrades (campaign only) ----------
 // Jack: the stars won on the campaign buy upgrades, ★1 each, in three tabs (Economy, Defences, Castle); every building has one
 // or two, the second only after the first; 36 in all, one for each star there is. Bought ones are kept in localStorage['mtd-upg']
@@ -12554,7 +12582,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '9cd0df29fd'; var updateWait = false, updateT = 0;
+const BUILD = 'fee410be80'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

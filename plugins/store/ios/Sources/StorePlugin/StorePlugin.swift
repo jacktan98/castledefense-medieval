@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Capacitor
 import StoreKit
 
@@ -7,6 +8,7 @@ import StoreKit
 //   buy({ id })        -> { state: 'bought' | 'pending' | 'cancelled' | 'failed' }
 //   owned()            -> { ids }   what this Apple account owns now (works offline)
 //   restore()          -> { ids }   asks the App Store to sync first (Restore purchases)
+//   review()           -> { asked }   asks Apple to show its rating pop-up (Apple decides whether it shows, at most 3 times a year)
 //   event 'owned'      -> { ids, revoked }   a purchase finished outside buy() (Ask to Buy, an interrupted purchase) or refunded
 @objc(StorePlugin)
 public class StorePlugin: CAPPlugin, CAPBridgedPlugin {
@@ -16,7 +18,8 @@ public class StorePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "products", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "buy", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "owned", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "review", returnType: CAPPluginReturnPromise)
     ]
     private var updates: Task<Void, Never>?
 
@@ -98,6 +101,25 @@ public class StorePlugin: CAPPlugin, CAPBridgedPlugin {
             // asks the player to sign in if needed; a cancel there still reports what is already owned
             try? await AppStore.sync()
             call.resolve(["ids": await self.ownedIds()])
+        }
+    }
+
+    // Apple's own "Enjoying Castle Defense?" pop-up, in the app's active window; the game calls it after a big win (11-store.js)
+    @objc func review(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            let scene = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first { $0.activationState == .foregroundActive }
+            guard let scene = scene else {
+                call.resolve(["asked": false])
+                return
+            }
+            if #available(iOS 16.0, *) {
+                AppStore.requestReview(in: scene)
+            } else {
+                SKStoreReviewController.requestReview(in: scene)
+            }
+            call.resolve(["asked": true])
         }
     }
 }

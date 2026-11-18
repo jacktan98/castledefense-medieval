@@ -371,6 +371,7 @@ function endGame(won) {
     nextStage = won && st >= 0 ? (unlockNext ? unlockNext[0] : Math.min(st + 1, CAMPAIGN.length - 1)) : st; }
   if (!hardOn && n > (STARS[MAP] || 0)) { STARS[MAP] = n; try { localStorage.setItem('mtd-stars', JSON.stringify(STARS)); } catch (e) {} }
   if (won && hardOn && !CROWNS[MAP]) { CROWNS[MAP] = 1; try { localStorage.setItem('mtd-crowns', JSON.stringify(CROWNS)); } catch (e) {} }
+  reviewMoment(won);   // a big win: the App Store's rating pop-up once back on the campaign (11-store.js)
   // achievements of the win itself, then the ones the stars and crowns now earn
   if (won) { if (!stats.lostB) achFlag('flawless'); if (C && C.hp < C.max * .1) achFlag('laststand'); } achCheck();
   if (won && hardOn) $('#sumText').innerHTML = `All ${NIGHTS} waves held · <b class="hardTag">Hard</b>`;

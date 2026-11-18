@@ -811,6 +811,7 @@ function openCampaign(i) {
   cSel = i !== undefined ? i : cCur; cDrag = 0; layoutDeck(false); openStage(cSel);
   // the full game was bought or restored away from the campaign (its thank-you card already shown there): the reveal plays now
   if (pendingReveal) { pendingReveal = false; revealStart(); revealSweep(); }
+  reviewSoon(1800);   // a big win's rating pop-up, once any unlock has finished (11-store.js)
 }
 $('#campBtn').addEventListener('click', () => { sfx('click'); openCampaign(); });
 // a stage just unlocked by the last win (Jack): its card starts grey with the padlock, the padlock springs open and fades, and the
@@ -1171,7 +1172,7 @@ $('#adGallery').addEventListener('click', openGallery);
 let campResetT = 0;
 for (const b of document.querySelectorAll('.campReset')) b.addEventListener('click', () => {
   if (performance.now() > campResetT) { campResetT = performance.now() + 3000; b.style.minWidth = b.offsetWidth + 'px'; b.classList.add('armed'); b.innerHTML = PICO.tick.replace('<svg ', '<svg class="bIco" '); setTimeout(() => { if (performance.now() > campResetT) { b.classList.remove('armed'); b.textContent = 'Reset campaign'; b.style.minWidth = ''; } }, 3100); return; }
-  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards', 'hero', 'hero-ranger', 'hero-captain', 'hero-pick']) localStorage.removeItem('mtd-' + k); } catch (e) {}
+  try { for (const k of ['stars', 'best', 'crowns', 'save', 'guide', 'tips', 'stage-pair', 'stage-decor', 'upg', 'ach', 'codex', 'story', 'cards', 'hero', 'hero-ranger', 'hero-captain', 'hero-pick', 'review']) localStorage.removeItem('mtd-' + k); } catch (e) {}
   location.reload();
 });
 $('#moveBtn').addEventListener('click', () => { if (paused) return setHint('Paused', 'bad'); if (!selected) return; moveFor = moveFor === selected ? null : selected; setHint(moveFor ? 'Tap a tile' : 'Select a building'); refreshCard(); });

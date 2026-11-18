@@ -136,3 +136,29 @@ if (STORE) {
 }
 
 syncTitleCrown();
+// ---------- the App Store rating pop-up (Jack, version 1.1) ----------
+// Apple's own "Enjoying Castle Defense?" pop-up, asked once each at three big wins: Stage 3 won with 2 or 3 stars (the end of the
+// free stages), Raider Keep won (the first boss), and all twelve main stages won. Never at a defeat, mid-game or over the summary:
+// endGame notes the moment (reviewMoment) and the game asks once the campaign is up again, after any stage's unlock and any
+// purchase reveal have finished (reviewSoon). Only in the app (STORE.review, plugins/store); Apple decides whether it shows, at most
+// 3 times a year. Moments asked are kept in mtd-review (Reset campaign clears it)
+var reviewDue = null, reviewTimer = 0;
+const reviewAsked = () => { try { return JSON.parse(localStorage.getItem('mtd-review')) || []; } catch (e) { return []; } };
+function reviewMoment(won) {
+  if (!won || !STORE || typeof STORE.review !== 'function' || !CAMP_MAPS[MAP] || CAMP_MAPS[MAP].bonus) return;
+  const done = reviewAsked();
+  const k = !done.includes('all12') && mainWon() ? 'all12' : MAP === 'keep' && !done.includes('keep') ? 'keep'
+    : MAP === 'cross' && (STARS.cross || 0) >= 2 && !done.includes('stage3') ? 'stage3' : null;
+  if (k) reviewDue = k;
+}
+function reviewSoon(ms) {
+  clearTimeout(reviewTimer); if (!reviewDue) return;
+  reviewTimer = setTimeout(() => {
+    // only on the campaign, with nothing unlocking or being revealed; else it waits (or for the next time the campaign opens)
+    if ($('#campaign').hidden || !reviewDue) return;
+    if (revealLock || !$('#fullWrap').hidden || !$('#offerWrap').hidden || document.querySelector('.cCard.unlocking, .cCard.preUnlock')) { reviewSoon(1500); return; }
+    const k = reviewDue; reviewDue = null;
+    try { localStorage.setItem('mtd-review', JSON.stringify(reviewAsked().concat(k))); } catch (e) {}
+    try { const p = STORE.review(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+  }, ms);
+}
