@@ -289,7 +289,7 @@ function resumeGame() {
   PH = { kind: 'day', wave: S.wave, t: S.t }; nextPts = null; startRepairs(); assignJobs();
   const K = castleB(); if (K) { const c = center(K); target.set(c.x, 2, c.z); updateCam(); }
   $('#log').innerHTML = ''; log(`Survive <b>${NIGHTS} nights</b>`); log(`<b>Day ${S.wave}</b> · resumed`, 'good'); banner(`Day ${S.wave}`, 'Resumed');
-  goalsKey = ''; renderGoals();
+  goalsKey = ''; renderGoals(); warmUp();
 }
 // everyone off their posts and out again (dawn, and the cheer after the last night is won)
 function standDown() {

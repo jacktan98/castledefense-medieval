@@ -132,6 +132,7 @@ function startGame() {
   // the Goals panel shows this game's goals at once (it only redrew on the HUD tick, which waits behind the new-building cards,
   // so an open panel kept the last stage's goals: Jack)
   goalsKey = ''; renderGoals(); weatherReset(); heroStart(); sweepGeo(); cellOpen = fieldCache = pass3 = null; regionDirty = true;
+  warmUp();
 }
 
 // ---------- loop ----------

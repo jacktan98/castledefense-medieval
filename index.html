@@ -2283,6 +2283,23 @@ function sweepGeo() {
   scene.traverse(mark); if (gScene) gScene.traverse(mark);
   for (const g of liveGeo) if (!used.has(g)) { liveGeo.delete(g); g.dispose(); }
 }
+// zooming out hung the phone for a moment (Jack, the app): three only builds a material's shader and uploads its pictures the first
+// time it is in view, so the first zoom out on a stage built them all at once mid-game (7 shaders, about 2 s on Raider Keep in a test).
+// warmUp builds every shader and picture in the scene, in view or not, while the stage loads (end of startGame and resumeGame)
+const TEX_KEYS = ['map', 'alphaMap', 'bumpMap', 'normalMap', 'roughnessMap', 'emissiveMap'];
+function warmUp() {
+  try {
+    renderer.compile(scene, camera);
+    // and every shape: one draw of the whole scene with nothing culled sends them all to the graphics chip (224 shapes on Raider
+    // Keep were only sent at the first zoom out); the next frame draws over it
+    const culled = [];
+    scene.traverse(o => { if (o.frustumCulled) { o.frustumCulled = false; culled.push(o); } });
+    renderer.render(scene, camera);
+    for (const o of culled) o.frustumCulled = true;
+    const seen = new Set();
+    scene.traverse(o => { for (const m of [].concat(o.material || [])) for (const k of TEX_KEYS) { const t = m[k]; if (t && t.image && !seen.has(t)) { seen.add(t); renderer.initTexture(t); } } });
+  } catch (e) { console.warn('warm up', e); }
+}
 renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
 const scene = new THREE.Scene();
 const SKY_DAY = new THREE.Color('#96b3c9'), SKY_NIGHT = new THREE.Color('#2a3b63'), SKY_DUSK = new THREE.Color('#c98a5a');
@@ -8304,7 +8321,7 @@ function resumeGame() {
   PH = { kind: 'day', wave: S.wave, t: S.t }; nextPts = null; startRepairs(); assignJobs();
   const K = castleB(); if (K) { const c = center(K); target.set(c.x, 2, c.z); updateCam(); }
   $('#log').innerHTML = ''; log(`Survive <b>${NIGHTS} nights</b>`); log(`<b>Day ${S.wave}</b> · resumed`, 'good'); banner(`Day ${S.wave}`, 'Resumed');
-  goalsKey = ''; renderGoals();
+  goalsKey = ''; renderGoals(); warmUp();
 }
 // everyone off their posts and out again (dawn, and the cheer after the last night is won)
 function standDown() {
@@ -12104,6 +12121,7 @@ function startGame() {
   // the Goals panel shows this game's goals at once (it only redrew on the HUD tick, which waits behind the new-building cards,
   // so an open panel kept the last stage's goals: Jack)
   goalsKey = ''; renderGoals(); weatherReset(); heroStart(); sweepGeo(); cellOpen = fieldCache = pass3 = null; regionDirty = true;
+  warmUp();
 }
 
 // ---------- loop ----------
@@ -12530,7 +12548,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'bd07fe3d25'; var updateWait = false, updateT = 0;
+const BUILD = 'b8624c4a42'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
