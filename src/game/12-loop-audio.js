@@ -548,6 +548,10 @@ function unlockAudio() {
   syncMusic();
 }
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
+// in the app nothing waits for a tap (Jack: the music only started once the screen was touched): Capacitor's web view lets sound
+// play with no gesture (mediaTypesRequiringUserActionForPlayback = []), so the title's music starts as the game opens; tried again
+// once the page has loaded and a moment later (the loops' files are read into memory first). Browsers still wait for a tap
+if (IN_APP) { setTimeout(unlockAudio, 0); addEventListener('load', () => setTimeout(unlockAudio, 0)); setTimeout(unlockAudio, 1500); setTimeout(unlockAudio, 4000); }
 document.addEventListener('visibilitychange', () => { if (actx) document.hidden ? actx.suspend() : audioUnlocked && actx.resume(); syncMusic(); });
 // iOS can leave the sound 'interrupted' (a call, the app's own audio session being set): try to bring it back as soon as it
 // stops running while the game is on screen, and again at the next sound (sfx skips sounds while it isn't running)

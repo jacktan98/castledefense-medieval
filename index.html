@@ -12571,6 +12571,10 @@ function unlockAudio() {
   syncMusic();
 }
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
+// in the app nothing waits for a tap (Jack: the music only started once the screen was touched): Capacitor's web view lets sound
+// play with no gesture (mediaTypesRequiringUserActionForPlayback = []), so the title's music starts as the game opens; tried again
+// once the page has loaded and a moment later (the loops' files are read into memory first). Browsers still wait for a tap
+if (IN_APP) { setTimeout(unlockAudio, 0); addEventListener('load', () => setTimeout(unlockAudio, 0)); setTimeout(unlockAudio, 1500); setTimeout(unlockAudio, 4000); }
 document.addEventListener('visibilitychange', () => { if (actx) document.hidden ? actx.suspend() : audioUnlocked && actx.resume(); syncMusic(); });
 // iOS can leave the sound 'interrupted' (a call, the app's own audio session being set): try to bring it back as soon as it
 // stops running while the game is on screen, and again at the next sound (sfx skips sounds while it isn't running)
@@ -12582,7 +12586,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'fee410be80'; var updateWait = false, updateT = 0;
+const BUILD = '04c2b6d6f5'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
