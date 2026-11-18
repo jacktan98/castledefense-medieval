@@ -735,6 +735,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 .cDotsWrap{position:relative;width:min(380px,100%)} .cDotsWrap .cDots{width:100%}
 .campSide{position:absolute;left:0;bottom:100%;margin-bottom:10px;z-index:5;display:flex;gap:10px}
 .modal.tome .campSide .campCirc{position:relative;width:48px;height:48px;min-height:0!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;background:radial-gradient(circle at 50% 35%,#5a4428,#241a0c)!important;border:2px solid #d9b04e!important;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(240,201,90,.25)!important}
+.modal.tome .campSide .campCirc[hidden]{display:none!important}
 .campCirc > svg{width:30px;height:30px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
 .campBadge{position:absolute;top:-5px;right:-14px;padding:0 5px;border-radius:9px;background:#f0c95a;color:#2a1c08;font-size:11px;font-weight:700;line-height:16px;border:1.5px solid #fff1c4;box-shadow:0 1px 3px rgba(0,0,0,.6);animation:badgePulse 1.6s ease-in-out infinite}
 /* stars still to spend: the badge pulses and glows so players see there are upgrades to buy (Jack); hidden at none */
@@ -1436,6 +1437,9 @@ if ('serviceWorker' in navigator && !window.MTD_DEMO && (location.protocol === '
 <script>
 (() => {
 const $ = s => document.querySelector(s);
+// the heroes (the Heir, the Ranger, the Captain): off for the App Store's version 1.1 (Jack: build 4 ships without them); true brings
+// back the hero on the map, the portrait, the Hero screen and its campaign button, and the three hero achievements. Saved levels are kept either way
+const HEROES_ON = false;
 // colour management: colours are written in sRGB, converted to linear for lighting, and the renderer converts back with filmic tone mapping
 { const P = THREE.Color.prototype, sH = P.setHex, sS = P.setStyle, sL = P.setHSL;
   P.setHex = function (h) { sH.call(this, h); return this.convertSRGBToLinear(); };
@@ -8997,7 +9001,8 @@ const ACH_TABS = [
     ['wall100', 'Great Wall', 'Build 100 walls', 'stone-wall', 'walls', 100],
   ]],
 ];
-const ACH_ALL = ACH_TABS.flatMap(([t, l]) => l.map(a => ({ tab: t, id: a[0], name: a[1], how: a[2], ico: a[3], p: a[4], of: a[5] })));
+const HERO_ACH = ['hero10', 'heroes10', 'hero200'];   // hidden while the heroes are off (HEROES_ON)
+const ACH_ALL = ACH_TABS.flatMap(([t, l]) => l.filter(a => HEROES_ON || !HERO_ACH.includes(a[0])).map(a => ({ tab: t, id: a[0], name: a[1], how: a[2], ico: a[3], p: a[4], of: a[5] })));
 var ACH = { done: {}, n: {} }; try { const o = JSON.parse(localStorage.getItem('mtd-ach') || '{}'); ACH = { done: o.done || {}, n: o.n || {} }; } catch (e) {}
 let achSaveT = 0;
 const achSave = () => { if (achSaveT) return; achSaveT = setTimeout(() => { achSaveT = 0; try { localStorage.setItem('mtd-ach', JSON.stringify(ACH)); } catch (e) {} }, 800); };
@@ -9245,7 +9250,7 @@ document.addEventListener('click', e => { if (e.target.closest('#campCxBtn')) op
 // back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point. The skills are passive (Jack: no
 // abilities in the game, like the later Kingdom Rush games) and are learnt only on the campaign's Hero screen (#heroPick).
 // the Heir is part of the game for everyone now (Jack: it was a testing switch in the admin, which left the skills locked on his phone)
-const heroOn = () => true;
+const heroOn = () => HEROES_ON;   // the switch is in 00-core.js
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
@@ -10266,9 +10271,9 @@ function renderHeroPick() {
   }
   syncHeroBadge();
 }
-document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
+document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's helpers (testing)
-function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = false; syncHeroBadge(); } }
+function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !HEROES_ON; syncHeroBadge(); } }
 $('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
   HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();
@@ -12548,7 +12553,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'b8624c4a42'; var updateWait = false, updateT = 0;
+const BUILD = 'f23d1a19eb'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

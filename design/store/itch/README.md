@@ -32,7 +32,7 @@ The full game is on the App Store for iPhone and iPad, with
 - 12 campaign stages
 - 2 boss battles
 - 3 bonus stages on Hard
-- 36 star upgrades and 31 achievements
+- 36 star upgrades and 28 achievements
 
 Get it at https://apps.apple.com/app/id6832629905
 

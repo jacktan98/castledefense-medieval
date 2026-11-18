@@ -47,7 +47,8 @@ const ACH_TABS = [
     ['wall100', 'Great Wall', 'Build 100 walls', 'stone-wall', 'walls', 100],
   ]],
 ];
-const ACH_ALL = ACH_TABS.flatMap(([t, l]) => l.map(a => ({ tab: t, id: a[0], name: a[1], how: a[2], ico: a[3], p: a[4], of: a[5] })));
+const HERO_ACH = ['hero10', 'heroes10', 'hero200'];   // hidden while the heroes are off (HEROES_ON)
+const ACH_ALL = ACH_TABS.flatMap(([t, l]) => l.filter(a => HEROES_ON || !HERO_ACH.includes(a[0])).map(a => ({ tab: t, id: a[0], name: a[1], how: a[2], ico: a[3], p: a[4], of: a[5] })));
 var ACH = { done: {}, n: {} }; try { const o = JSON.parse(localStorage.getItem('mtd-ach') || '{}'); ACH = { done: o.done || {}, n: o.n || {} }; } catch (e) {}
 let achSaveT = 0;
 const achSave = () => { if (achSaveT) return; achSaveT = setTimeout(() => { achSaveT = 0; try { localStorage.setItem('mtd-ach', JSON.stringify(ACH)); } catch (e) {} }, 800); };

@@ -718,6 +718,7 @@ body.showcase #upPick.modal.tome{background-color:transparent!important;backgrou
 .cDotsWrap{position:relative;width:min(380px,100%)} .cDotsWrap .cDots{width:100%}
 .campSide{position:absolute;left:0;bottom:100%;margin-bottom:10px;z-index:5;display:flex;gap:10px}
 .modal.tome .campSide .campCirc{position:relative;width:48px;height:48px;min-height:0!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center;background:radial-gradient(circle at 50% 35%,#5a4428,#241a0c)!important;border:2px solid #d9b04e!important;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(240,201,90,.25)!important}
+.modal.tome .campSide .campCirc[hidden]{display:none!important}
 .campCirc > svg{width:30px;height:30px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
 .campBadge{position:absolute;top:-5px;right:-14px;padding:0 5px;border-radius:9px;background:#f0c95a;color:#2a1c08;font-size:11px;font-weight:700;line-height:16px;border:1.5px solid #fff1c4;box-shadow:0 1px 3px rgba(0,0,0,.6);animation:badgePulse 1.6s ease-in-out infinite}
 /* stars still to spend: the badge pulses and glows so players see there are upgrades to buy (Jack); hidden at none */

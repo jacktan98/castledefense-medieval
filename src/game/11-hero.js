@@ -5,7 +5,7 @@
 // back after HERO_CD s of game time, like the castle's riders. Each level brings a skill point. The skills are passive (Jack: no
 // abilities in the game, like the later Kingdom Rush games) and are learnt only on the campaign's Hero screen (#heroPick).
 // the Heir is part of the game for everyone now (Jack: it was a testing switch in the admin, which left the skills locked on his phone)
-const heroOn = () => true;
+const heroOn = () => HEROES_ON;   // the switch is in 00-core.js
 const HERO_CD = 30, HERO_MAX = 10;
 // skills: rank by rank, the level each rank needs
 const HERO_SK = {
@@ -1026,9 +1026,9 @@ function renderHeroPick() {
   }
   syncHeroBadge();
 }
-document.addEventListener('click', e => { if (e.target.closest('#campHeroBtn')) openHeroPick(); });
+document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's helpers (testing)
-function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = false; syncHeroBadge(); } }
+function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !HEROES_ON; syncHeroBadge(); } }
 $('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
   HERO = heroBlank(); saveHero(); syncHeroBadge(); if (hero) { const x = hero.x, z = hero.z; heroKit(hero); hero.x = x; hero.z = z; } heroKey = ''; heroUI();

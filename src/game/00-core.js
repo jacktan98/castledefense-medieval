@@ -1,5 +1,8 @@
 (() => {
 const $ = s => document.querySelector(s);
+// the heroes (the Heir, the Ranger, the Captain): off for the App Store's version 1.1 (Jack: build 4 ships without them); true brings
+// back the hero on the map, the portrait, the Hero screen and its campaign button, and the three hero achievements. Saved levels are kept either way
+const HEROES_ON = false;
 // colour management: colours are written in sRGB, converted to linear for lighting, and the renderer converts back with filmic tone mapping
 { const P = THREE.Color.prototype, sH = P.setHex, sS = P.setStyle, sL = P.setHSL;
   P.setHex = function (h) { sH.call(this, h); return this.convertSRGBToLinear(); };
