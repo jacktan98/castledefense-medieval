@@ -42,7 +42,7 @@ const skR = (k, v) => v && v.rk != null ? (!v.rkSk || v.rkSk === k ? v.rk : 0) :
 const HERO_DEFS = {
   // (Jack's second balance pass) level 1, then what each level adds; rate is seconds between blows or arrows; spd the walk speed
   heir: { name: 'The Heir', role: 'Knight', order: ['cry', 'flurry', 'horse'], hp: [265, 15], dmg: [16, 1], rate: 1, spd: [1, 0], hair: 1 },
-  ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'quick', 'eye'], hp: [160, 10], dmg: [6, 1], rate: 1, range: 5, spd: [1.05, .05], hair: 0 },
+  ranger: { name: 'The Ranger', role: 'Archer', order: ['twin', 'quick', 'eye'], hp: [110, 10], dmg: [6, 1], rate: 1, range: 5, spd: [1.05, .05], hair: 0 },
   captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [375, 25], dmg: [10.5, .5], rate: 1, spd: [1, 0], hair: 3 },
 };
 const HERO_KEY = id => id === 'heir' ? 'mtd-hero' : 'mtd-hero-' + id;
@@ -929,6 +929,8 @@ var heroTeamKey = '';
 function heroRecolour() { if (hpModel) { cxScene && cxScene.remove(hpModel.g); hpModel = null; } heroTeamKey = ''; }
 function heroModel(id = HERO_ID) {
   const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); heroKitFoot(p, id); p.seed = 0;
+  // no Inspire standard in the portraits (Jack: it stood up behind the head)
+  if (p.standard) { p.standard.visible = false; p.standard = null; p.pennant = null; }
   p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
   return { g: p.g, p };
 }
