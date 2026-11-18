@@ -302,7 +302,10 @@ const bossCamps = () => MAP === 'hold' ? HOLD_CAMPS : MAP === 'keep' ? KEEP_CAMP
 const campProp = (x, z) => bossCamps().some(c => (c.fire && Math.hypot(x - c.fire[0], z - c.fire[1]) < .9) || (c.props || []).some(([, a, b, , r]) => Math.hypot(x - a, z - b) < (r || .8)));
 // Dunewell's pool: its whole basin (the steep bank down to the water) is off limits, else units stood on the bank inside the
 // crater and looked to be in the pond (Jack); ellD 1.36 is just past the top of the bank (sstep .85–1.35 in duneHeight)
-const sceneryAt = (x, z) => MAP === 'dune' && ellD(x, z, DUNE_POOL) < 1.36 ? true : (MAP === 'hold' || MAP === 'keep') && campProp(x, z) ? true : MAP === 'hold' && HOLD_TOWERS.some(([a, b]) => Math.hypot(x - a, z - b) < 1.2) ? true : MAP === 'keep' ? inPoly(KEEP_POLY, x, z) || KEEP_RUINS.some(([a, b]) => Math.hypot(x - a, z - b) < 1.7) : MAP === 'hold' ? inPoly(HOLD_POLY, x, z) : false;
+const sceneryAt = (x, z) => MAP === 'dune' && ellD(x, z, DUNE_POOL) < 1.36 ? true : (MAP === 'hold' || MAP === 'keep') && campProp(x, z) ? true : MAP === 'hold' && HOLD_TOWERS.some(([a, b]) => Math.hypot(x - a, z - b) < 1.2) ? true : MAP === 'keep' ? inPoly(KEEP_POLY, x, z) || keepDitch(x, z) || KEEP_RUINS.some(([a, b]) => Math.hypot(x - a, z - b) < 1.7) : MAP === 'hold' ? inPoly(HOLD_POLY, x, z) : false;
+// Raider Keep's dry ditch (Jack: the hero walked down into it): closed like the keep's yard, all but the crossing at the gate
+// (keepHeight leaves the ditch out within 3.4 m of the gate's middle and shallow to 4.6)
+const keepDitch = (x, z) => Math.abs(x - KEEP_GATE[0]) > 3.8 && polyDist(KEEP_DITCH, x, z) < 2.3;
 // the maps with ground nobody may walk or build on (Mountain pass's mountains, Greenvale's hills)
 const mapOpenRaw = (x, z) => MAP === 'pass' ? passOpen(x, z) : MAP === 'vale' ? valeOpen(x, z) : MAP === 'hold' ? holdOpen(x, z) : true;
 // asked for every step every unit takes (canStand), and each answer walks the whole mountain line: on Warlord's Hold it was a
