@@ -225,7 +225,9 @@ function dress(v, kind) {
   else if (O.hat === 'felt') { h.add(cyl(.2, .2, .03, 10, O.hatM, 0, 1.12, 0)); h.add(cyl(.12, .13, .11, 10, O.hatM, 0, 1.19, 0)); }
   v.body.add(h); v.hatG = h;
   // the herder's coif covers the hair (it showed through it); any other outfit shows it again
-  if (v.headParts && v.headParts[2] && !v.hero) v.headParts[2].visible = !(O && O.hat === 'coif');
+  // the hair stays until the coif itself goes on in a change (Jack: the head went bare in between; headGear)
+  v.coif = !!(O && O.hat === 'coif');
+  if (v.headParts && v.headParts[2] && !v.hero) v.headParts[2].visible = !(v.coif && !v.hatOff);
   if (O && O.apron) {                       // mason's canvas apron: curved round the front of the body, waist tie and a chalk-pale hem
     v.apron = new THREE.Group();
     const cloth = new THREE.Mesh(new THREE.CylinderGeometry(.17, .216, .4, 12, 1, true, -Math.PI / 3, Math.PI * 2 / 3), apronM); cloth.position.y = .56; cloth.castShadow = true; v.apron.add(cloth);
@@ -263,6 +265,7 @@ function headGear(f, on) {
   if (kit) { for (const o of kit) if (o.userData.helm) o.visible = on; }
   else if (f.hatG) f.hatG.visible = on;
   f.hatOff = !on;
+  if (f.coif && f.headParts && f.headParts[2] && !f.hero) f.headParts[2].visible = !on;   // the hair shows while the coif is off
 }
 function changePose(f, p) {
   p = clamp(p, 0, 1);
