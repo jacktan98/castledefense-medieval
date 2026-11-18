@@ -133,7 +133,7 @@ function heroKit(v, id = HERO_ID, foot) {
     // the Heir's horse by Royal horse's rank (Jack): a blanket at rank 1; the flank cloths from 2; at 3 gold trim on them and a steel plate down its face
     const hr = skR('horse', v);
     soldierKit(v, 3, id === 'heir' && !foot && HERO.sk.horse > 0, 1);
-    if (v.horse && hr >= 3) horseArmour(v, 3, null, steelM);   // the plate only: its flanks wear the flaps below
+    if (v.horse && hr >= 3) horseArmour(v, 3, null, heroGold);   // the plate only, in the crown's gold (Jack): its flanks wear the flaps below
     for (const o of v.kit.slice()) if (o.userData && o.userData.helm) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
     if (id === 'heir') {
       const c = head(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
