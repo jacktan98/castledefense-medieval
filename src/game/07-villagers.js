@@ -3,7 +3,8 @@
 const tunics = ['#7a5434', '#8a6240', '#6b4a2e', '#956b44', '#7f5a3a', '#5f4229'].map(mat);   // plain villagers: homespun browns
 // hair is a thin open shell round the head: drawn on both sides, so its inside shows where it stands off the low-poly head (Jack saw a
 // gap between hair and head, the shell's inside being culled)
-const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(c => { const m = mat(c); m.side = THREE.DoubleSide; return m; });
+// hair is shaded smoothly (Jack: flat-shaded, the dome's rings caught the light one by one and read as the panels of a cap)
+const hairs = ['#3a2716', '#5a3a1e', '#2a221c', '#8a5a2e', '#b8894a', '#6b6b66'].map(c => { const m = mat(c); m.side = THREE.DoubleSide; m.flatShading = false; return m; });
 const skin = mat('#d6a982'), hatM = mat('#6b5236'), legM = mat('#3a2e22');
 // solid things inside a walkable plot (farm: hut, hay, scarecrow, barn, stooks; forester: hut; farmhouse: house, coop, sty, byre):
 // [x, z, half-width, half-depth] from the plot centre, by tier
