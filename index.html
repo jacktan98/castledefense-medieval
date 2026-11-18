@@ -5386,6 +5386,22 @@ function makeHelm(kind) {
 }
 const UNIT_K = .78;   // everyone drawn a little smaller so they fit through doors
 // both eyes are one mesh (one draw call a face, not two)
+// the head (Jack): the low-poly ball (8 round, rows of 30 degrees) with its bottom row cut off and closed by one flat underside,
+// as the 8 thin triangles meeting under the chin showed as shards; the lowest row is lit 1.5 times and the underside 1.6, so the
+// jaw and chin no longer go dark (vertex colours on a copy of the skin; each face takes its row from its lowest corner, so a
+// face's two triangles always match)
+const HEAD_GEO = (() => {
+  const R = .13, T = 5 * Math.PI / 6, g = new THREE.SphereGeometry(R, 8, 5, 0, Math.PI * 2, 0, T).toNonIndexed(), P = Array.from(g.attributes.position.array), C = [];
+  for (let i = 0; i < P.length / 9; i++) {
+    const y = Math.min(P[i * 9 + 1], P[i * 9 + 4], P[i * 9 + 7]), row = Math.round(Math.acos(Math.max(-1, Math.min(1, y / R))) / (Math.PI / 6)) - 1;
+    const k = row >= 4 ? 1.5 : 1; for (let j = 0; j < 3; j++) C.push(k, k, k);
+  }
+  const yc = R * Math.cos(T), rr = R * Math.sin(T), ring = j => { const ph = j / 8 * Math.PI * 2; return [-rr * Math.cos(ph), yc, rr * Math.sin(ph)]; };
+  for (let j = 0; j < 8; j++) { P.push(0, yc, 0, ...ring(j), ...ring(j + 1)); for (let q = 0; q < 3; q++) C.push(1.6, 1.6, 1.6); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); geo.computeVertexNormals();
+  return geo;
+})();
+const headSkin = skin.clone(); headSkin.vertexColors = true; headSkin.side = THREE.DoubleSide;
 const EYE_GEO = (() => { const g = new THREE.BufferGeometry(), P = [], Q = [], one = new THREE.BoxGeometry(.028, .04, .02).toNonIndexed();
   for (const sx of [-1, 1]) for (let i = 0; i < one.attributes.position.count; i++) { P.push(one.attributes.position.getX(i) + sx * .046, one.attributes.position.getY(i), one.attributes.position.getZ(i)); Q.push(one.attributes.normal.getX(i), one.attributes.normal.getY(i), one.attributes.normal.getZ(i)); }
   g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Q, 3)); return g; })(), eyeM = new THREE.MeshLambertMaterial({ color: '#1d1611' });
@@ -5400,7 +5416,7 @@ function makePerson(opts) {
     const hd = new THREE.Mesh(new THREE.SphereGeometry(.048, 6, 5), skin); hd.position.set(sx * .012, -.33, 0); hd.castShadow = true; a.add(hd);
     body.add(a); return a;
   });
-  const head = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), skin); head.position.y = 1.03; head.castShadow = true; body.add(head);
+  const head = new THREE.Mesh(HEAD_GEO, headSkin); head.position.y = 1.03; head.castShadow = true; body.add(head);
   // two small dark eyes (Jack: faces were blank up close); helms and hoods that cover the face sit over them
   // the eyes sit in a group round the head's upright axis, so the head, eyes and hair can turn together (idle villagers look about)
   const eyes = new THREE.Mesh(EYE_GEO, eyeM); eyes.position.set(0, 1.045, .119); const eyeG = new THREE.Group(); eyeG.add(eyes); body.add(eyeG);
@@ -12479,7 +12495,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'b031ad22e7'; var updateWait = false, updateT = 0;
+const BUILD = '507e30703e'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
