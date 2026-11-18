@@ -199,7 +199,8 @@ function captainHelm() {
   for (const sx of [-1, 1]) drum(sx > 0 ? SL : -W, W - SL, YB, E1);
   drum(0, 2 * S, YB, YT, capInM, .965);
   const din = add(new THREE.Mesh(new THREE.SphereGeometry(R * .965, 16, 8, 0, 2 * S, 0, S / 2), capInM)); din.position.y = YT; din.scale.y = KY;
-  const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(R + .014, R + .014, .026, 18, 1, false, 0, S), capSteelM)); ridge.rotation.z = S / 2; ridge.position.y = YT; ridge.scale.x = KY;
+  // the ridge in the town's colour (Jack)
+  const ridge = add(new THREE.Mesh(new THREE.CylinderGeometry(R + .014, R + .014, .026, 18, 1, false, 0, S), kiteM)); ridge.rotation.z = S / 2; ridge.position.y = YT; ridge.scale.x = KY;
   const run = (A, n = 8) => { const P = []; for (let i = 0; i <= n; i++) P.push(A(i / n));
     add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(P), n * 2, TR, 6, false), capTrimM)); };
   const ball = p => { const b = add(new THREE.Mesh(new THREE.SphereGeometry(TR * 1.05, 8, 6), capTrimM)); b.position.copy(p); };
@@ -212,8 +213,8 @@ function captainHelm() {
   }
   run(t => pt(SL + (2 * S - 2 * SL) * t, YB), 40);
   for (const th of [-.9, .9, -1.6, 1.6]) { const r = add(new THREE.Mesh(new THREE.SphereGeometry(.011, 6, 4), capTrimM)); r.position.copy(pt(th, YT + .045, 1.0)).setY(YT + .045); }
-  // drawn a little smaller (Jack), and set down onto the shoulders so it meets the body (Jack)
-  g.scale.setScalar(.88); g.position.y = 1.03 * (1 - .88) - .025;
+  // drawn smaller (Jack: .83, about the least before the head shows through its sides), set down onto the shoulders (Jack)
+  g.scale.setScalar(.83); g.position.y = 1.03 * (1 - .83) - .025;
   return g;
 }
 function heroHome() { const K = castleB(); if (!K) return null; const dp = doorPoint(K), [ox, oz] = faceRot(K.face || 0, 0, 1.6); return { x: dp.x + ox, z: dp.z + oz }; }
