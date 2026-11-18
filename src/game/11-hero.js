@@ -345,11 +345,19 @@ function updateHero(v, dt) {
   }
   if (heroDef().range) { rangerStep(v, dt, home); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
-  const foe = heroFoe(v, home, dt, 7, 7.5, e => Math.hypot(e.x - home.x, e.z - home.z));
+  const reachOf = e => .9 + (e.horse ? .3 : 0) + (e.engine ? ENEMY[e.kind].r : 0) + (v.cav ? .35 : 0);
+  let foe = heroFoe(v, home, dt, 7, 7.5, e => Math.hypot(e.x - home.x, e.z - home.z), reachOf);
+  // a foe out of reach while another raider stands within it: strike that one instead (Jack: surrounded, the Captain stood a
+  // moment not striking, trying to reach a raider beyond the crowd)
+  if (foe && Math.hypot(foe.x - v.x, foe.z - v.z) > reachOf(foe)) {
+    let nb = null, nd = Infinity;
+    for (const e of enemies) if (!e.dead && !e.dormant && (!v.skip || v.skip.e !== e)) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d <= reachOf(e) && d < nd) { nd = d; nb = e; } }
+    if (nb) { foe = nb; v.foePick = .4; }
+  }
   if (foe !== v.foe) v.prog = null;
   v.foe = foe; const ride = heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk'));
   if (foe) {
-    const reach = .9 + (foe.horse ? .3 : 0) + (foe.engine ? ENEMY[foe.kind].r : 0) + (v.cav ? .35 : 0), d = Math.hypot(foe.x - v.x, foe.z - v.z);
+    const reach = reachOf(foe), d = Math.hypot(foe.x - v.x, foe.z - v.z);
     if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }
     else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { const b = heroBurst(v, 'flurry', 5, .3, SWORD_T); heroStrike(v, foe);
       // Flurry at rank 3: the burst's last quick blow is a heavier finishing thrust that drives the raider back
@@ -371,8 +379,9 @@ function updateHero(v, dt) {
 // (`busyT`, set as they strike a building, a soldier or the hero) come before ones only passing by, nearer ones before further,
 // checked again every .4 s and changed only for a clearly better one (never mid-blow); a foe is given up once it is past the leash
 // from the hero's spot (`out`, 7.5 m for those who fight hand to hand: it was 10, so the hero chased walkers far from the spot)
-function heroFoe(v, home, dt, inR, outR, far) {
-  const score = e => Math.hypot(e.x - v.x, e.z - v.z) + (e.busyT > 0 ? 0 : 3);
+function heroFoe(v, home, dt, inR, outR, far, reachOf) {
+  // a raider already within the hero's reach counts as fighting too, so one at his side is never passed over for one beyond the crowd
+  const score = e => { const d = Math.hypot(e.x - v.x, e.z - v.z); return d + (e.busyT > 0 || (reachOf && d <= reachOf(e)) ? 0 : 3); };
   let foe = v.foe && !v.foe.dead && !v.foe.dormant && far(v.foe) < outR ? v.foe : null;
   if (foe && ((v.foePick = (v.foePick || 0) - dt) > 0 || v.attackT > 0)) return foe;
   v.foePick = .4;
