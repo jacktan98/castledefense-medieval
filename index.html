@@ -12365,8 +12365,12 @@ function sfxBytes(u) {
 }
 function sfxDecode(ab) { return new Promise(res => { try { const p = actx.decodeAudioData(ab, res, () => res(null)); if (p && p.catch) p.catch(() => res(null)); } catch (e) { res(null); } }); }
 var sfxLoad = { ok: 0, bad: [], n: 0 };
+var IN_APP = location.protocol === 'capacitor:', loopUrl = {};
+// in the app the title's music is read first (Jack: on the Simulator it took a while to start by itself: it was read alongside
+// every effect and loop, about 11 MB at once); the effects and the other loops wait for it, or for 4 s at most
+var firstSound = IN_APP ? Promise.race([loopSrc('music'), new Promise(r => setTimeout(r, 4000))]) : null;
 function sfxReport() { if (++sfxLoad.n === Object.values(SND).reduce((t, S) => t + (S.files || [S.file]).length, 0)) console.info('sounds loaded ' + sfxLoad.ok + ' of ' + sfxLoad.n + (sfxLoad.bad.length ? ' · missing ' + sfxLoad.bad.join(', ') : '') + ' · audio ' + (actx && actx.state)); }
-if (actx) for (const k in SND) {
+const loadSfx = () => { if (actx) for (const k in SND) {
   const S = SND[k]; clips[k] = [];
   for (const f of S.files || [S.file]) sfxBytes('audio/' + f).then(ab => ab && sfxDecode(ab)).then(b => { if (!b) { sfxLoad.bad.push(f); return; } sfxLoad.ok++;
     if (S.strikes) {
@@ -12380,13 +12384,13 @@ if (actx) for (const k in SND) {
       clips[k].push({ buf: b, from, len: b.duration - from, gain: gainFor(levelOf(b), S.trim) });
     }
   }).catch(() => sfxLoad.bad.push(f)).finally(sfxReport);
-}
+} };
+if (firstSound) firstSound.then(loadSfx, loadSfx); else loadSfx();
 // each loop is an <audio> element routed into Web Audio; makeLoop builds (or rebuilds) one onto the loop's gain node
 var loopAn = {}, MUSIC_LOOPS = ['music', 'music2', 'night'];
 // inside the app (Jack: no music on his iPhone, effects fine, the website fine) a loop's file is read like the effects' (fetch)
 // and played from a blob: address, as WebKit may not stream an <audio> from the app's own capacitor:// files into Web Audio;
 // read once per loop and kept (about 11 MB), so a rebuild reuses it
-var IN_APP = location.protocol === 'capacitor:', loopUrl = {};
 function loopSrc(k) {
   if (loopUrl[k]) return loopUrl[k];
   const mp3 = 'audio/' + LOOPS[k].file, m4a = mp3.replace(/\.mp3$/, '.m4a');
@@ -12411,7 +12415,7 @@ function makeLoop(k) {
   // phones only start downloading after the first tap, so a compact AAC copy (.m4a, ~60% smaller) is tried first;
   // if it is missing or can't play, the original .mp3 takes over, and if that fails too the loop is dropped
   const mp3 = 'audio/' + LOOPS[k].file, m4a = mp3.replace(/\.mp3$/, '.m4a');
-  if (IN_APP) loopSrc(k).then(u => {
+  if (IN_APP) (k === 'music' ? loopSrc(k) : firstSound.then(() => loopSrc(k), () => loopSrc(k))).then(u => {
     if (el !== loopEl[k]) return;
     if (!u) { console.log('loop ' + k + ' failed to load: no file'); delete loopEl[k]; syncMusic(); return; }
     el.src = u; if (loopWanted[k]) el.play().catch(e => console.log('loop ' + k + ' did not play: ' + (e && e.name) + ' · audio ' + (actx && actx.state)));
@@ -12586,7 +12590,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '04c2b6d6f5'; var updateWait = false, updateT = 0;
+const BUILD = '66e66c2a58'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
