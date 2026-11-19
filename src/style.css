@@ -1202,3 +1202,6 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 /* Second wind: the hero portrait's health bar pulses while it mends him */
 #heroBar .hpb.mend i{animation:mendPulse .8s ease-in-out infinite alternate}
 @keyframes mendPulse{from{filter:brightness(1)}to{filter:brightness(1.6) drop-shadow(0 0 3px #b8ffc8)}}
+/* beta only (Jack): Graphics and Heroes each on one row, the name left of its switch, so Settings has more room (#colCard.rowSet, set by syncHeroSet) */
+#colCard.rowSet .gfxSub{display:none} #colCard.rowSet .gfxRow{align-items:center;gap:14px} #colCard.rowSet .gfxLbl{display:block;width:72px;text-align:right;font-family:var(--display);font-size:15px;color:#f0c95a}
+#colCard.rowSet #heroSet{margin-top:-2px} #colCard.rowSet .gfxSeg button.seg{min-width:56px!important;padding-left:0!important;padding-right:0!important}

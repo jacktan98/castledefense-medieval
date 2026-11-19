@@ -1030,7 +1030,7 @@ document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#ca
 // the admin's helpers (testing)
 // beta only: Settings' Heroes On / Off hides every hero for a recording; the choice takes effect on a reload
 function syncHeroSet() {
-  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA;
+  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA; const cc = $('#colCard'); if (cc) cc.classList.toggle('rowSet', !!window.MTD_BETA);
   for (const b of document.querySelectorAll('[data-heroes]')) b.classList.toggle('on', (b.dataset.heroes === 'on') === HEROES_ON);
 }
 syncHeroSet();

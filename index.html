@@ -1219,6 +1219,9 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 /* Second wind: the hero portrait's health bar pulses while it mends him */
 #heroBar .hpb.mend i{animation:mendPulse .8s ease-in-out infinite alternate}
 @keyframes mendPulse{from{filter:brightness(1)}to{filter:brightness(1.6) drop-shadow(0 0 3px #b8ffc8)}}
+/* beta only (Jack): Graphics and Heroes each on one row, the name left of its switch, so Settings has more room (#colCard.rowSet, set by syncHeroSet) */
+#colCard.rowSet .gfxSub{display:none} #colCard.rowSet .gfxRow{align-items:center;gap:14px} #colCard.rowSet .gfxLbl{display:block;width:72px;text-align:right;font-family:var(--display);font-size:15px;color:#f0c95a}
+#colCard.rowSet #heroSet{margin-top:-2px} #colCard.rowSet .gfxSeg button.seg{min-width:56px!important;padding-left:0!important;padding-right:0!important}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -1337,10 +1340,10 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
       <div class="setSub">Sound</div>
       <div class="setVols"><label class="volRow"><span>Music</span><input type="range" id="setMusic" min="0" max="100" step="1" aria-label="Music loudness"></label>
       <label class="volRow"><span>Sounds</span><input type="range" id="setSfx" min="0" max="100" step="1" aria-label="Sound loudness"></label></div>
-      <div class="setSub">Graphics</div>
+      <div class="setSub gfxSub">Graphics</div>
       <div class="gfxRow"><span class="gfxLbl">Graphics</span><span class="gfxSeg"><button class="seg" data-gfx="low">Low</button><button class="seg" data-gfx="high">High</button></span></div>
-      <div id="heroSet" hidden><div class="setSub">Heroes</div>
-      <div class="gfxRow"><span class="gfxSeg"><button class="seg" data-heroes="on">On</button><button class="seg" data-heroes="off">Off</button></span></div></div>
+      <div id="heroSet" hidden><div class="setSub gfxSub">Heroes</div>
+      <div class="gfxRow"><span class="gfxLbl">Heroes</span><span class="gfxSeg"><button class="seg" data-heroes="on">On</button><button class="seg" data-heroes="off">Off</button></span></div></div>
       </div></div>
       <!-- Restore purchases, then Credits and Reset campaign: one row under each column sideways, so they line up (Jack) -->
       <div class="setFoot"><div class="setBtns" id="setRestoreRow" hidden><button id="setRestore">Restore purchases</button></div>
@@ -10281,7 +10284,7 @@ document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#ca
 // the admin's helpers (testing)
 // beta only: Settings' Heroes On / Off hides every hero for a recording; the choice takes effect on a reload
 function syncHeroSet() {
-  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA;
+  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA; const cc = $('#colCard'); if (cc) cc.classList.toggle('rowSet', !!window.MTD_BETA);
   for (const b of document.querySelectorAll('[data-heroes]')) b.classList.toggle('on', (b.dataset.heroes === 'on') === HEROES_ON);
 }
 syncHeroSet();
@@ -12606,7 +12609,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '8580db0ba9'; var updateWait = false, updateT = 0;
+const BUILD = 'ddcd2d7668'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
