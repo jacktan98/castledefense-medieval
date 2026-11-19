@@ -22,7 +22,7 @@ if (/fonts\.googleapis/.test(html)) throw new Error('the Google Fonts link was n
 if (!/<head>/.test(html)) throw new Error('no <head>');
 const sha = (process.env.CF_PAGES_COMMIT_SHA || (() => { try { return execSync('git rev-parse HEAD', { cwd: ROOT }).toString(); } catch (e) { return ''; } })()).trim().slice(0, 7);
 html = html.replace('<head>', '<head>\n<script>window.MTD_DEMO = true;' + (BETA ? ' window.MTD_BETA = true;' : '') + '</script>');
-if (BETA) html += `\n<div style="position:fixed;left:4px;bottom:2px;z-index:99;font:10px sans-serif;color:#fff8;pointer-events:none">beta ${sha}</div>\n`;
+if (BETA) html += `\n<div id="betaTag" style="position:fixed;left:4px;bottom:2px;z-index:99;font:10px sans-serif;color:#fff8;pointer-events:none">beta ${sha}</div>\n`;
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
 
 // the files the game loads (as the app copies them), and the fonts

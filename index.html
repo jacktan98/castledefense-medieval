@@ -629,7 +629,9 @@ body.islandR{--padR:max(8px,env(safe-area-inset-right,0px));--padL:12px}
   .corner{bottom:auto;top:8px;right:auto;left:calc(50% - 41px);flex-direction:column;align-items:flex-start}
   .cornerBtns{flex-direction:row}
   #pauseBtn{right:auto;left:calc(50% - 85px)}
-  .admin{max-height:calc(100vh - 60px);overflow:auto}
+  /* the admin opens under its button, over the dock, so its close button and the admin button stay in reach (Jack) */
+  .corner{flex-direction:column-reverse;z-index:25}
+  .admin{max-height:calc(100vh - 62px);overflow:auto}
   #raidDash{width:440px;max-height:calc(100vh - 16px);position:fixed;top:8px;right:50px;z-index:30} .rdList{grid-template-columns:1fr repeat(3,32px) 1fr repeat(3,32px);gap:3px 5px} .rdList button,.rdCount button{min-height:24px}
   .pausedTag{padding-top:0;align-items:center}
 }
@@ -1222,6 +1224,11 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 /* beta only (Jack): Graphics and Heroes each on one row, the name left of its switch, so Settings has more room (#colCard.rowSet, set by syncHeroSet) */
 #colCard.rowSet .gfxSub{display:none} #colCard.rowSet .gfxRow{align-items:center;gap:14px} #colCard.rowSet .gfxLbl{display:block;width:72px;text-align:right;font-family:var(--display);font-size:15px;color:#f0c95a}
 #colCard.rowSet #heroSet{margin-top:-2px} #colCard.rowSet .gfxSeg button.seg{min-width:56px!important;padding-left:0!important;padding-right:0!important}
+
+/* Clean screen (admin, for recordings: Jack): only Pause and the admin button stay */
+body.clean .panel,body.clean .dock,body.clean #tipPill,body.clean #powers,body.clean #heroBar,body.clean #bossBar,body.clean #raidMark0,body.clean #raidMark1,body.clean .hitMark,body.clean #wavePop,body.clean #statTip,body.clean #betaTag{display:none!important}
+.adminHead .iconBtn{margin-left:auto}
+.adminHead span{margin-left:8px}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -1263,12 +1270,13 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
   <button class="iconBtn" id="pauseBtn" aria-pressed="false" aria-label="Pause" title="Pause (P)"></button>
   <div class="corner">
     <div class="admin" id="admin" hidden>
-      <div class="adminHead"><b>Admin</b><span>testing tools</span></div>
+      <div class="adminHead"><b>Admin</b><span>testing tools</span><button class="iconBtn" id="adClose" aria-label="Close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18"/></svg></button></div>
       <div class="adminRes" id="adminRes"></div>
       <div class="adminRow"><button id="adFill">Fill all to 9,999</button><button id="adFinish">Finish all building</button></div>
       <label class="adminTog"><input type="checkbox" id="adInstant"> Instant build and upgrades</label>
       <div class="adminRow"><button id="adPop">+5 villagers</button><button id="adDay">Skip to night</button></div>
       <div class="adminRow"><button id="adRaid">Raiders</button><button id="adGallery">Gallery</button></div>
+      <div class="adminRow"><button id="speedBtn" aria-pressed="false">Speed 1×</button><button id="adClean" aria-pressed="false">Clean screen</button></div>
       <div class="adminRow"><button id="adWin">Win this stage</button></div>
       <div class="adminRow" id="adHeroRow"><button id="adHeroLv">Hero level +1</button><button id="adHeroReset">Reset hero</button></div>
       <div class="adminRow"><button id="adReset" class="campReset">Reset campaign</button></div>
@@ -1279,8 +1287,6 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
       <div class="rdList" id="rdList"></div>
     </div>
     <div class="cornerBtns">
-      <button class="iconBtn" id="muteBtn" aria-pressed="false" aria-label="Mute sound" title="Sound on (M to mute)"></button>
-      <button class="iconBtn" id="speedBtn" aria-pressed="false" aria-label="Game speed 1×" title="Game speed"><span class="spd">1×</span></button>
       <button class="iconBtn" id="adminBtn" aria-pressed="false" aria-label="Admin" title="Admin tools"><svg viewBox="0 0 24 24"><path d="M14.5 5.5 a4 4 0 0 0 4.9 5 l-8.6 8.6 a2.1 2.1 0 0 1-3-3 l8.6-8.6 a4 4 0 0 0-1.9-2z"/><path d="M5 5 L9 9"/></svg></button>
     </div>
   </div>
@@ -12208,8 +12214,17 @@ $('#pauseBtn').addEventListener('click', () => !gameOver && !menuOn() && setPaus
 $('#resumeBtn').addEventListener('click', () => !menuOn() && setPaused(false));
 $('#speedBtn').addEventListener('click', () => {
   gameSpeed = gameSpeed === 1 ? 2 : 1;
-  $('#speedBtn').innerHTML = `<span class="spd">${gameSpeed}×</span>`; $('#speedBtn').setAttribute('aria-pressed', String(gameSpeed > 1)); $('#speedBtn').setAttribute('aria-label', `Game speed ${gameSpeed}×`);
+  $('#speedBtn').textContent = `Speed ${gameSpeed}×`; $('#speedBtn').setAttribute('aria-pressed', String(gameSpeed > 1));
 });
+// Jack, for screen recordings: Clean screen hides the top panel, the dock, the hints and the other HUD, leaving only Pause and the
+// admin button (body.clean in style.css); the Select tool is picked so a tap never builds while the dock is hidden
+$('#adClean').addEventListener('click', () => {
+  const on = !document.body.classList.contains('clean'); document.body.classList.toggle('clean', on);
+  $('#adClean').setAttribute('aria-pressed', String(on)); $('#adClean').textContent = on ? 'Show HUD' : 'Clean screen';
+  if (on) { setTool('select'); deselect(); closeAdmin(); }
+});
+function closeAdmin() { $('#admin').hidden = true; $('#raidDash').hidden = true; $('#adminBtn').setAttribute('aria-pressed', 'false'); }
+$('#adClose').addEventListener('click', closeAdmin);
 $('#adminRes').innerHTML = RES_KEYS.map(k => `<div class="adRow"><span class="ico">${ICON[k]}</span><input id="ad-${k}" type="number" min="0" step="10" inputmode="numeric" aria-label="${k === 'food' ? 'Food' : k[0].toUpperCase() + k.slice(1)}"><button data-k="${k}" data-n="100">+100</button><button data-k="${k}" data-n="1000">+1k</button></div>`).join('');
 function syncAdmin(force) { for (const k of RES_KEYS) { const el = $('#ad-' + k); if (force || document.activeElement !== el) el.value = Math.floor(res[k]); } }
 RES_KEYS.forEach(k => $('#ad-' + k).addEventListener('change', e => { res[k] = Math.max(0, Math.floor(+e.target.value || 0)); syncAdmin(true); }));
@@ -12609,7 +12624,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'ddcd2d7668'; var updateWait = false, updateT = 0;
+const BUILD = 'f3cc5be366'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
@@ -12637,11 +12652,11 @@ document.addEventListener('click', e => { const b = e.target.closest('button'); 
 function setMuted(on) {
   muted = on; try { localStorage.setItem('mtd-muted', on ? '1' : '0'); } catch (e) {}
   const b = $('#muteBtn');
+  if (!b) { syncMusic(); return; }
   b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 9.5 H7.5 L12 5.5 V18.5 L7.5 14.5 H4 Z"/>' + (on ? '<path d="M16 9.5 L21 14.5 M21 9.5 L16 14.5"/>' : '<path d="M15.5 9 a4 4 0 0 1 0 6 M18 6.5 a7.5 7.5 0 0 1 0 11"/>') + '</svg>';
   b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Unmute sound' : 'Mute sound'); b.title = on ? 'Sound off (M to unmute)' : 'Sound on (M to mute)';
   syncMusic();
 }
-$('#muteBtn').addEventListener('click', () => setMuted(!muted));
 function syncAudioToggles() { for (const [id, v] of [['musicVol', musicVol], ['sfxVol', sfxVol], ['setMusic', musicVol], ['setSfx', sfxVol]]) { const el = $('#' + id); if (!el) continue; el.value = Math.round(v * 100); el.style.setProperty('--p', el.value + '%'); } }
 function setVol(kind, v) {
   v = clamp(v, 0, 1);

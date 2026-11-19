@@ -166,8 +166,17 @@ $('#pauseBtn').addEventListener('click', () => !gameOver && !menuOn() && setPaus
 $('#resumeBtn').addEventListener('click', () => !menuOn() && setPaused(false));
 $('#speedBtn').addEventListener('click', () => {
   gameSpeed = gameSpeed === 1 ? 2 : 1;
-  $('#speedBtn').innerHTML = `<span class="spd">${gameSpeed}×</span>`; $('#speedBtn').setAttribute('aria-pressed', String(gameSpeed > 1)); $('#speedBtn').setAttribute('aria-label', `Game speed ${gameSpeed}×`);
+  $('#speedBtn').textContent = `Speed ${gameSpeed}×`; $('#speedBtn').setAttribute('aria-pressed', String(gameSpeed > 1));
 });
+// Jack, for screen recordings: Clean screen hides the top panel, the dock, the hints and the other HUD, leaving only Pause and the
+// admin button (body.clean in style.css); the Select tool is picked so a tap never builds while the dock is hidden
+$('#adClean').addEventListener('click', () => {
+  const on = !document.body.classList.contains('clean'); document.body.classList.toggle('clean', on);
+  $('#adClean').setAttribute('aria-pressed', String(on)); $('#adClean').textContent = on ? 'Show HUD' : 'Clean screen';
+  if (on) { setTool('select'); deselect(); closeAdmin(); }
+});
+function closeAdmin() { $('#admin').hidden = true; $('#raidDash').hidden = true; $('#adminBtn').setAttribute('aria-pressed', 'false'); }
+$('#adClose').addEventListener('click', closeAdmin);
 $('#adminRes').innerHTML = RES_KEYS.map(k => `<div class="adRow"><span class="ico">${ICON[k]}</span><input id="ad-${k}" type="number" min="0" step="10" inputmode="numeric" aria-label="${k === 'food' ? 'Food' : k[0].toUpperCase() + k.slice(1)}"><button data-k="${k}" data-n="100">+100</button><button data-k="${k}" data-n="1000">+1k</button></div>`).join('');
 function syncAdmin(force) { for (const k of RES_KEYS) { const el = $('#ad-' + k); if (force || document.activeElement !== el) el.value = Math.floor(res[k]); } }
 RES_KEYS.forEach(k => $('#ad-' + k).addEventListener('change', e => { res[k] = Math.max(0, Math.floor(+e.target.value || 0)); syncAdmin(true); }));
@@ -595,11 +604,11 @@ document.addEventListener('click', e => { const b = e.target.closest('button'); 
 function setMuted(on) {
   muted = on; try { localStorage.setItem('mtd-muted', on ? '1' : '0'); } catch (e) {}
   const b = $('#muteBtn');
+  if (!b) { syncMusic(); return; }
   b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 9.5 H7.5 L12 5.5 V18.5 L7.5 14.5 H4 Z"/>' + (on ? '<path d="M16 9.5 L21 14.5 M21 9.5 L16 14.5"/>' : '<path d="M15.5 9 a4 4 0 0 1 0 6 M18 6.5 a7.5 7.5 0 0 1 0 11"/>') + '</svg>';
   b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Unmute sound' : 'Mute sound'); b.title = on ? 'Sound off (M to unmute)' : 'Sound on (M to mute)';
   syncMusic();
 }
-$('#muteBtn').addEventListener('click', () => setMuted(!muted));
 function syncAudioToggles() { for (const [id, v] of [['musicVol', musicVol], ['sfxVol', sfxVol], ['setMusic', musicVol], ['setSfx', sfxVol]]) { const el = $('#' + id); if (!el) continue; el.value = Math.round(v * 100); el.style.setProperty('--p', el.value + '%'); } }
 function setVol(kind, v) {
   v = clamp(v, 0, 1);
