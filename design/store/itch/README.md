@@ -43,4 +43,4 @@ Made by Jack Tan · castledefense.app
 ## Edit theme (the page's look, like the website)
 - **BG** `#100e0a` · **BG 2** `#1b1712` · **Text** `#e9dfc8` · **Link** `#e3bf66`
 - **Font** Alegreya Sans (else Lato) · **Size** Large · **Screenshots** Auto
-- **Banner** `banner-960x240.png` (made by `tools/render/store/itch-banner.html`, shot at 2×) · **Background** none · **Embed BG** none
+- **Banner** `banner-1280x320.png` (the 1920 × 480 `banner-960x240.png`, made by `tools/render/store/itch-banner.html` at 2×, shrunk to the embed's 1280 width: itch.io shows a banner at its own pixel size, so the 1920 one filled the whole window) · **Background** none · **Embed BG** none
