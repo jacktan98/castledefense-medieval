@@ -181,7 +181,7 @@ $('#adminRes').innerHTML = RES_KEYS.map(k => `<div class="adRow"><span class="ic
 function syncAdmin(force) { for (const k of RES_KEYS) { const el = $('#ad-' + k); if (force || document.activeElement !== el) el.value = Math.floor(res[k]); } }
 RES_KEYS.forEach(k => $('#ad-' + k).addEventListener('change', e => { res[k] = Math.max(0, Math.floor(+e.target.value || 0)); syncAdmin(true); }));
 document.querySelectorAll('.adRow button').forEach(b => b.addEventListener('click', () => { res[b.dataset.k] += +b.dataset.n; syncAdmin(true); }));
-$('#adminBtn').addEventListener('click', () => { const open = $('#admin').hidden && $('#raidDash').hidden; $('#raidDash').hidden = true; $('#admin').hidden = !open; $('#adminBtn').setAttribute('aria-pressed', String(open)); if (open) syncAdmin(true); });
+$('#adminBtn').addEventListener('click', () => { const open = $('#admin').hidden && $('#raidDash').hidden; $('#raidDash').hidden = true; $('#admin').hidden = !open; $('#adminBtn').setAttribute('aria-pressed', String(open)); if (open) { syncAdmin(true); $('#admin').scrollTop = 0; } });
 $('#adFill').addEventListener('click', () => { RES_KEYS.forEach(k => res[k] = 9999); syncAdmin(true); });
 $('#adFinish').addEventListener('click', () => { buildings.forEach(B => { if (B.site) B.site.progress = 1; }); });
 $('#adInstant').addEventListener('change', e => { instantBuild = e.target.checked; if (instantBuild) buildings.forEach(B => { if (B.site) B.site.progress = 1; }); });

@@ -609,9 +609,10 @@ body.islandR{--padR:max(8px,env(safe-area-inset-right,0px));--padL:12px}
   .dock > .guideCard{position:fixed;left:auto;transform:none;margin:0}
   .tipPill{left:auto!important;transform:none!important}
   /* one row at the top middle (Jack: the market's card needed the room on the right): Pause, then sound, speed and admin */
-  .corner{bottom:auto;top:8px;right:auto;left:calc(50% - 41px);flex-direction:column;align-items:flex-start}
+  .corner{bottom:auto;top:8px;right:auto;left:calc(50% + 3px);flex-direction:column;align-items:flex-start}
   .cornerBtns{flex-direction:row}
-  #pauseBtn{right:auto;left:calc(50% - 85px)}
+  /* Pause and the admin button, the pair centred at the top (Jack) */
+  #pauseBtn{right:auto;left:calc(50% - 41px)}
   /* the admin opens under its button, over the dock, so its close button and the admin button stay in reach (Jack) */
   .corner{flex-direction:column-reverse;z-index:25}
   .admin{max-height:calc(100vh - 62px);overflow:auto}
@@ -1212,3 +1213,8 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
 body.clean .panel,body.clean .dock,body.clean #tipPill,body.clean #powers,body.clean #heroBar,body.clean #bossBar,body.clean #raidMark0,body.clean #raidMark1,body.clean .hitMark,body.clean #wavePop,body.clean #statTip,body.clean #betaTag{display:none!important}
 .adminHead .iconBtn{margin-left:auto}
 .adminHead span{margin-left:8px}
+/* sideways, Clean screen moves Pause and the admin button to the top-right corner (Jack: clear of the recording's middle) */
+@media (max-height:520px){
+  body.clean #pauseBtn{left:auto;right:calc(var(--padR) + 44px)}
+  body.clean .corner{left:auto;right:var(--padR);align-items:flex-end}
+}
