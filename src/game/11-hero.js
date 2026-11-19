@@ -1028,6 +1028,18 @@ function renderHeroPick() {
 }
 document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's helpers (testing)
+// beta only: Settings' Heroes On / Off hides every hero for a recording; the choice takes effect on a reload
+function syncHeroSet() {
+  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA;
+  for (const b of document.querySelectorAll('[data-heroes]')) b.classList.toggle('on', (b.dataset.heroes === 'on') === HEROES_ON);
+}
+syncHeroSet();
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-heroes]'); if (!b || !window.MTD_BETA) return;
+  const on = b.dataset.heroes === 'on'; if (on === HEROES_ON) return;
+  try { if (on) localStorage.removeItem('mtd-heroes-off'); else localStorage.setItem('mtd-heroes-off', '1'); } catch (e2) {}
+  location.reload();
+});
 function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !HEROES_ON; syncHeroBadge(); } }
 $('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {

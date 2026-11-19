@@ -1339,6 +1339,8 @@ body.tablet .hsDh .hsIco{width:68px;height:68px}body.tablet .hsDh .hsIco svg{wid
       <label class="volRow"><span>Sounds</span><input type="range" id="setSfx" min="0" max="100" step="1" aria-label="Sound loudness"></label></div>
       <div class="setSub">Graphics</div>
       <div class="gfxRow"><span class="gfxLbl">Graphics</span><span class="gfxSeg"><button class="seg" data-gfx="low">Low</button><button class="seg" data-gfx="high">High</button></span></div>
+      <div id="heroSet" hidden><div class="setSub">Heroes</div>
+      <div class="gfxRow"><span class="gfxSeg"><button class="seg" data-heroes="on">On</button><button class="seg" data-heroes="off">Off</button></span></div></div>
       </div></div>
       <!-- Restore purchases, then Credits and Reset campaign: one row under each column sideways, so they line up (Jack) -->
       <div class="setFoot"><div class="setBtns" id="setRestoreRow" hidden><button id="setRestore">Restore purchases</button></div>
@@ -1453,7 +1455,9 @@ var URLQ = window.MTD_DEMO && !window.MTD_BETA ? '' : location.search;
 // the heroes (the Heir, the Ranger, the Captain): off in the App Store's version 1.1, the itch.io demo and a plain local page (Jack: build 4
 // ships without them), on in the private beta (Jack: it keeps them) and with ?heroes (the public demo ignores the address). On, they bring
 // back the hero on the map, the portrait, the Hero screen and its campaign button, and the three hero achievements. Saved levels are kept either way
-const HEROES_ON = !!window.MTD_BETA || /[?&]heroes\b/.test(URLQ);
+// the beta can hide them for a recording: Settings' Heroes On / Off (Jack), kept in mtd-heroes-off and applied by a reload
+const heroesHidden = () => { try { return localStorage.getItem('mtd-heroes-off') === '1'; } catch (e) { return false; } };
+const HEROES_ON = (!!window.MTD_BETA && !heroesHidden()) || /[?&]heroes\b/.test(URLQ);
 // MAP: 'meadow' (the original map) or 'isle' (the castle on an island ringed by a river, three fixed bridges); ?map=isle skips the picker
 var MAP = (URLQ.match(/[?&]map=(meadow|isle|pass|vale|bridge|cross|watch|dune|bend|crag|ford|mere|plains|keep|hold)\b/) || [])[1] || 'vale';
 // river isle: the river's centre line wobbles round the castle; ISLE.r is its mean radius in metres
@@ -10275,6 +10279,18 @@ function renderHeroPick() {
 }
 document.addEventListener('click', e => { if (HEROES_ON && e.target.closest('#campHeroBtn')) openHeroPick(); });
 // the admin's helpers (testing)
+// beta only: Settings' Heroes On / Off hides every hero for a recording; the choice takes effect on a reload
+function syncHeroSet() {
+  const w = $('#heroSet'); if (!w) return; w.hidden = !window.MTD_BETA;
+  for (const b of document.querySelectorAll('[data-heroes]')) b.classList.toggle('on', (b.dataset.heroes === 'on') === HEROES_ON);
+}
+syncHeroSet();
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-heroes]'); if (!b || !window.MTD_BETA) return;
+  const on = b.dataset.heroes === 'on'; if (on === HEROES_ON) return;
+  try { if (on) localStorage.removeItem('mtd-heroes-off'); else localStorage.setItem('mtd-heroes-off', '1'); } catch (e2) {}
+  location.reload();
+});
 function syncHeroAdmin() { const hb = $('#campHeroBtn'); if (hb) { hb.hidden = !HEROES_ON; syncHeroBadge(); } }
 $('#adHeroLv').addEventListener('click', () => { if (HERO.lv < HERO_MAX) heroXp(heroNeed() - HERO.xp); syncHeroBadge(); heroUI(); });
 $('#adHeroReset').addEventListener('click', () => {
@@ -12590,7 +12606,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '66e66c2a58'; var updateWait = false, updateT = 0;
+const BUILD = '8580db0ba9'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
