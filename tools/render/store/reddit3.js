@@ -35,9 +35,11 @@ if(want('grow')){const p=await L.open(env,'cross',W,H,D);
   SH.town([['tower',-6,-6,3,0],['tower',6,-6,3,0],['tower',-6,6,3,0],['tower',6,6,3,0],
    ['house',-2,3,3,0],['house',2,3,2,0],['house',-4,2,3,0],['house',3,-3,3,0],['house',-3,-3,2,0],['house',0,-4,3,0],['house',-5,-3,3,0],['house',5,-1,3,0],['house',-1,5,2,0],
    ['farm',-5,0,3,0],['farm',-4,-5,2,0],['market',3,1,3,0],['lodge',-3,5,2,0],['quarry',4,-5,2,0],['barracks',4,4,3,0],
-   ['well',2,-2,1,0],['torch',-1,3,1,0],['torch',1,3,1,0],['torch',-1,-3,1,0],['torch',4,2,1,0],['flowers',-2,-2,1,0],['banner',-2,2,1,0],['campfire',5,2,1,0],['statue',1,-2,1,0]],10);
+   ['well',2,-2,1,0],['torch',-1,3,1,0],['torch',1,3,1,0],['torch',-1,-3,1,0],['torch',4,2,1,0],['flowers',-2,-2,1,0],['banner',-2,2,1,0],['campfire',5,2,1,0],['statue',1,-2,1,0]],22);
   for(const B of buildings.slice())if(B.type!=='wall'&&B.type!=='gate'&&B!==K){const q=center(B);if(Math.abs(q.x-c.x)>13||Math.abs(q.z-c.z)>13)removeBuilding(B,false,true);}
   const gz=(cj+7.5)*CELL,gx=(ci+7.5)*CELL;layRoads([[[c.x,c.z+3.2],[c.x,gz+6]],[[c.x+3.2,c.z],[gx+6,c.z]]]);rebuildRoads();cacheCells();
+  // clearing the map took the castle too, which ended the game and froze everyone: start it again
+  gameOver=false;clearSummary();PH.kind='day';PH.t=DUSK+60;
   res.food=res.gold=res.wood=res.stone=9999;SH.run(40);SH.hud(false);
   window.__ok=buildings.length+' buildings '+villagers.length+' villagers';})()`);
  console.log('grow',await G(p,'window.__ok'),p.errs.slice(0,3));
@@ -47,6 +49,12 @@ if(want('grow')){const p=await L.open(env,'cross',W,H,D);
   L.forEach((o,i)=>{o.a=.04+.5*i/L.length;o.u2=o.t>=2?Math.min(.9,o.a+.1+R()*.35):9;o.u3=o.t>=3?Math.min(.95,Math.max(o.u2+.08,.5)+R()*.3):9;});
   const RISE=.05;const pop=(B,up)=>{B.pop=window.__T;const q=center(B);for(let n=0;n<6;n++){const a=n/6*6.283;dustAt(q.x+Math.cos(a)*1.2,hAt(q.x,q.z),q.z+Math.sin(a)*1.2);}
    if(B===K){window.__ev.push([window.__fi||0,'castleUp',1]);return;}if(B.type!=='wall'&&B.type!=='gate')sfx('build',{x:q.x,z:q.z},up?.55:.7);};
+  // a path from each building's door to the nearest road as it is finished, so the streets grow with the town
+  const pave=B=>{const d=B.door;if(!d||B.type==='torch'||B.type==='flowers')return;const st=d.b*N+d.a;if(d.a<0||d.b<0||d.a>=N||d.b>=N)return;
+   if(road[st])return;const from=new Map([[st,-1]]),q=[st];let end=-1;
+   while(q.length&&from.size<500){const n=q.shift();if(road[n]&&n!==st){end=n;break;}const a=n%N,b=(n/N)|0;
+    for(const [x,y] of [[a+1,b],[a-1,b],[a,b+1],[a,b-1]]){if(x<0||y<0||x>=N||y>=N)continue;const m=y*N+x;if(from.has(m)||occB[m])continue;from.set(m,n);q.push(m);}}
+   if(end<0)return;for(let n=from.get(end);n>=0;n=from.get(n))road[n]=1;rebuildRoads();};
   const set=(B,t)=>{if(B.tier>=t)return;B.tier=t;B.max=DEF[B.type].hp[t-1];B.hp=B.max;swapModel(B);if(B.type==='wall'||B.type==='gate')refreshWalls();pop(B,1);};
   for(const o of L){o.B.tier=1;o.B.max=DEF[o.B.type].hp[0];o.B.hp=o.B.max;swapModel(o.B);}K.tier=1;swapModel(K);refreshWalls();for(const o of L)o.B.group.visible=false;
   paused=false;PH.kind='day';
@@ -54,7 +62,7 @@ if(want('grow')){const p=await L.open(env,'cross',W,H,D);
   const CYC=5;let LT=1,DK=0;const lo=updateLight;updateLight=(dt,now)=>{light=LT;PH.t=Math.max(2,DUSK*(1-DK));skyT=0;lo(0,now);updateClouds(dt);};
   const sm=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x);};
   window.__tick=t=>{for(const o of L){
-    if(t>=o.a&&!o.done){o.B.group.visible=true;const k=(t-o.a)/RISE;if(k<1)stageSite(o.B,k);else{stageSite(o.B,-1);o.done=true;pop(o.B,0);}}if(t>=o.u2&&o.done)set(o.B,2);if(t>=o.u3&&o.done)set(o.B,3);}
+    if(t>=o.a&&!o.done){o.B.group.visible=true;const k=(t-o.a)/RISE;if(k<1)stageSite(o.B,k);else{stageSite(o.B,-1);o.done=true;pop(o.B,0);pave(o.B);}}if(t>=o.u2&&o.done)set(o.B,2);if(t>=o.u3&&o.done)set(o.B,3);}
    if(t>=.4)set(K,2);if(t>=.72)set(K,3);
    const f=(t*CYC+.15)%1;
    // day .0-.42, dusk to .55, night to .82, dawn to 1
