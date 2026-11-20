@@ -30,7 +30,7 @@ if(want('town')){const p=await L.open(env,'vale',W,H,D);
   SH.town([['house',-3,-1,3,0],['house',-3,1,2,0],['house',-2,3,3,0],['house',3,1,2,0],['house',3,-1,3,0],['house',-4,3,2,0],['house',4,3,3,0],
    ['market',1,4,3,0],['tower',-3,-4,3,0],['tower',3,-4,3,0],['tower',5,3,2,0],['farm',-7,-1,3,0],['farm',-7,2,2,0],['barracks',0,-5,3,0],
    ['lodge',-6,5,2,0],['quarry',6,-2,2,0],['torch',-1,2,1,0],['torch',1,2,1,0],['campfire',-1,6,1,0],['banner',2,-3,1,0],
-   ['flowers',-4,0,1,0],['flowers',4,0,1,0],['well',4,5,1,0],['statue',-2,-3,1,0]],16);
+   ['flowers',-4,0,1,0],['flowers',4,0,1,0],['well',4,5,1,0],['statue',-2,-3,1,0]],6);
   const c=center(castleB());layRoads([[[c.x,c.z+3.2],[c.x,c.z+12]],[[c.x-8,c.z+5],[c.x+8,c.z+5]]]);rebuildRoads();cacheCells();
   res.food=999;res.gold=500;res.wood=400;res.stone=300;PH.kind='day';PH.t=DAYLEN[0]*.7;SH.run(45);for(const v of villagers){v.sleeping=false;v.hunger=0;}PH.t=DAYLEN[0]*.7;SH.hud(false);
   const y0=(castleB().face||0)*Math.PI/2+.5;
@@ -38,42 +38,49 @@ if(want('town')){const p=await L.open(env,'vale',W,H,D);
   window.__ok=buildings.length+' buildings '+villagers.length+' villagers';})()`);
  console.log('town',await G(p,'window.__ok'),p.errs.slice(0,3));
  await clip(p,'1-town',7,{fin:12,fout:8,cap:['Build','your town']});await p.close();}
-// 2 the charge: knights ride out across the open plains into a raider column coming down on the town
+// 2 the battle: the town's foot march in first, knights swing round both flanks, the raiders' army with siege shooting at two towers
 if(want('charge')){const p=await L.open(env,'plains',W,H,D);
  await G(p,`(()=>{weatherReset(null);
-  // the stables behind the castle, out of view; the riders are brought out to the field once mounted
-  SH.town([['stables',-6,6,3,0],['stables',-2,7,3,0],['stables',2,7,3,0],['stables',6,6,3,0],['barracks',-10,4,3,0],['barracks',10,4,3,0]],30);
-  UPK.lance=true;const K=castleB(),c=center(K);const x=c.x,z=c.z-10,fz=z-11;
+  // troop buildings behind the castle, out of view, at mixed tiers; two archer towers out on the flanks
+  SH.town([['stables',-4,6,3,0],['stables',4,6,2,0],['barracks',-10,4,3,0],['barracks',10,4,2,0],['barracks',-10,8,1,0]],34);
+  UPK.lance=true;const K=castleB(),c=center(K);const x=c.x,z=c.z-10,fz=z-10;
+  SH.town([['tower',-4,-5,1,0],['tower',5,-7,3,0]],0);
   SH.clearTrees(x,(z+fz)/2,16);for(const r of rocks)if(Math.hypot(r.x-x,r.z-(z+fz)/2)<16)r.amount=0;seatRocks();
-  // a few trees here and there round the field, clear of the charge's path
-  {let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647;};let n=0;for(let k=0;k<400&&n<22;k++){const tx=x-22+R()*44,tz=fz-8+R()*24;if(Math.abs(tx-x)<6.5&&tz>fz-3&&tz<z+3)continue;if(Math.hypot(tx-c.x,tz-c.z)<9||!canStand(tx,tz,2))continue;if(trees.some(t=>!t.dead&&Math.hypot(t.x-tx,t.z-tz)<2.2))continue;trees.push({x:tx,z:tz,s:.8+R()*.5,k:1});n++;}trunks.count=crowns.count=trees.length;const tc=new THREE.Color();trees.forEach((t,m)=>{const r=(Math.sin(t.x*12.9+t.z*78.2)*43758.5)%1;tc.setHSL(.27+(Math.abs(r)-.5)*.07,.3+Math.abs(r)*.15,.17+Math.abs(r)*.08);crowns.setColorAt(m,tc);});crowns.instanceColor.needsUpdate=true;seatTrees();}
+  // a few trees here and there round the field, clear of the fighting and the flanking rides
+  {let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647;};let n=0;for(let k=0;k<400&&n<22;k++){const tx=x-24+R()*48,tz=fz-8+R()*24;if(Math.abs(tx-x)<12.5&&tz>fz-4&&tz<z+4)continue;if(Math.hypot(tx-c.x,tz-c.z)<9||!canStand(tx,tz,2))continue;if(trees.some(t=>!t.dead&&Math.hypot(t.x-tx,t.z-tz)<2.2))continue;trees.push({x:tx,z:tz,s:.8+R()*.5,k:1});n++;}trunks.count=crowns.count=trees.length;const tc=new THREE.Color();trees.forEach((t,m)=>{const r=(Math.sin(t.x*12.9+t.z*78.2)*43758.5)%1;tc.setHSL(.27+(Math.abs(r)-.5)*.07,.3+Math.abs(r)*.15,.17+Math.abs(r)*.08);crowns.setColorAt(m,tc);});crowns.instanceColor.needsUpdate=true;seatTrees();}
   cacheCells();SH.run(4);SH.hud(false);for(const v of villagers){v.sleeping=false;v.hunger=0;}res.food=999;
-  // the raiders' army: foot in front, archers and crossbows behind, horsemen on the wings, siege at the back
+  // the raiders' army at mixed tiers: foot in front, archers and crossbows among them, horsemen on the wings, siege at the back
   const KK=['spear','sword','spear','sword','spear','sword','archer','xbow','spear','sword'];let n=0;
-  for(let i=0;i<400&&n<26;i++){const ex=x-6+Math.random()*12,ez=fz-Math.random()*5;if(canStand(ex,ez,2)&&!enemies.some(e=>Math.hypot(e.x-ex,e.z-ez)<1.1)){SH.spawn(KK[n%KK.length],1+(n%3===0?1:0)+(n%7===0?1:0),ex,ez);n++;}}
-  for(const [k,dx,dz,t] of [['rider',-8,-1,3],['lancer',-9,-3,2],['rider',8,-1,3],['lancer',9,-3,2]])SH.spawn(k,t,x+dx,fz+dz);
-  for(const [k,dx,dz,t] of [['ballista',-4,-8,2],['catapult',1,-9,3],['ram',5,-7,2]])SH.spawn(k,t,x+dx,fz+dz);
+  for(let i=0;i<400&&n<26;i++){const ex=x-6+Math.random()*12,ez=fz-Math.random()*5;if(canStand(ex,ez,2)&&!enemies.some(e=>Math.hypot(e.x-ex,e.z-ez)<1.1)){SH.spawn(KK[n%KK.length],1+n%3,ex,ez);n++;}}
+  for(const [k,dx,dz,t] of [['rider',-8,-1,3],['lancer',-9,-3,1],['rider',8,-1,2],['lancer',9,-3,3]])SH.spawn(k,t,x+dx,fz+dz);
+  for(const [k,dx,dz,t] of [['ballista',-4,-4,2],['catapult',2,-5,3],['ballista',6,-4,1]])SH.spawn(k,t,x+dx,fz+dz);
   for(const e of enemies){e.__sp=e.speed;e.speed=.0001;}
   SH.run(.3);assignPosts();
-  const ST=buildings.filter(B=>B.type==='stables');ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z+4}));
+  const ST=buildings.filter(B=>B.type==='stables'),BK=buildings.filter(B=>B.type==='barracks');ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z+4}));BK.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z+6}));
   SH.run(22);
-  // every rider in two neat ranks on the start line, facing the raiders
-  const R=()=>villagers.filter(v=>v.cav&&v.soldier&&!v.dead);R().forEach((v,i)=>{const px=x-5.5+(i%6)*2.2+(i>5?1.1:0),pz=z+(i>5?1.6:0);v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;});
-  const BK=buildings.filter(B=>B.type==='barracks'),F=()=>villagers.filter(v=>v.soldier&&!v.cav&&v.post&&v.post.B.type==='barracks'&&!v.dead);
-  F().forEach((v,i)=>{const px=x-5+(i%6)*2,pz=z+3.6+(i>5?1.4:0);v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;});
-  ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z}));BK.forEach((B,i)=>setRally(B,{x:x-3+i*6,z:z+3.6}));for(const v of [...R(),...F()])v.march=false;SH.run(.6);
+  // the foot in a line in front, the knights behind them split onto both flanks
+  const R=()=>villagers.filter(v=>v.cav&&v.soldier&&!v.dead),F=()=>villagers.filter(v=>v.soldier&&!v.cav&&v.post&&v.post.B.type==='barracks'&&!v.dead);
+  const put=(v,px,pz)=>{v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;};
+  const fv=F();fv.forEach((v,i)=>put(v,x-(fv.length-1)*.8+i*1.6,z-2+(i%2)*.5));
+  // the knights behind them on both flanks, one stables to a wing
+  ST.forEach((B,i)=>{const sd=i?1:-1;R().filter(v=>v.post.B===B).forEach((v,j)=>put(v,x+sd*(6+(j%2)*1.4),z+1+j*1.3));});
+  ST.forEach((B,i)=>setRally(B,{x:x+(i?7:-7),z:z+2}));BK.forEach(B=>setRally(B,{x:x,z:z-2}));for(const v of [...R(),...F()])v.march=false;SH.run(.4);
   for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
   for(const e of enemies){e.speed=e.__sp||e.speed;e.hp=e.max=e.max*2.2;}
   // night: moonlight, a few torches along the raiders' line
   const lo=updateLight;updateLight=(dt,now)=>{light=0;lo(dt,now);};
   for(const [dx,dz] of [[-9,-2],[9,-3],[-3,-8],[7,3]]){const ci=Math.floor((x+dx)/CELL),cj=Math.floor((fz+dz)/CELL);place('torch',ci,cj,{instant:true,free:true,quiet:true});}lampT=0;
-  const tx={};let rushed=0;
-  window.__tick=t=>{if(!rushed&&t>.04){rushed=1;window.__ev.push([window.__fi||0,'rush',1]);ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:fz-2}));for(const v of R())v.march=false;}
-   if(rushed===1&&t>.12){rushed=2;window.__ev.push([window.__fi||0,'neigh',.8]);BK.forEach((B,i)=>setRally(B,{x:x-3+i*6,z:fz}));for(const v of F())v.march=false;}
+  const tx={};let st=0;
+  // the wings: out wide past the foot, then wheel in on the raiders' flanks
+  const wings=(dx,dz)=>{ST.forEach((B,i)=>setRally(B,{x:x+(i?dx:-dx),z:dz}));for(const v of R())v.march=false;};
+  window.__tick=t=>{
+   if(st===0&&t>.02){st=1;BK.forEach((B,i)=>setRally(B,{x:x-4+i*4,z:fz}));for(const v of F())v.march=false;}
+   if(st===1&&t>.1){st=2;window.__ev.push([window.__fi||0,'rush',1]);wings(10,fz+3);}
+   if(st===2&&t>.42){st=3;window.__ev.push([window.__fi||0,'neigh',.8]);wings(4,fz-2);}
    for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
-   const r=R(),f=enemies.filter(e=>!e.dead);if(r.length){let ax=0,az=0;for(const v of r){ax+=v.rx;az+=v.rz;}ax/=r.length;az/=r.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.6+bx*.4,gz=az*.6+bz*.4;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
-   SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.4,pitch:.76+t*.06,dist:17+t*3,y:1.2});};
-  window.__ok='riders '+R().length+' foot '+F().length+' foes '+enemies.length+' trees+';})()`);
+   const a=[...R(),...F()],f=enemies.filter(e=>!e.dead&&!e.engine);if(a.length){let ax=0,az=0;for(const v of a){ax+=v.rx;az+=v.rz;}ax/=a.length;az/=a.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.5+bx*.5,gz=az*.5+bz*.5;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
+   SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.3,pitch:.74+t*.05,dist:18+t*2,y:1.2});};
+  window.__ok='riders '+R().length+' foot '+F().length+' foes '+enemies.length+' towers '+buildings.filter(B=>B.type==='tower').length+' manned '+buildings.filter(B=>B.type==='tower').map(B=>B.manned).join(',');})()`);
  console.log('charge',await G(p,'window.__ok'),p.errs.slice(0,3));
  await clip(p,'2-charge',10,{k:.8,fout:8,cap:['Charge','into battle']});
  console.log('end',await G(p,`'foes left '+enemies.filter(e=>!e.dead).length`));await p.close();}
@@ -98,7 +105,7 @@ if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.titl
   document.body.appendChild(d);},[BADGE,ITCH]);
  await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const k=Math.min(1,Math.max(0,(t-.3)/.25));d.style.opacity=k;d.firstChild.style.transform='scale('+(1.08-.08*k)+')';}}`);
  await clip(p,'3-title',4.5,{fin:12});await p.close();}
-fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music.mp3','1-town','1-town',.15,0,1.2],['music/Night_theme_music.mp3','2-charge','2-charge',.2,4,1.6],['music/Medieval_theme_music_2.mp3','3-title','3-title',.13,35]],
+fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music_2.mp3','1-town','3-title',.14,35,3]],
  beds:[['sfx/Bird_chirping.mp3','1-town',.28],['sfx/Bird_chirping.mp3','2-charge',.1]],horn:false,
  keep:{'1-town':['chop','pick','hammer'],'2-charge':['rush','neigh','clash','kill','block','rockFire','rockHit','bolt','arrow'],'3-title':[]},rush:[4.5,1.6]}));
 await env.b.close();env.server.close();})();
