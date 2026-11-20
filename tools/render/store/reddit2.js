@@ -42,21 +42,26 @@ if(want('town')){const p=await L.open(env,'vale',W,H,D);
 if(want('charge')){const p=await L.open(env,'plains',W,H,D);
  await G(p,`(()=>{weatherReset(null);
   // the stables behind the castle, out of view; the riders are brought out to the field once mounted
-  SH.town([['stables',-6,6,3,0],['stables',-2,7,3,0],['stables',2,7,3,0],['stables',6,6,3,0]],16);
+  SH.town([['stables',-6,6,3,0],['stables',-2,7,3,0],['stables',2,7,3,0],['stables',6,6,3,0],['barracks',-10,4,3,0],['barracks',10,4,3,0]],30);
   UPK.lance=true;const K=castleB(),c=center(K);const x=c.x,z=c.z-10,fz=z-11;
   SH.clearTrees(x,(z+fz)/2,16);for(const r of rocks)if(Math.hypot(r.x-x,r.z-(z+fz)/2)<16)r.amount=0;seatRocks();
   // a few trees here and there round the field, clear of the charge's path
   {let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647;};let n=0;for(let k=0;k<400&&n<22;k++){const tx=x-22+R()*44,tz=fz-8+R()*24;if(Math.abs(tx-x)<6.5&&tz>fz-3&&tz<z+3)continue;if(Math.hypot(tx-c.x,tz-c.z)<9||!canStand(tx,tz,2))continue;if(trees.some(t=>!t.dead&&Math.hypot(t.x-tx,t.z-tz)<2.2))continue;trees.push({x:tx,z:tz,s:.8+R()*.5,k:1});n++;}trunks.count=crowns.count=trees.length;const tc=new THREE.Color();trees.forEach((t,m)=>{const r=(Math.sin(t.x*12.9+t.z*78.2)*43758.5)%1;tc.setHSL(.27+(Math.abs(r)-.5)*.07,.3+Math.abs(r)*.15,.17+Math.abs(r)*.08);crowns.setColorAt(m,tc);});crowns.instanceColor.needsUpdate=true;seatTrees();}
   cacheCells();SH.run(4);SH.hud(false);for(const v of villagers){v.sleeping=false;v.hunger=0;}res.food=999;
-  const KK=['spear','sword','spear','sword','spear','archer','spear','sword','xbow','spear'];let n=0;
-  for(let i=0;i<300&&n<30;i++){const ex=x-7+Math.random()*14,ez=fz-Math.random()*6;if(canStand(ex,ez,2)&&!enemies.some(e=>Math.hypot(e.x-ex,e.z-ez)<1.1)){SH.spawn(KK[n%KK.length],1+(n%3===0?1:0),ex,ez);n++;}}
+  // the raiders' army: foot in front, archers and crossbows behind, horsemen on the wings, siege at the back
+  const KK=['spear','sword','spear','sword','spear','sword','archer','xbow','spear','sword'];let n=0;
+  for(let i=0;i<400&&n<26;i++){const ex=x-6+Math.random()*12,ez=fz-Math.random()*5;if(canStand(ex,ez,2)&&!enemies.some(e=>Math.hypot(e.x-ex,e.z-ez)<1.1)){SH.spawn(KK[n%KK.length],1+(n%3===0?1:0)+(n%7===0?1:0),ex,ez);n++;}}
+  for(const [k,dx,dz,t] of [['rider',-8,-1,3],['lancer',-9,-3,2],['rider',8,-1,3],['lancer',9,-3,2]])SH.spawn(k,t,x+dx,fz+dz);
+  for(const [k,dx,dz,t] of [['ballista',-4,-8,2],['catapult',1,-9,3],['ram',5,-7,2]])SH.spawn(k,t,x+dx,fz+dz);
   for(const e of enemies){e.__sp=e.speed;e.speed=.0001;}
   SH.run(.3);assignPosts();
   const ST=buildings.filter(B=>B.type==='stables');ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z+4}));
   SH.run(22);
   // every rider in two neat ranks on the start line, facing the raiders
   const R=()=>villagers.filter(v=>v.cav&&v.soldier&&!v.dead);R().forEach((v,i)=>{const px=x-5.5+(i%6)*2.2+(i>5?1.1:0),pz=z+(i>5?1.6:0);v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;});
-  ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z}));for(const v of R())v.march=false;SH.run(.6);
+  const BK=buildings.filter(B=>B.type==='barracks'),F=()=>villagers.filter(v=>v.soldier&&!v.cav&&v.post&&v.post.B.type==='barracks'&&!v.dead);
+  F().forEach((v,i)=>{const px=x-5+(i%6)*2,pz=z+3.6+(i>5?1.4:0);v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;});
+  ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:z}));BK.forEach((B,i)=>setRally(B,{x:x-3+i*6,z:z+3.6}));for(const v of [...R(),...F()])v.march=false;SH.run(.6);
   for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
   for(const e of enemies){e.speed=e.__sp||e.speed;e.hp=e.max=e.max*2.2;}
   // night: moonlight, a few torches along the raiders' line
@@ -64,10 +69,11 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
   for(const [dx,dz] of [[-9,-2],[9,-3],[-3,-8],[7,3]]){const ci=Math.floor((x+dx)/CELL),cj=Math.floor((fz+dz)/CELL);place('torch',ci,cj,{instant:true,free:true,quiet:true});}lampT=0;
   const tx={};let rushed=0;
   window.__tick=t=>{if(!rushed&&t>.04){rushed=1;window.__ev.push([window.__fi||0,'rush',1]);ST.forEach((B,i)=>setRally(B,{x:x-6+i*4,z:fz-2}));for(const v of R())v.march=false;}
+   if(rushed===1&&t>.12){rushed=2;window.__ev.push([window.__fi||0,'neigh',.8]);BK.forEach((B,i)=>setRally(B,{x:x-3+i*6,z:fz}));for(const v of F())v.march=false;}
    for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
    const r=R(),f=enemies.filter(e=>!e.dead);if(r.length){let ax=0,az=0;for(const v of r){ax+=v.rx;az+=v.rz;}ax/=r.length;az/=r.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.6+bx*.4,gz=az*.6+bz*.4;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
-   SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.4,pitch:.76+t*.06,dist:15+t*3,y:1.2});};
-  window.__ok='riders '+R().length+' foes '+enemies.length+' trees+';})()`);
+   SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.4,pitch:.76+t*.06,dist:17+t*3,y:1.2});};
+  window.__ok='riders '+R().length+' foot '+F().length+' foes '+enemies.length+' trees+';})()`);
  console.log('charge',await G(p,'window.__ok'),p.errs.slice(0,3));
  await clip(p,'2-charge',10,{k:.8,fout:8,cap:['Charge','into battle']});
  console.log('end',await G(p,`'foes left '+enemies.filter(e=>!e.dead).length`));await p.close();}
@@ -75,15 +81,24 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
  await p.addStyleTag({content:'.gameTitle{top:9vh!important}'});await p.waitForTimeout(3000);
  const BADGE='data:image/svg+xml;base64,'+fs.readFileSync(__dirname+'/../../../site/img/appstore-badge.svg').toString('base64');
- await p.evaluate(B=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),d=document.createElement('div');d.id='awaits';d.innerHTML='<div><div class=l1>Full game</div><img src="'+B+'"><div class=l2>Play the demo on itch.io</div></div>';
+ // itch.io's mark (simple-icons, CC0), drawn in itch.io's red on a black badge like Apple's
+ const ITCH=fs.readFileSync(__dirname+'/itchio-mark.svg','utf8').match(/ d="([^"]+)"/)[1];
+ await p.evaluate(([B,I])=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),d=document.createElement('div');d.id='awaits';
+  d.innerHTML='<div><div class=col><div class=l1>Full game</div><img src="'+B+'"></div><div class=col><div class=l1>Free demo</div><div class=itch><svg viewBox="0 0 24 24"><path fill="#fa5c5c" d="'+I+'"/></svg><div><small>Play the demo on</small><b>itch.io</b></div></div></div></div>';
   d.style.cssText='position:fixed;left:0;right:0;bottom:0;height:44%;display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 45%,rgba(0,0,0,.7))';
-  const s=d.firstChild,F=parseFloat(cs.fontSize);s.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:${F*.22}px;font-family:${cs.fontFamily};letter-spacing:.03em;text-shadow:0 3px 14px rgba(0,0,0,.9)`;
-  s.querySelector('.l1').style.cssText=`color:#fff1c8;font-size:${F*.62}px;-webkit-text-stroke:1.5px #3a2009;paint-order:stroke fill`;
-  s.querySelector('img').style.cssText=`height:${F*1.5}px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
-  s.querySelector('.l2').style.cssText=`color:#f6d77a;font-size:${F*.85}px;-webkit-text-stroke:2px #3a2009;paint-order:stroke fill;text-shadow:0 3px 14px rgba(0,0,0,.9),0 0 22px rgba(243,207,110,.35)`;document.body.appendChild(d);},BADGE);
+  const s=d.firstChild,F=parseFloat(cs.fontSize),h=F*1.35;s.style.cssText=`display:flex;align-items:flex-end;gap:${F*.9}px;font-family:${cs.fontFamily};letter-spacing:.03em;text-shadow:0 3px 14px rgba(0,0,0,.9)`;
+  for(const c of s.querySelectorAll('.col'))c.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:${F*.18}px`;
+  for(const l of s.querySelectorAll('.l1'))l.style.cssText=`color:#fff1c8;font-size:${F*.6}px;-webkit-text-stroke:1.5px #3a2009;paint-order:stroke fill`;
+  s.querySelector('img').style.cssText=`height:${h}px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
+  const it=s.querySelector('.itch');it.style.cssText=`height:${h}px;box-sizing:border-box;display:flex;align-items:center;gap:${h*.2}px;padding:0 ${h*.32}px 0 ${h*.24}px;background:#000;border:${h/40}px solid #a6a6a6;border-radius:${h*.2}px;font-family:'Helvetica Neue',Helvetica,'Liberation Sans',Arial,sans-serif;letter-spacing:0;text-shadow:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
+  it.querySelector('svg').style.cssText=`height:${h*.62}px;width:${h*.62}px`;
+  it.querySelector('div').style.cssText=`display:flex;flex-direction:column;color:#fff;line-height:1`;
+  it.querySelector('small').style.cssText=`font-size:${h*.2}px;margin-bottom:${h*.04}px`;
+  it.querySelector('b').style.cssText=`font-size:${h*.46}px;font-weight:700;letter-spacing:-.01em`;
+  document.body.appendChild(d);},[BADGE,ITCH]);
  await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const k=Math.min(1,Math.max(0,(t-.3)/.25));d.style.opacity=k;d.firstChild.style.transform='scale('+(1.08-.08*k)+')';}}`);
  await clip(p,'3-title',4.5,{fin:12});await p.close();}
 fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music.mp3','1-town','1-town',.15,0,1.2],['music/Night_theme_music.mp3','2-charge','2-charge',.2,4,1.6],['music/Medieval_theme_music_2.mp3','3-title','3-title',.13,35]],
  beds:[['sfx/Bird_chirping.mp3','1-town',.28],['sfx/Bird_chirping.mp3','2-charge',.1]],horn:false,
- keep:{'1-town':['chop','pick','hammer'],'2-charge':['rush','clash','kill','block'],'3-title':[]}}));
+ keep:{'1-town':['chop','pick','hammer'],'2-charge':['rush','neigh','clash','kill','block','rockFire','rockHit','bolt','arrow'],'3-title':[]},rush:[4.5,1.6]}));
 await env.b.close();env.server.close();})();

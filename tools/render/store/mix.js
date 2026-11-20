@@ -56,7 +56,9 @@ for(const p of parts){const f=`${DIR}/${p}.json`;if(!fs.existsSync(f))continue;c
   // a raider falling: a grunt, the two recordings in turn
   if(name==='kill'){fx('grunt',t,Math.max(.5,g));continue;}
   // the riders' charge: a neigh and the gallop under it for a few seconds
-  if(name==='rush'){fx('neigh',t+.1,1,1);bed('sfx/Horse_gallop.mp3',t,t+3.2,1.2,.3,.9);continue;}
+  // a video's own length and loudness for the charge's gallop (mix.json rush: [secs, gain])
+  if(name==='rush'){const RS=CFG&&CFG.rush||[3.2,1.2];fx('neigh',t+.1,1,1);bed('sfx/Horse_gallop.mp3',t,t+RS[0],RS[1],.3,.9);continue;}
+  if(name==='neigh'){fx('neigh',t,g,1);continue;}
   fx(name,t,g);}}
 // a soft limiter, then 16-bit stereo
 let pk=0;for(const v of mix)pk=Math.max(pk,Math.abs(v));const buf=Buffer.alloc(44+len*4);
