@@ -451,7 +451,10 @@ function rangerStep(v, dt, home) {
   // the Engineer's crossbow: a short bolt; Blasting bolts, every 4th bursts on the raider and those beside it
   if (xb) { const to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + (foe.horse ? 1.2 : .8) * UNIT_K, foe.z);
     const bl = HERO.sk.blast && (v.boltN = (v.boltN || 0) + 1) % 4 === 0;
-    fireArrow(from, to, () => { if (bl) blastBolt(foe, to, dm); if (!foe.dead) hurtEnemy(foe, dm, v); }, null, 'qbolt'); return; }
+    const m = fireArrow(from, to, () => { if (bl) blastBolt(foe, to, dm); if (!foe.dead) hurtEnemy(foe, dm, v); }, null, 'qbolt');
+    // the bursting bolt by rank: like the others at 1, heavier at 2, glowing and trailing sparks at 3
+    if (bl) { const r = skR('blast'); if (r >= 2) m.scale.set(1.5, 1.5, 1.2); if (r >= 3) { m.material = glowArrowM; glowArrows.push(m); } }
+    return; }
   const tr = HERO.sk.twin ? skR('twin') : 0;
   let two = null;
   if (HERO.sk.twin) { let bd = R; for (const e of enemies) if (e !== foe && !e.dead && !e.dormant) { const d = Math.hypot(e.x - v.x, e.z - v.z); if (d < bd) { bd = d; two = e; } } }
@@ -478,9 +481,19 @@ function rangerStep(v, dt, home) {
 // ---------- the Engineer's skills ----------
 // Blasting bolts: the bolt bursts where it strikes, hurting every other raider within 1.5 m (not engines' crews), with dust and a thump
 function blastBolt(foe, at, dm) {
-  const k = HERO_SK.blast.k[HERO.sk.blast - 1];
+  const k = HERO_SK.blast.k[HERO.sk.blast - 1], r = skR('blast');
   for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - at.x, e.z - at.z) < 1.5) hurtEnemy(e, dm * k, hero);
-  blastFx(at.x, at.z, 1, 1.2); sparkBurst(at.x, at.y, at.z, '#ffb24a', 6); sfx('rockHit', { x: at.x, z: at.z });
+  blastLook(at.x, walkY(at.x, at.z), at.y, at.z, r);
+  if (r >= 2) blastFx(at.x, at.z, r - 1, 1.2);
+  if (r >= 3) shake(.04, at, 'hit', .6);
+  sfx('rockHit', { x: at.x, z: at.z });
+}
+// the burst's look by rank (the game's and the gallery's; Jack's rule: rank 1 plain, rank 2 a change, rank 3 one signature moment):
+// a puff of dust and a few sparks at 1; a ring of dust and more sparks at 2; at 3 a wide ring, a bright flash of sparks and a shake
+function blastLook(x, gy, y, z, r) {
+  const n = [3, 3, 8, 12][r], rad = [.25, .25, .6, .9][r];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; dustAt(x + Math.cos(a) * rad, gy, z + Math.sin(a) * rad); }
+  sparkBurst(x, y, z, r >= 3 ? '#ffe08a' : '#ffb24a', [5, 5, 9, 16][r]);
 }
 // Repairs: buildings within 5 m of the Engineer (standing, not building or upgrading) mend a share of their health a second, with a
 // gold speck on them now and then
@@ -490,19 +503,27 @@ function heroRepair(v, dt) {
     if (!B.built || B.dead || B.site || B.hp >= B.max) continue;
     const c = center(B); if (Math.hypot(c.x - v.x, c.z - v.z) > 5 + (DEF[B.type].size || 1)) continue;
     B.hp = Math.min(B.max, B.hp + B.max * k * dt);
-    if ((B.mendFx = (B.mendFx || 0) - dt) <= 0) { B.mendFx = .5; sparkBurst(c.x + (Math.random() - .5), hAt(c.x, c.z) + .4 + Math.random(), c.z + (Math.random() - .5), '#ffe08a', 1); }
+    // by rank: a gold speck now and then, more often at 2, and at 3 a ring of gold sparks round the building every 2.5 s
+    const r = skR('mend');
+    if ((B.mendFx = (B.mendFx || 0) - dt) <= 0) { B.mendFx = [.5, .5, .28, .2][r]; sparkBurst(c.x + (Math.random() - .5), hAt(c.x, c.z) + .4 + Math.random(), c.z + (Math.random() - .5), '#ffe08a', 1); }
+    if (r >= 3 && (B.mendRing = (B.mendRing || 0) - dt) <= 0) { B.mendRing = 2.5; mendRing(c.x, hAt(c.x, c.z), c.z, (DEF[B.type].size || 1) * CELL * .6); }
   }
 }
+function mendRing(x, y, z, rad) { for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; sparkBurst(x + Math.cos(a) * rad, y + .15, z + Math.sin(a) * rad, '#ffd24a', 1); } }
 // Field scorpion: a small ballista on a timber tripod set up beside the Engineer's spot; it turns to the nearest raider within 9 m and
 // shoots a bolt every 3.5 s while he stands (`engScorp`, built in heroTick, cleared with the hero)
 var engScorp = null;
 const SCORP_R = 9, SCORP_T = 3.5;
-function makeScorpion() {
+// by rank: the plain tripod at 1; at 2 iron feet on its legs and a timber shield board across its front; at 3 (signature) each bolt
+// leaves with a puff of dust and a streak of air behind it (scorpTick)
+function makeScorpion(r = 1) {
   const g = new THREE.Group(), top = .62;
-  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2 + Math.PI / 6;
-    const leg = box(.05, .7, .05, M.timber, Math.sin(a) * .2, top / 2, Math.cos(a) * .2); leg.rotation.set(-Math.cos(a) * .33, 0, Math.sin(a) * .33); g.add(leg); }
+  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2 + Math.PI / 6, lx = Math.sin(a) * .2, lz = Math.cos(a) * .2;
+    const leg = box(.05, .7, .05, M.timber, lx, top / 2, lz); leg.rotation.set(-Math.cos(a) * .33, 0, Math.sin(a) * .33); g.add(leg);
+    if (r >= 2) g.add(box(.07, .06, .07, M.iron, Math.sin(a) * .315, .03, Math.cos(a) * .315)); }
   g.add(cyl(.09, .09, .06, 8, M.timber, 0, top, 0));
   const t = ballistaTurret(BALLISTA_K[0] * .62); t.position.y = top - .02; g.add(t);
+  if (r >= 2) { t.add(box(.62, .22, .035, M.wood, 0, .36, .55)); for (const x of [-.22, .22]) t.add(box(.04, .24, .045, M.iron, x, .36, .56)); }
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
   return { g, t };
 }
@@ -518,7 +539,8 @@ function scorpTick(dt) {
   if (!want) { removeScorpion(); return; }
   const sp = scorpSpot(); if (!sp) return;
   if (engScorp && Math.hypot(engScorp.x - sp.x, engScorp.z - sp.z) > .3 && !hero.march) removeScorpion();
-  if (!engScorp) { if (hero.march) return; const s = makeScorpion(); s.x = sp.x; s.z = sp.z; s.cool = 1.5; s.g.position.set(sp.x, hAt(sp.x, sp.z), sp.z); scene.add(s.g); engScorp = s; dustAt(sp.x, hAt(sp.x, sp.z), sp.z); }
+  if (engScorp && engScorp.rk !== skR('scorp')) removeScorpion();
+  if (!engScorp) { if (hero.march) return; const s = makeScorpion(skR('scorp')); s.rk = skR('scorp'); s.x = sp.x; s.z = sp.z; s.cool = 1.5; s.g.position.set(sp.x, hAt(sp.x, sp.z), sp.z); scene.add(s.g); engScorp = s; dustAt(sp.x, hAt(sp.x, sp.z), sp.z); }
   const S = engScorp; S.cool -= dt;
   let foe = null, bd = SCORP_R; for (const e of enemies) if (!e.dead && !e.dormant) { const d = Math.hypot(e.x - S.x, e.z - S.z); if (d < bd) { bd = d; foe = e; } }
   if (!foe) return;
@@ -528,6 +550,7 @@ function scorpTick(dt) {
   S.cool = SCORP_T;
   const from = new THREE.Vector3(S.x, hAt(S.x, S.z) + .95, S.z), to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + .7 * UNIT_K, foe.z), dm = HERO_SK.scorp.k[HERO.sk.scorp - 1];
   const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero); }, .2, 'qbolt'); m.scale.set(1.6, 1.6, 1.6);
+  if (S.rk >= 3) { arrowStreak(m, 2); for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
 // quick blows too); the Captain swings round on the spot with his Sweeping blow every 5th blow (Jack)
@@ -1042,6 +1065,8 @@ function heroModel(id = HERO_ID) {
   const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); heroKitFoot(p, id); p.seed = 0;
   // no Inspire standard in the portraits (Jack: it stood up behind the head)
   if (p.standard) { p.standard.visible = false; p.standard = null; p.pennant = null; }
+  // the Engineer's kettle hat casts no shadow in the portraits (its broad brim darkened his whole face: Jack)
+  if (id === 'engineer') for (const o of p.kit || []) if (o.userData && o.userData.helm) o.traverse(m => { if (m.isMesh) m.castShadow = false; });
   p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
   return { g: p.g, p };
 }
@@ -1062,7 +1087,9 @@ function heroBust(now) {
   blink(p, now);
   p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
   codexStage(hpModel);
-  cxCam.position.set(hd.x + .14, hd.y + .1, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .02, hd.z);
+  // the Engineer's portrait is taken from a little lower, so his eyes show under the kettle hat's brim
+  const lo = HERO_ID === 'engineer' ? .1 : 0;
+  cxCam.position.set(hd.x + .14, hd.y + .1 - lo, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .02 + lo * .2, hd.z);
   cxR.render(cxScene, cxCam); cxScene.remove(hpModel.g);
   return cxR.domElement;
 }
@@ -1088,7 +1115,8 @@ function rosterSnaps(el) {
     const p = rosterModel(cv.dataset.h), g = p.g; cxScene.add(g); g.updateMatrixWorld(true);
     const hd = p.headParts[0].getWorldPosition(new THREE.Vector3());
     codexStage({ r: .01, k: 1.2, c: hd.clone() });
-    cxCam.position.set(hd.x + .22, hd.y + .1, hd.z + 1.2); cxCam.lookAt(hd.x, hd.y - .06, hd.z);
+    const lo = cv.dataset.h === 'engineer' ? .1 : 0;
+    cxCam.position.set(hd.x + .22, hd.y + .1 - lo, hd.z + 1.2); cxCam.lookAt(hd.x, hd.y - .06 + lo * .2, hd.z);
     cxR.render(cxScene, cxCam); cxScene.remove(g); heroCopy(cxR.domElement, cv); cv.dataset.done = 1;
   });
 }
@@ -1211,6 +1239,25 @@ function galDemo(p, t, dt) {
     if ((p.hoofT = (p.hoofT || 0) - dt) <= 0) { p.hoofT = [.18, .18, .1, .07][r]; dustAt(x0 - fx * .7, 0, z0 - fz * .7); }
     if (p.flaps) p.flaps.forEach((h, i) => { h.rotation.z = h.userData.flap * (.35 + Math.sin(now / 90 + i * 1.7) * .12); });
     const c = T % 4; if (r >= 3 && c < 1.3) { const k = Math.sin(Math.PI * c / 1.3); p.g.rotation.order = 'YXZ'; p.g.rotation.x = -.5 * k; p.g.position.y = .25 * k; }
+    return;
+  }
+  if (d === 'scorp' || d === 'mend' || d === 'blast') {          // the Engineer: a bolt every 2 s, the scorpion, repairs, a bursting bolt
+    const c = T % 2, prev = p.prevC == null ? c : p.prevC; p.prevC = c;
+    xbowPose(p, d !== 'mend' && c > .6 && c < 1.3);
+    if (d === 'scorp') {
+      if (!p.scorpM || p.scorpM.rk !== r) { if (p.scorpM) gScene.remove(p.scorpM.g); const S = p.scorpM = makeScorpion(r); S.rk = r;
+        S.g.position.set(x0 + fz * 1.1, 0, z0 - fx * 1.1); S.t.rotation.y = fw; gScene.add(S.g); }
+      if (crossed(prev, c, 1)) { const S = p.scorpM.g.position, to = foeAt(p.foes[0]); galArrow(new THREE.Vector3(S.x, .95, S.z), to, undefined, r >= 3 ? 2 : 0);
+        if (r >= 3) for (let i = 0; i < 3; i++) dustAt(S.x, 0, S.z); }
+    } else if (d === 'blast') {
+      if (crossed(prev, c, 1)) { galArrow(xbowPoint(p), foeAt(p.foes[0]), r >= 3 ? 'sparks' : undefined); p.blastAt = t + .2; }
+      if (p.blastAt && t >= p.blastAt) { p.blastAt = 0; const w = foeAt(p.foes[0]); blastLook(w.x, 0, w.y, w.z, r); if (p.foes[0]) p.foes[0].kb = r >= 3 ? .3 : 0; }
+    } else if (p.prop) {
+      // Repairs: gold specks rising off the building beside him, more often at rank 2, a ring of sparks round it at 3
+      const P = p.prop.position;
+      if ((p.mendFx = (p.mendFx || 0) - dt) <= 0) { p.mendFx = [.5, .5, .28, .2][r]; sparkBurst(P.x + (Math.random() - .5), .4 + Math.random(), P.z + (Math.random() - .5), '#ffe08a', 1); }
+      if (r >= 3 && (p.ringT = (p.ringT || 0) - dt) <= 0) { p.ringT = 2.5; mendRing(P.x, 0, P.z, .75); }
+    }
     return;
   }
   if (d === 'twin' || d === 'eye' || d === 'quick') {            // the Ranger: a shot every 1.8 s at the raider ahead
