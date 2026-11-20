@@ -27,7 +27,7 @@ const want=s=>!only.length||only.includes(s);
 // 1 the timelapse: the castle a bare palisade fort; houses, fields, workshops and towers rise round it one by one, nearest first,
 // each in stages like a site, and are upgraded on their own times; the walls go up and turn to stone; the castle becomes a keep, then
 // a castle; day and night come round every few seconds (lit by the town's torches at night), the game running fast so people bustle
-if(want('grow')){const p=await L.open(env,'cross',W,H,D);
+if(want('grow')){const p=await L.open(env,'plains',W,H,D);
  await G(p,`(()=>{for(const B of buildings.slice())removeBuilding(B,false,true);for(const v of villagers)scene.remove(v.g);villagers.length=0;road.fill(0);rebuildRoads();cacheCells();regionDirty=true;weatherReset(null);
   const ev0=findValid('castle',Math.floor(N/2)-1,Math.floor(N/2)-1,{free:true});const K=place('castle',ev0.ci,ev0.cj,{instant:true,free:true,quiet:true});SH.face(K,0);const c=center(K),ci=Math.floor(c.x/CELL),cj=Math.floor(c.z/CELL);SH.clearTrees(c.x,c.z,20);
   for(const r of rocks){const a=Math.floor(r.x/CELL),b=Math.floor(r.z/CELL);if(Math.abs(a-ci)<=7&&Math.abs(b-cj)<=7)r.amount=0;}seatRocks();cacheCells();
@@ -68,7 +68,7 @@ if(want('grow')){const p=await L.open(env,'cross',W,H,D);
    // day .0-.42, dusk to .55, night to .82, dawn to 1
    if(f<.42){LT=1;DK=0;}else if(f<.55){const k=sm((f-.42)/.13);LT=1-k;DK=Math.sin(k*Math.PI)*.9+(k>.5?0:0);}else if(f<.82){LT=0;DK=0;}else{const k=sm((f-.82)/.18);LT=k;DK=Math.sin(k*Math.PI)*.8;}
    res.food=res.gold=res.wood=res.stone=9999;for(const v of villagers){v.hunger=0;v.sleeping=false;}
-   SH.cam({yaw:-.35,pitch:1.02,dist:37,dx:0,dz:1.5,y:1});};})()`);
+   SH.cam({yaw:-.35,pitch:1.1,dist:41,dx:-.5,dz:2.5,y:1});};})()`);
  await clip(p,'1-grow',20,{k:2.5,fin:12,fout:10,cap:['From hovel','to castle'],capT:4});await p.close();}
 // 3 the title, and where to get it
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
