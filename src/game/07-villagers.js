@@ -1077,7 +1077,7 @@ function updateVillagers(dt, now) {
     v.arms[1].rotation.z = ease(v.arms[1].rotation.z, twoLogs ? 2.3 : logC ? .47 : 0); v.body.rotation.x = ease(v.body.rotation.x, lean);
     if (starving || v.bellyK) { v.bellyK = ease(v.bellyK || 0, starving ? 1 : 0); if (!starving && v.bellyK < .02) v.bellyK = 0; if (!v.changing) v.arms[0].rotation.z = .6 * v.bellyK; }
     if (v.changing) changePose(v, 1 - v.changeT / CHANGE_T); else if (v.spun) { v.spun = false; v.body.rotation.y = 0; v.arms[0].rotation.z = v.arms[1].rotation.z = 0; }
-    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
+    if (v.soldier) { if (v.toolKind === 'bow') bowPose(v, v.drawing, v.attackT > 0, -.35 - swing * .3, -swing * .6); else if (v.toolKind === 'crossbow') xbowPose(v, !!v.foe); else (v.toolKind === 'spear' ? spearPose : v.strike === 'thrust' ? thrustPose : v.strike === 'sweep' ? sweepPose : swordPose)(v, (v.attackT || 0) * (v.atkK || 1), swing); }   // exact: eased, the strikes go soft
     if (v.soldier) { const bq = blockK(v, now); if (bq) shieldUp(v, bq); }   // the shield up and turned to face the foe
     if (v.cape) capeWave(v, now / 1000, v.walking ? .55 : .15);   // the Captain's cloak ripples
     // Sweeping blow flares the cloak out behind the spin; Quick draw's hand flicks back to the quiver between shots

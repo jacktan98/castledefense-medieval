@@ -23,7 +23,7 @@ const ACH_TABS = [
     ['bonusall', 'Legend', 'Win all three bonus stages', 'open-treasure-chest', () => ['meadow', 'isle', 'pass'].filter(m => CROWNS[m]).length, 3],
     // the heroes (Jack): one to level 10, all three to level 10
     ['hero10', 'Seasoned Hero', 'Raise a hero to level 10', 'rank-3', () => heroTopLv(), 10],
-    ['heroes10', 'Hall of Heroes', 'Raise all three heroes to level 10', 'throne-king', () => heroLvs().filter(l => l >= 10).length, 3],
+    ['heroes10', 'Hall of Heroes', 'Raise every hero to level 10', 'throne-king', () => heroLvs().filter(l => l >= 10).length, 4],
   ]],
   ['Battle', [
     ['kill250', 'Raider Hunter', 'Slay 250 raiders', 'arrow-cluster', 'kills', 250],
