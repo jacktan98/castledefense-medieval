@@ -83,6 +83,6 @@ if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.titl
   document.body.appendChild(d);},[BADGE,ITCH]);
  await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const k=Math.min(1,Math.max(0,(t-.3)/.25));d.style.opacity=k;d.firstChild.style.transform='scale('+(1.08-.08*k)+')';}}`);
  await clip(p,'3-title',4.5,{fin:12});await p.close();}
-fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music_2.mp3','1-grow','3-title',.14,35,3]],
+fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music_2.mp3','1-grow','3-title',.24,35,3]],
  beds:[['sfx/Bird_chirping.mp3','1-grow',.18]],horn:false,keep:{'1-grow':['castleUp','build'],'3-title':[]}}));
 await env.b.close();env.server.close();})();
