@@ -74,12 +74,13 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
 // 3 the title, and where to get it
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
  await p.addStyleTag({content:'.gameTitle{top:9vh!important}'});await p.waitForTimeout(3000);
- await p.evaluate(()=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),d=document.createElement('div');d.id='awaits';d.innerHTML='<div><div class=l1>Full game</div><img src="/site/img/appstore-badge.svg"><div class=l2>Play the demo on itch.io</div></div>';
+ const BADGE='data:image/svg+xml;base64,'+fs.readFileSync(__dirname+'/../../../site/img/appstore-badge.svg').toString('base64');
+ await p.evaluate(B=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),d=document.createElement('div');d.id='awaits';d.innerHTML='<div><div class=l1>Full game</div><img src="'+B+'"><div class=l2>Play the demo on itch.io</div></div>';
   d.style.cssText='position:fixed;left:0;right:0;bottom:0;height:44%;display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 45%,rgba(0,0,0,.7))';
-  const s=d.firstChild,F=parseFloat(cs.fontSize);s.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:${F*.18}px;font-family:${cs.fontFamily};letter-spacing:.03em;text-shadow:0 3px 14px rgba(0,0,0,.9)`;
-  s.querySelector('.l1').style.cssText=`color:#fff1c8;font-size:${F*.5}px;-webkit-text-stroke:1.5px #3a2009;paint-order:stroke fill`;
-  s.querySelector('img').style.cssText=`height:${F*1.15}px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
-  s.querySelector('.l2').style.cssText=`color:#f6d77a;font-size:${F*.62}px;-webkit-text-stroke:2px #3a2009;paint-order:stroke fill;text-shadow:0 3px 14px rgba(0,0,0,.9),0 0 22px rgba(243,207,110,.35)`;document.body.appendChild(d);});
+  const s=d.firstChild,F=parseFloat(cs.fontSize);s.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:${F*.22}px;font-family:${cs.fontFamily};letter-spacing:.03em;text-shadow:0 3px 14px rgba(0,0,0,.9)`;
+  s.querySelector('.l1').style.cssText=`color:#fff1c8;font-size:${F*.62}px;-webkit-text-stroke:1.5px #3a2009;paint-order:stroke fill`;
+  s.querySelector('img').style.cssText=`height:${F*1.5}px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
+  s.querySelector('.l2').style.cssText=`color:#f6d77a;font-size:${F*.85}px;-webkit-text-stroke:2px #3a2009;paint-order:stroke fill;text-shadow:0 3px 14px rgba(0,0,0,.9),0 0 22px rgba(243,207,110,.35)`;document.body.appendChild(d);},BADGE);
  await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const k=Math.min(1,Math.max(0,(t-.3)/.25));d.style.opacity=k;d.firstChild.style.transform='scale('+(1.08-.08*k)+')';}}`);
  await clip(p,'3-title',4.5,{fin:12});await p.close();}
 fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music.mp3','1-town','1-town',.15,0,1.2],['music/Night_theme_music.mp3','2-charge','2-charge',.2,4,1.6],['music/Medieval_theme_music_2.mp3','3-title','3-title',.13,35]],
