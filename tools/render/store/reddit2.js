@@ -1,7 +1,9 @@
 // node reddit2.js W H DSF out-dir [town charge title]: a short Reddit video (Jack): the busy town on the green River isle by day,
 // then knights charging out across Horsefields into a raider column, then the title. Join with node mix.js out-dir out.mp4
 const L=require('./lib');const SC=require('./scenes');const fs=require('fs');
-const [W,H,D,OUT]=[+process.argv[2],+process.argv[3],+process.argv[4],process.argv[5]];const only=process.argv.slice(6);
+const [W,H,D,OUT]=[+process.argv[2],+process.argv[3],+process.argv[4],process.argv[5]];
+// a portrait size (H > W) makes the 9:16 version for TikTok, Shorts and Reels: each camera is set up for it below
+const PORT=H>W;const only=process.argv.slice(6);
 const FPS=30;fs.mkdirSync(OUT,{recursive:true});
 const G=(p,c)=>p.evaluate(c=>G(c),c);
 const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=window.__T||performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};`));
@@ -34,7 +36,7 @@ if(want('town')){const p=await L.open(env,'vale',W,H,D);
   const c=center(castleB());layRoads([[[c.x,c.z+3.2],[c.x,c.z+12]],[[c.x-8,c.z+5],[c.x+8,c.z+5]]]);rebuildRoads();cacheCells();
   res.food=999;res.gold=500;res.wood=400;res.stone=300;PH.kind='day';PH.t=DAYLEN[0]*.7;SH.run(45);for(const v of villagers){v.sleeping=false;v.hunger=0;}PH.t=DAYLEN[0]*.7;SH.hud(false);
   const y0=(castleB().face||0)*Math.PI/2+.5;
-  window.__tick=t=>{const k=t*t*(3-2*t);PH.t=DUSK+30-(DUSK+30-DUSK*.4)*k;SH.look(c.x,c.z+1,{yaw:y0+t*.55,pitch:.66-t*.06,dist:34-t*6,y:1.5});};
+  window.__tick=t=>{const k=t*t*(3-2*t);PH.t=DUSK+30-(DUSK+30-DUSK*.4)*k;SH.look(c.x,c.z+1,{yaw:y0+t*.55,pitch:.66-t*.06,dist:${PORT?'48-t*8':'34-t*6'},y:1.5});};
   window.__ok=buildings.length+' buildings '+villagers.length+' villagers';})()`);
  console.log('town',await G(p,'window.__ok'),p.errs.slice(0,3));
  await clip(p,'1-town',7,{fin:12,fout:8,cap:['Build','your town']});await p.close();}
@@ -79,7 +81,7 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
    if(st===2&&t>.6){st=3;window.__ev.push([window.__fi||0,'neigh',.8]);wings(4,fz-2);}
    for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
    const a=st>=2?[...R(),...F()]:F(),f=enemies.filter(e=>!e.dead&&!e.engine);if(a.length){let ax=0,az=0;for(const v of a){ax+=v.rx;az+=v.rz;}ax/=a.length;az/=a.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.5+bx*.5,gz=az*.5+bz*.5;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
-   SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.3,pitch:.74+t*.05,dist:18+t*2,y:1.2});};
+   SH.look(tx.x,tx.z,{yaw:+(window.YAW||${PORT?0:-1.6})+t*${PORT?.15:.3},pitch:${PORT?.85:.74}+t*.05,dist:${PORT?'30+t*2':'18+t*2'},y:1.2});};
   window.__ok='riders '+R().length+' foot '+F().length+' foes '+enemies.length+' towers '+buildings.filter(B=>B.type==='tower').length+' manned '+buildings.filter(B=>B.type==='tower').map(B=>B.manned).join(',');})()`);
  console.log('charge',await G(p,'window.__ok'),p.errs.slice(0,3));
  await clip(p,'2-charge',12,{k:.8,fout:8,cap:['Charge','into battle']});

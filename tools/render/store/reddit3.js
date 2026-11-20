@@ -2,7 +2,9 @@
 // growing from a bare palisade fort to a full tier-3 town while day and night come round every few seconds, then the title.
 // Join with node mix.js out-dir out.mp4
 const L=require('./lib');const SC=require('./scenes');const fs=require('fs');
-const [W,H,D,OUT]=[+process.argv[2],+process.argv[3],+process.argv[4],process.argv[5]];const only=process.argv.slice(6);
+const [W,H,D,OUT]=[+process.argv[2],+process.argv[3],+process.argv[4],process.argv[5]];
+// a portrait size (H > W) makes the 9:16 version for TikTok, Shorts and Reels: each camera is set up for it below
+const PORT=H>W;const only=process.argv.slice(6);
 const FPS=30;fs.mkdirSync(OUT,{recursive:true});
 const G=(p,c)=>p.evaluate(c=>G(c),c);
 const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=window.__T||performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};`));
@@ -68,7 +70,7 @@ if(want('grow')){const p=await L.open(env,'plains',W,H,D);
    // day .0-.42, dusk to .55, night to .82, dawn to 1
    if(f<.42){LT=1;DK=0;}else if(f<.55){const k=sm((f-.42)/.13);LT=1-k;DK=Math.sin(k*Math.PI)*.9+(k>.5?0:0);}else if(f<.82){LT=0;DK=0;}else{const k=sm((f-.82)/.18);LT=k;DK=Math.sin(k*Math.PI)*.8;}
    res.food=res.gold=res.wood=res.stone=9999;for(const v of villagers){v.hunger=0;v.sleeping=false;}
-   SH.cam({yaw:-.35,pitch:1.15,dist:35,dx:0,dz:2,y:1});};})()`);
+   SH.cam(${PORT?'{yaw:0,pitch:1.2,dist:60,dx:0,dz:0,y:1}':'{yaw:-.35,pitch:1.15,dist:35,dx:0,dz:2,y:1}'});};})()`);
  await clip(p,'1-grow',20,{k:2.5,fin:12,fout:10,cap:['From hovel','to castle'],capT:4});await p.close();}
 // 3 the title, and where to get it
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
