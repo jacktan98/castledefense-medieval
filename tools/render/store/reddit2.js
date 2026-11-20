@@ -44,7 +44,7 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
   // troop buildings behind the castle, out of view, at mixed tiers; two archer towers out on the flanks
   SH.town([['stables',-4,6,3,0],['stables',4,6,2,0],['barracks',-10,4,3,0],['barracks',10,4,2,0],['barracks',-10,8,1,0]],34);
   UPK.lance=true;const K=castleB(),c=center(K);const x=c.x,z=c.z-10,fz=z-10;
-  SH.town([['tower',-4,-5,1,0],['tower',5,-7,3,0]],0);
+  SH.town([['tower',-4,-5,3,0],['tower',5,-7,3,0]],0);
   SH.clearTrees(x,(z+fz)/2,16);for(const r of rocks)if(Math.hypot(r.x-x,r.z-(z+fz)/2)<16)r.amount=0;seatRocks();
   // a few trees here and there round the field, clear of the fighting and the flanking rides
   {let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647;};let n=0;for(let k=0;k<400&&n<22;k++){const tx=x-24+R()*48,tz=fz-8+R()*24;if(Math.abs(tx-x)<12.5&&tz>fz-4&&tz<z+4)continue;if(Math.hypot(tx-c.x,tz-c.z)<9||!canStand(tx,tz,2))continue;if(trees.some(t=>!t.dead&&Math.hypot(t.x-tx,t.z-tz)<2.2))continue;trees.push({x:tx,z:tz,s:.8+R()*.5,k:1});n++;}trunks.count=crowns.count=trees.length;const tc=new THREE.Color();trees.forEach((t,m)=>{const r=(Math.sin(t.x*12.9+t.z*78.2)*43758.5)%1;tc.setHSL(.27+(Math.abs(r)-.5)*.07,.3+Math.abs(r)*.15,.17+Math.abs(r)*.08);crowns.setColorAt(m,tc);});crowns.instanceColor.needsUpdate=true;seatTrees();}
@@ -63,8 +63,8 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
   const put=(v,px,pz)=>{v.x=v.rx=px;v.z=v.rz=pz;v.g.position.set(px,walkY(px,pz),pz);v.g.rotation.y=Math.PI;v.hx=0;v.hz=-1;};
   const fv=F();fv.forEach((v,i)=>put(v,x-(fv.length-1)*.8+i*1.6,z-2+(i%2)*.5));
   // the knights behind them on both flanks, one stables to a wing
-  ST.forEach((B,i)=>{const sd=i?1:-1;R().filter(v=>v.post.B===B).forEach((v,j)=>put(v,x+sd*(6+(j%2)*1.4),z+1+j*1.3));});
-  ST.forEach((B,i)=>setRally(B,{x:x+(i?7:-7),z:z+2}));BK.forEach(B=>setRally(B,{x:x,z:z-2}));for(const v of [...R(),...F()])v.march=false;SH.run(.4);
+  ST.forEach((B,i)=>{const sd=i?1:-1;R().filter(v=>v.post.B===B).forEach((v,j)=>put(v,x+sd*(10+(j%2)*1.4),z+6+j*1.3));});
+  ST.forEach((B,i)=>setRally(B,{x:x+(i?11:-11),z:z+7}));BK.forEach(B=>setRally(B,{x:x,z:z-2}));for(const v of [...R(),...F()])v.march=false;SH.run(.4);
   for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
   for(const e of enemies){e.speed=e.__sp||e.speed;e.hp=e.max=e.max*2.2;}
   // night: moonlight, a few torches along the raiders' line
@@ -75,14 +75,14 @@ if(want('charge')){const p=await L.open(env,'plains',W,H,D);
   const wings=(dx,dz)=>{ST.forEach((B,i)=>setRally(B,{x:x+(i?dx:-dx),z:dz}));for(const v of R())v.march=false;};
   window.__tick=t=>{
    if(st===0&&t>.02){st=1;BK.forEach((B,i)=>setRally(B,{x:x-4+i*4,z:fz}));for(const v of F())v.march=false;}
-   if(st===1&&t>.1){st=2;window.__ev.push([window.__fi||0,'rush',1]);wings(10,fz+3);}
-   if(st===2&&t>.42){st=3;window.__ev.push([window.__fi||0,'neigh',.8]);wings(4,fz-2);}
+   if(st===1&&t>.3){st=2;window.__ev.push([window.__fi||0,'rush',1]);wings(10,fz+2);}
+   if(st===2&&t>.6){st=3;window.__ev.push([window.__fi||0,'neigh',.8]);wings(4,fz-2);}
    for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;
-   const a=[...R(),...F()],f=enemies.filter(e=>!e.dead&&!e.engine);if(a.length){let ax=0,az=0;for(const v of a){ax+=v.rx;az+=v.rz;}ax/=a.length;az/=a.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.5+bx*.5,gz=az*.5+bz*.5;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
+   const a=st>=2?[...R(),...F()]:F(),f=enemies.filter(e=>!e.dead&&!e.engine);if(a.length){let ax=0,az=0;for(const v of a){ax+=v.rx;az+=v.rz;}ax/=a.length;az/=a.length;let bx=ax,bz=az;if(f.length){bx=0;bz=0;for(const e of f){bx+=e.x;bz+=e.z;}bx/=f.length;bz/=f.length;}const gx=ax*.5+bx*.5,gz=az*.5+bz*.5;if(tx.n===undefined){tx.x=gx;tx.z=gz;tx.n=1;}tx.x+=(gx-tx.x)*.06;tx.z+=(gz-tx.z)*.06;}
    SH.look(tx.x,tx.z,{yaw:+(window.YAW||-1.6)+t*.3,pitch:.74+t*.05,dist:18+t*2,y:1.2});};
   window.__ok='riders '+R().length+' foot '+F().length+' foes '+enemies.length+' towers '+buildings.filter(B=>B.type==='tower').length+' manned '+buildings.filter(B=>B.type==='tower').map(B=>B.manned).join(',');})()`);
  console.log('charge',await G(p,'window.__ok'),p.errs.slice(0,3));
- await clip(p,'2-charge',10,{k:.8,fout:8,cap:['Charge','into battle']});
+ await clip(p,'2-charge',12,{k:.8,fout:8,cap:['Charge','into battle']});
  console.log('end',await G(p,`'foes left '+enemies.filter(e=>!e.dead).length`));await p.close();}
 // 3 the title, and where to get it
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
@@ -107,5 +107,5 @@ if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.titl
  await clip(p,'3-title',4.5,{fin:12});await p.close();}
 fs.writeFileSync(`${OUT}/mix.json`,JSON.stringify({music:[['music/Medieval_theme_music_2.mp3','1-town','3-title',.14,35,3]],
  beds:[['sfx/Bird_chirping.mp3','1-town',.28],['sfx/Bird_chirping.mp3','2-charge',.1]],horn:false,
- keep:{'1-town':['chop','pick','hammer'],'2-charge':['rush','neigh','clash','kill','block','rockFire','rockHit','bolt','arrow'],'3-title':[]},rush:[4.5,1.6]}));
+ keep:{'1-town':['chop','pick','hammer'],'2-charge':['rush','neigh','clash','kill','block','rockFire','rockHit','bolt','arrow'],'3-title':[]},rush:[5,1.6]}));
 await env.b.close();env.server.close();})();
