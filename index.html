@@ -1235,6 +1235,12 @@ body.clean .panel,body.clean .dock,body.clean #tipPill,body.clean #powers,body.c
   body.clean #pauseBtn{left:auto;right:calc(var(--padR) + 44px)}
   body.clean .corner{left:auto;right:var(--padR);align-items:flex-end}
 }
+/* the Heroes row upright on a phone (Jack: four cards ran off the screen's edge): three to a row, the fourth (the Engineer) starts
+   the second row under the Heir; every card the same width */
+@media (max-width:600px) and (orientation:portrait){
+  .hRoster{flex-wrap:wrap;justify-content:flex-start}
+  .modal.tome .hRos{flex:0 0 calc((100% - 20px) / 3);max-width:none;min-width:0}
+}
 </style>
 
 <!-- shown from the first paint until the game is ready (three.js comes from a CDN; on a slow phone that takes a while) -->
@@ -12784,7 +12790,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = 'eb2c1ddd7d'; var updateWait = false, updateT = 0;
+const BUILD = 'a5ab881ae1'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;

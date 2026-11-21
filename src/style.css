@@ -1218,3 +1218,9 @@ body.clean .panel,body.clean .dock,body.clean #tipPill,body.clean #powers,body.c
   body.clean #pauseBtn{left:auto;right:calc(var(--padR) + 44px)}
   body.clean .corner{left:auto;right:var(--padR);align-items:flex-end}
 }
+/* the Heroes row upright on a phone (Jack: four cards ran off the screen's edge): three to a row, the fourth (the Engineer) starts
+   the second row under the Heir; every card the same width */
+@media (max-width:600px) and (orientation:portrait){
+  .hRoster{flex-wrap:wrap;justify-content:flex-start}
+  .modal.tome .hRos{flex:0 0 calc((100% - 20px) / 3);max-width:none;min-width:0}
+}
