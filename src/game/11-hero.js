@@ -217,8 +217,12 @@ function heroKit(v, id = HERO_ID, foot) {
       // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): a small gold crown on the chest, an empty
       // scabbard at the left hip with a gold tip, and tall riding boots with turned tops
       // the crown in the middle of the chest, a little above its middle (Jack: between the first spot and just under the collar)
-      const cr2 = new THREE.Group(); cr2.position.set(0, .755, .21); put(cr2);
-      cr2.add(box(.085, .025, .012, heroGold, 0, 0, 0)); for (const dx of [-.032, 0, .032]) cr2.add(box(.016, .035, .012, heroGold, dx, .028, 0));
+      // the surcoat is six-sided with a corner at the front (its radius .169 at this height): the crown sits on that corner, each half
+      // turned flat onto the face beside it, so it lies on the chest (Jack: it floated in front of it)
+      const cr2 = new THREE.Group(); cr2.position.set(0, .755, .169); put(cr2);
+      for (const sx of [-1, 1]) { const h = new THREE.Group(); h.rotation.y = sx * Math.PI / 6; cr2.add(h);
+        h.add(box(.044, .025, .012, heroGold, sx * .022, 0, .007), box(.016, .035, .012, heroGold, sx * .034, .028, .007)); }
+      cr2.add(box(.016, .035, .012, heroGold, 0, .028, .007));
       const sb = new THREE.Group(); sb.position.set(-.215, .5, -.02); sb.rotation.set(.55, 0, -.1); sb.userData.scabbard = true; put(sb);
       sb.add(box(.04, .34, .055, leatherM, 0, -.16, 0), box(.046, .045, .062, heroGold, 0, -.32, 0), box(.046, .03, .062, heroGold, 0, .01, 0));
       if (v.horse) sb.visible = false;
@@ -497,7 +501,8 @@ function rangerStep(v, dt, home) {
   // a plain bolt at 1, a higher twang and a streak of air behind it at 2, a gold bolt trailing sparks at 3
   if (xb) { const to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + (foe.horse ? 1.2 : .8) * UNIT_K, foe.z), rr = HERO.sk.rapid ? skR('rapid') : 0;
     shotRate = rr >= 2 ? 1.15 : 0;
-    const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, v); }, null, 'qbolt'); shotRate = 0;
+    // flown dead straight like a crossbow bolt (Jack: it arced like an arrow)
+    const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, v); }, .001, 'qbolt'); shotRate = 0;
     if (rr >= 2) arrowStreak(m, 2);
     if (rr >= 3) { m.material = glowArrowM; glowArrows.push(m); }
     return; }
@@ -547,7 +552,7 @@ function mendRing(x, y, z, rad) { for (let i = 0; i < 10; i++) { const a = i / 1
 // his back, walks freely and builds it again where he stops (SC_BUILD_T). States (`S.st`): set, tow, pack, carried, build;
 // `S.pk` 0 in pieces (on his back), 1 whole.
 var engScorp = null;
-const SCORP_R = 9, SCORP_T = 3, SCORP_SPLASH = 1.2, SC_BREAK_T = 6, SC_BUILD_T = 6.5, TOW_V = MOVE_SPEED, SC_REST = -.07;
+const SCORP_R = 9, SCORP_T = 3, SCORP_SPLASH = 1.2, SC_BREAK_T = 6, SC_BUILD_T = 6.5, TOW_V = MOVE_SPEED, SC_REST = -.07, SCORP_BOLT = .65;   // SCORP_BOLT: its bolt drawn at that much of the ballista's
 // by rank: plain at 1; at 2 iron tyres on its wheels, iron feet on its legs and a timber shield board across its front; at 3
 // (signature) each bolt leaves with a puff of dust and a streak of air behind it (scorpTick)
 function makeScorpion(r = 1) {
@@ -707,13 +712,16 @@ function scorpTick(dt) {
   S.t.rotation.y += Math.sign(dy) * Math.min(Math.abs(dy), dt * 3);
   if (S.cool > 0 || Math.abs(dy) > .25) return;
   S.cool = SCORP_T;
-  const from = scorpMuzzle(S), to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + .7 * UNIT_K, foe.z), dm = HERO_SK.scorp.k[HERO.sk.scorp - 1];
-  // its bolt strikes an area (Jack): full damage on the raider, and every other raider within SCORP_SPLASH m takes from full at the
-  // middle to half at the edge, with a puff of dust where it lands
-  const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero);
-    for (const e of enemies.slice()) { if (e === foe || e.dead || e.dormant) continue; const d = Math.hypot(e.x - to.x, e.z - to.z);
+  const from = scorpMuzzle(S), dm = HERO_SK.scorp.k[HERO.sk.scorp - 1];
+  // shot like the ballista's (Jack): a heavy bolt flown dead straight past the raider into the ground 1 m beyond, where it throws
+  // up earth and stays stuck, slanting; it strikes an area: full damage on the raider, and every other raider within SCORP_SPLASH m
+  // takes from full at the middle to half at the edge
+  const dx = foe.x - from.x, dz = foe.z - from.z, dl = Math.hypot(dx, dz) || 1, dir = new THREE.Vector3(dx / dl, 0, dz / dl), L = Math.min(dl + 1, SCORP_R + 1);
+  const to = from.clone().addScaledVector(dir, L); to.y = walkY(to.x, to.z);
+  const m = fireArrow(from, to, () => { const cx = foe.dead ? to.x : foe.x, cz = foe.dead ? to.z : foe.z; if (!foe.dead) hurtEnemy(foe, dm, hero);
+    for (const e of enemies.slice()) { if (e === foe || e.dead || e.dormant) continue; const d = Math.hypot(e.x - cx, e.z - cz);
       if (d < SCORP_SPLASH) hurtEnemy(e, dm * (1 - .5 * d / SCORP_SPLASH), hero); }
-    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, (shotSnd = 'scorp', 'qbolt')); shotSnd = null; m.scale.set(1.6, 1.6, 1.6);
+    blastFx(to.x, to.z, 1, .6); stickBolt(to, dir); stuckBolts[stuckBolts.length - 1].m.scale.setScalar(SCORP_BOLT); }, .001, (shotSnd = 'scorp', 'bolt')); shotSnd = null; m.scale.setScalar(SCORP_BOLT);
   if (S.rk >= 3) { arrowStreak(m, 2); for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
@@ -1389,16 +1397,18 @@ syncHeroAdmin();
 // put into the gallery's scene while it is open (fxScene); arrows are the gallery's own, flown by galFxTick
 const galArrows = [];
 // look: undefined a plain arrow, 'gold' Quick draw's glowing one, 'sparks' glowing with a trail of sparks; streak: Twin shot's rank
-function galArrow(from, to, look, streak) {
-  const m = new THREE.Mesh(ARROW_GEO, look && look !== 'feather' ? ARROW_GOLD : ARROW_PLAIN), glow = look === 'sparks', feather = look === 'feather'; m.position.copy(from); gScene.add(m);
-  m.lookAt(to); galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / 20), glow, feather });
+// flat: the Engineer's shots, flown dead straight: 'qbolt' his crossbow's bolt, 'bolt' the field scorpion's heavy bolt (stuck in the ground after)
+function galArrow(from, to, look, streak, flat) {
+  const m = flat === 'bolt' ? new THREE.Mesh(SHOT.bolt.geo, arrowMat) : flat === 'qbolt' ? new THREE.Mesh(SHOT.qbolt.geo, look ? glowArrowM : SHOT.qbolt.m || arrowMat) : new THREE.Mesh(ARROW_GEO, look && look !== 'feather' ? ARROW_GOLD : ARROW_PLAIN), glow = look === 'sparks', feather = look === 'feather'; m.position.copy(from); gScene.add(m);
+  if (flat === 'bolt') m.scale.setScalar(SCORP_BOLT);
+  m.lookAt(to); galArrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.2, from.distanceTo(to) / (flat ? 25 : 20)), glow, feather, arc: flat ? 0 : .35, flat });
   if (streak) arrowStreak(m, streak, () => galArrows.some(a => a.m === m));
 }
 function galFxTick(dt) {
   updatePuffs(dt); updateFloats(dt); heroSpriteTick(dt); streakTick();
   for (let n = galArrows.length - 1; n >= 0; n--) {
     const a = galArrows[n]; a.t += dt / a.dur; const k = Math.min(1, a.t), m = a.m, p = m.position.clone();
-    m.position.lerpVectors(a.from, a.to, k); m.position.y += .35 * 4 * k * (1 - k); m.lookAt(m.position.clone().add(m.position.clone().sub(p)));
+    m.position.lerpVectors(a.from, a.to, k); m.position.y += a.arc * 4 * k * (1 - k); m.lookAt(m.position.clone().add(m.position.clone().sub(p)));
     if (a.glow) sparkBurst(m.position.x, m.position.y - .05, m.position.z, '#ffd36a', 1);
     if (k >= 1) { if (a.feather) featherPuff(a.to); sparkBurst(a.to.x, a.to.y, a.to.z, a.glow ? '#ffd36a' : '#e8d8b0', 3); unparent(m); galArrows.splice(n, 1); }
   }
@@ -1454,12 +1464,12 @@ function galDemo(p, t, dt) {
     if (d === 'scorp') {
       if (!p.scorpM || p.scorpM.rk !== r) { if (p.scorpM) gScene.remove(p.scorpM.g); const S = p.scorpM = makeScorpion(r); S.rk = r;
         S.g.position.set(x0 + fz * 1.1, 0, z0 - fx * 1.1); S.g.rotation.y = fw; scorpPose(S, 1); gScene.add(S.g); }
-      if (crossed(prev, c, 1)) { const S = p.scorpM.g.position, to = foeAt(p.foes[0]); galArrow(scorpMuzzle(p.scorpM), to, undefined, r >= 3 ? 2 : 0);
+      if (crossed(prev, c, 1)) { const S = p.scorpM.g.position, fr = scorpMuzzle(p.scorpM), f = foeAt(p.foes[0]), to = f.clone().sub(fr).setY(0).normalize().multiplyScalar(Math.hypot(f.x - fr.x, f.z - fr.z) + 1).add(fr).setY(0); galArrow(fr, to, undefined, r >= 3 ? 2 : 0, 'bolt');
         if (r >= 3) for (let i = 0; i < 3; i++) dustAt(S.x, 0, S.z); }
     } else if (d === 'rapid') {
       // Rapid fire: a bolt every 1.2 s, 15/30/45% sooner by rank; a streak behind it from rank 2, gold with sparks at 3
       const per = 1.2 / (1 + [0, .4, .7, 1][r]), c2 = T % per, pv = p.prevR == null ? c2 : p.prevR; p.prevR = c2;
-      if (c2 < pv) galArrow(xbowPoint(p), foeAt(p.foes[0]), r >= 3 ? 'sparks' : undefined, r >= 2 ? 2 : 0);
+      if (c2 < pv) galArrow(xbowPoint(p), foeAt(p.foes[0]), r >= 3 ? 'sparks' : undefined, r >= 2 ? 2 : 0, 'qbolt');
     } else if (p.prop) {
       // Repairs: gold specks rising off the building beside him, more often at rank 2, a ring of sparks round it at 3
       const P = p.prop.position;
