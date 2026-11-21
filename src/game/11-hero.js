@@ -216,8 +216,8 @@ function heroKit(v, id = HERO_ID, foot) {
       for (const o of (v.armour || []).concat(v.kit)) if (o.userData && o.userData.pauldron) o.material = heroGold;
       // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): a small gold crown on the chest, an empty
       // scabbard at the left hip with a gold tip, and tall riding boots with turned tops
-      // the crown in the middle of the chest, high up under the collar (Jack)
-      const cr2 = new THREE.Group(); cr2.position.set(0, .8, .207); put(cr2);
+      // the crown in the middle of the chest, a little above its middle (Jack: between the first spot and just under the collar)
+      const cr2 = new THREE.Group(); cr2.position.set(0, .755, .21); put(cr2);
       cr2.add(box(.085, .025, .012, heroGold, 0, 0, 0)); for (const dx of [-.032, 0, .032]) cr2.add(box(.016, .035, .012, heroGold, dx, .028, 0));
       const sb = new THREE.Group(); sb.position.set(-.215, .5, -.02); sb.rotation.set(.55, 0, -.1); sb.userData.scabbard = true; put(sb);
       sb.add(box(.04, .34, .055, leatherM, 0, -.16, 0), box(.046, .045, .062, heroGold, 0, -.32, 0), box(.046, .03, .062, heroGold, 0, .01, 0));
