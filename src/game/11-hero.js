@@ -166,9 +166,10 @@ function heroKit(v, id = HERO_ID, foot) {
     put(ch);
     for (const sx of [-1, 1]) { put(box(.035, .3, .02, leatherM, sx * .1, .77, 0)); put(box(.035, .02, .2, leatherM, sx * .1, .92, -.09)); }
     const ml = new THREE.Group(); ml.position.set(.21, .52, .05); ml.rotation.z = .15; ml.add(box(.022, .22, .022, M.timber, 0, -.08, 0));
-    const mh = cyl(.045, .045, .12, 8, M.wood, 0, .04, 0); mh.rotation.x = Math.PI / 2; ml.add(mh); put(ml);
+    const mh = cyl(.045, .045, .12, 8, M.wood, 0, .04, 0); mh.rotation.x = Math.PI / 2; ml.add(mh); put(ml); v.hipMallet = ml;
     if (v.pivot) v.pivot.parent.remove(v.pivot);
     v.toolKind = 'crossbow'; v.pivot = makeTool('crossbow'); v.arms[1].add(v.pivot);
+    v.handMallet = makeTool('hammer'); v.handMallet.visible = false; v.arms[1].add(v.handMallet);
     v.soldier = true; v.cav = false;
   } else {
     // the Heir's horse by Royal horse's rank (Jack): a blanket at rank 1; the flank cloths from 2; at 3 gold trim on them and a steel plate down its face
@@ -441,7 +442,7 @@ function rangerStep(v, dt, home) {
   // setting the scorpion up (or packing it): he kneels at it and does not shoot
   if (v.scorpWork > 0) { v.scorpWork -= dt; v.foe = null; v.drawing = false; v.walking = false;
     if (engScorp) turnTo(v, Math.atan2(engScorp.x - v.x, engScorp.z - v.z), dt);
-    if ((v.tapT = (v.tapT || 0) - dt) <= 0) { v.tapT = .55; sfx('hammer', v); } heroMend(v, dt, null); return; }
+    heroMend(v, dt, null); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
   const foe = heroFoe(v, home, dt, R, R + .5, e => Math.hypot(e.x - v.x, e.z - v.z));
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
@@ -552,11 +553,12 @@ function makeScorpion(r = 1) {
 // k: 0 packed for the road, 1 set up to shoot
 function scorpPose(S, k) {
   const e = k * k * (3 - 2 * k);
-  S.legs.rotation.x = -1.5 * (1 - e); S.mount.rotation.x = .45 * (1 - e);
+  S.legs.rotation.x = -1.5 * (1 - e); S.mount.rotation.x = -1.05 * (1 - e);
   if (k < 1) S.t.rotation.y *= .9;
+  S.t.traverse(o => { if (o.userData.bolt) o.visible = k >= 1; });
 }
 function scorpMuzzle(S) { S.g.updateMatrixWorld(true); return S.t.localToWorld(new THREE.Vector3(0, .5, .55)); }
-function removeScorpion() { if (engScorp) { scene.remove(engScorp.g); engScorp = null; } }
+function removeScorpion() { if (engScorp) { scene.remove(engScorp.g); if (engScorp.bar) scene.remove(engScorp.bar.grp); engScorp = null; } }
 // the Engineer packs up before he moves off (from updateHero while he marches): true while he must wait
 function scorpPacking(v, dt) {
   const S = engScorp; if (!S || HERO_ID !== 'engineer') return false;
@@ -570,7 +572,7 @@ function scorpTick(dt) {
   const back = () => { const a = v.g.rotation.y; return { x: v.x - Math.sin(a) * SCORP_TOW, z: v.z - Math.cos(a) * SCORP_TOW }; };
   if (engScorp && engScorp.rk !== skR('scorp')) {
     const o = engScorp, n = makeScorpion(skR('scorp')); Object.assign(n, { x: o.x, z: o.z, st: o.st, k: o.k, tm: o.tm, cool: o.cool, rk: skR('scorp') });
-    n.g.position.copy(o.g.position); n.g.rotation.y = o.g.rotation.y; n.t.rotation.y = o.t.rotation.y; scene.remove(o.g); scene.add(n.g); engScorp = n; scorpPose(n, n.k); }
+    n.g.position.copy(o.g.position); n.g.rotation.y = o.g.rotation.y; n.t.rotation.y = o.t.rotation.y; n.bar = o.bar; scene.remove(o.g); scene.add(n.g); engScorp = n; scorpPose(n, n.k); }
   if (!engScorp) { const S = makeScorpion(skR('scorp')), p = back(); S.rk = skR('scorp'); S.x = p.x; S.z = p.z; S.cool = 1; S.g.rotation.y = v.g.rotation.y; scene.add(S.g); engScorp = S; }
   const S = engScorp;
   if (S.st === 'packed') {
@@ -588,9 +590,12 @@ function scorpTick(dt) {
     if (S.tm <= 0) { S.st = 'set'; S.k = 1; S.cool = .6; for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); }
   } else if (S.st === 'packing') {
     S.tm -= dt; S.k = Math.max(0, S.tm / PACK_T);
-    if (S.tm <= 0) { S.st = 'packed'; S.k = 0; v.scorpWork = 0; }
+    if (S.tm <= 0) { S.st = 'packed'; S.k = 0; v.scorpWork = 0; for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); }
   }
   S.g.position.set(S.x, hAt(S.x, S.z), S.z); scorpPose(S, S.k);
+  if (!S.bar) S.bar = makeBar(.7);
+  const busy = S.st === 'setting' || S.st === 'packing';
+  S.bar.grp.visible = busy; if (busy) { S.bar.grp.position.set(S.x, hAt(S.x, S.z) + 1.25, S.z); S.bar.set(S.st === 'setting' ? S.k : 1 - S.k); }
   if (S.st !== 'set') return;
   S.cool -= dt;
   let foe = null, bd = SCORP_R; for (const e of enemies) if (!e.dead && !e.dormant) { const d = Math.hypot(e.x - S.x, e.z - S.z); if (d < bd) { bd = d; foe = e; } }
@@ -850,7 +855,17 @@ var lvOwner = null;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
   // the Engineer kneels at his scorpion while he sets it up or packs it, his free hand working at it
-  if (on && v.scorpWork > 0) { kneel(v, .75); v.arms[0].rotation.set(-1.1 + .35 * Math.sin(now / 95), 0, .2); }
+  const work = on && HERO_ID === 'engineer' && v.scorpWork > 0;
+  if (v && v.handMallet) { v.handMallet.visible = work; if (v.pivot) v.pivot.visible = !work; if (v.hipMallet) v.hipMallet.visible = !work; }
+  if (work) {
+    kneel(v, .75);
+    const p = (now / 1000 / .55) % 1, w = stroke(p);
+    v.arms[1].rotation.set(-1.25 + w * .85, 0, 0); v.handMallet.rotation.x = -.95; v.arms[0].rotation.set(-.75, 0, .15);
+    // each blow lands with a knock, splinters and a little dust at the scorpion
+    if (w > .85 && !v.malletHit) { v.malletHit = true; sfx('hammer', v); chipBurst(v, 'hammer', p > .5);
+      if (engScorp) dustAt(engScorp.x, hAt(engScorp.x, engScorp.z), engScorp.z); }
+    if (w < .5) v.malletHit = false;
+  }
   // Inspire
   const insp = on && HERO_ID === 'heir' && HERO.sk.cry, mates = insp ? villagers.filter(u => u.soldier && !u.hero && u.g.visible && Math.hypot(u.x - v.x, u.z - v.z) < 7) : [];
   const ringOn = insp && (mates.length || v.foe);
