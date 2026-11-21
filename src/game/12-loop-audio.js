@@ -82,7 +82,7 @@ function startGame() {
   mapRules(); applyUpgrades();
   // Frozen Pass: deep winter, villagers eat more (a meal every 14 s of daylight, not 20)
   if (bonusOn() && MAP === 'pass') MEAL = Math.round(MEAL * .7);
-  PH = { kind: 'day', wave: 1, t: DAYLEN[0] }; nextPts = null; econT = TICK; gameOver = false; endCheer = 0; endDawn = false; musicFade(0); light = 1; if (paused) setPaused(false); setMusic('day');
+  PH = { kind: 'day', wave: 1, t: DAYLEN[0] }; nextPts = null; econT = TICK; gameOver = false; lostAt = 0; endCheer = 0; endDawn = false; musicFade(0); light = 1; if (paused) setPaused(false); setMusic('day');
   if (MAP === 'isle') { KX = 27; KZ = 27; } else if (MAP === 'pass') { KX = 27; KZ = 21; } else if (MAP === 'vale') { KX = 25; KZ = 33; } else if (MAP === 'bridge') { KX = 29; KZ = 37; } else if (MAP === 'cross') { KX = 17; KZ = 39; } else if (MAP === 'watch') { KX = 17; KZ = 29; } else if (MAP === 'dune') { KX = 15; KZ = 26; } else if (MAP === 'bend') { KX = 21; KZ = 28; } else if (MAP === 'crag') { KX = 25; KZ = 33; } else if (MAP === 'ford') { KX = 29; KZ = 43; } else if (MAP === 'mere') { KX = 15; KZ = 43; } else if (MAP === 'plains') { KX = 28; KZ = 28; } else if (MAP === 'keep') { KX = 41; KZ = 67; } else if (MAP === 'hold') { KX = 39; KZ = 65; } else { KX = 19; KZ = 27; }
   // a medium map (Stages 7-10) is its 56 m layout scaled up: the castle's site too
   MK = MED[MAP] ? MAP_N[MAP] * CELL / 56 : 1; if (MED[MAP]) { KX *= MK; KZ *= MK; }
@@ -447,6 +447,7 @@ function sfx(name, at, vol = 1) {
   if (muted || !actx) return;
   if (actx.state !== 'running') { if (audioUnlocked && !document.hidden && actx.state !== 'closed') actx.resume().catch(() => {}); return; }
   if (name === 'victory' || name === 'defeat' ? musicOff : sfxOff) return;
+  if (at && lostAt && gameOver && performance.now() - lostAt > 1000) return;
   if (!clips[name] || !clips[name].length) return SND[name] && SND[name].fallback ? sfx(SND[name].fallback, at, vol * .7) : undefined;
   const now = actx.currentTime; if (now - (sfxLast[name] || -9) < (SFX_GAP[name] || .05)) return;
   // a refused tap sounds only the error, never the button's click as well (Jack): every button's click plays first (the capture
@@ -918,7 +919,7 @@ function tick(dt, now) {
     const C = endDawn && castleB(); if (C) { const c = center(C), k = 1 - Math.exp(-gdt * .6); target.x += (c.x - target.x) * k; target.z += (c.z - target.z) * k; updateCam(); }
   }   // the town's cheer before the summary
   if (!gameOver) { updatePhase(gdt); updateVillagers(gdt, now); updateEco(gdt); updateMoves(gdt); updateEnemies(gdt); updateDefense(gdt); separateUnits(gdt); updateDoors(gdt); updateFallen(gdt); updateChips(gdt); updateSplashes(gdt); }
-  updateArrows(gdt); updateAmbience(dt); updateVolley(gdt); heroTick(gdt); updateTrees(now); emitSmoke(gdt); updateBirds(gdt); if (holdRiders.length) { animHoldRiders(now / 1000, gdt); updateHoldTrebs(gdt); }
+  updateArrows(gdt); updateAmbience(dt); updateVolley(gdt); heroTick(gdt); updateTrees(now); emitSmoke(gdt); updateBirds(gdt); if (holdRiders.length) { animHoldRiders(now / 1000, gdt); if (!gameOver) updateHoldTrebs(gdt); }
   if (anims.length) {
     for (let n = anims.length - 1; n >= 0; n--) { const a = anims[n], t = clamp((now - a.t0) / a.dur, 0, 1); applyPlan(a.plan, easeOut(t)); if (t >= 1) anims.splice(n, 1); }
     syncTerrain();

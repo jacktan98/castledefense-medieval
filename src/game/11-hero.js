@@ -102,7 +102,8 @@ const fletchM = mat('#efe6d2'), arrowWoodM = mat('#9a6b3c');
 const rangerTunM = mat('#5b4630'), rangerGreenM = mat('#4f6e36'), rangerCloakM = mat('#3f5a2e'),
   capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
 const engCoatM = quiltMat('#7a6f60', '#5f564a'), engApronM = (() => { const m = mat('#6b4a2c'); m.side = THREE.DoubleSide; return m; })(),
-  engBrassM = mat('#c9a34a'), engRopeM = mat('#b59a63');
+  engBrassM = mat('#c9a34a'), engRopeM = mat('#b59a63'), engCapM = mat('#8a5a32'),
+  engGlassM = new THREE.MeshStandardMaterial({ color: '#2f5964', roughness: .15, metalness: .35 });
 // the hood is an open shell round the head: drawn on both sides, so its inside shows where it stands off the head (Jack saw a gap)
 rangerCloakM.side = THREE.DoubleSide;
 function heroKit(v, id = HERO_ID, foot) {
@@ -141,7 +142,7 @@ function heroKit(v, id = HERO_ID, foot) {
     v.soldier = true; v.cav = false;
   } else if (id === 'engineer') {
     // the Engineer (Jack's draft): a grey-brown padded coat, a heavy leather apron with two pockets and brass rivets, a belt in the
-    // town's colour, a steel kettle hat with a town-colour band, a tool chest on his back with a coil of rope, a mallet at his hip
+    // town's colour, a leather work cap with ear flaps and brass goggles pushed up on it, a tool chest on his back with a coil of rope, a mallet at his hip
     // and a crossbow
     if (v.kit) v.kit.forEach(o => o.parent && o.parent.remove(o));
     v.kit = []; if (v.carryLog) v.carryLog.visible = v.carryStone.visible = false;
@@ -155,9 +156,21 @@ function heroKit(v, id = HERO_ID, foot) {
       for (const dx of [-.034, .034]) { const r = new THREE.Mesh(new THREE.SphereGeometry(.009, 6, 4), engBrassM); r.position.set(px + dx * Math.cos(a), .48, pz + .006 - dx * Math.sin(a)); put(r); }
     }
     put(cyl(.196, .196, .045, 12, kiteM, 0, .6, 0)); put(box(.04, .04, .012, engBrassM, 0, .6, .198));
-    const hat = put(head());
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(.152, 14, 7, 0, Math.PI * 2, 0, Math.PI * .5), steelM); dome.position.y = 1.07; dome.scale.y = .92; hat.add(dome);
-    hat.add(cyl(.17, .285, .035, 16, steelM, 0, 1.06, 0), cyl(.155, .155, .03, 16, kiteM, 0, 1.095, 0));
+    // his cap (Jack: the kettle hat didn't suit him): a padded leather work cap tipped back off the brow, a darker band round its
+    // edge, flaps over the ears and the nape, and a pair of brass-rimmed goggles pushed up on its front on a leather strap
+    const hat = put(head()), cap = new THREE.Group(); cap.position.y = 1.035; cap.rotation.x = -.3; hat.add(cap);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(.15, 16, 8, 0, Math.PI * 2, 0, Math.PI * .46), engCapM); dome.scale.set(1, .96, 1.04); cap.add(dome);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(.148, .013, 6, 28), engApronM); band.rotation.x = Math.PI / 2; band.position.y = .018; cap.add(band);
+    for (const sx of [-1, 1]) { const f = box(.022, .1, .085, engCapM, sx * .143, -.035, -.012); f.rotation.z = sx * .1; cap.add(f); }
+    const nape = new THREE.Mesh(new THREE.CylinderGeometry(.15, .158, .075, 14, 1, true, Math.PI * .62, Math.PI * .76), engApronM); nape.position.y = -.02; cap.add(nape);
+    const strap = new THREE.Mesh(new THREE.TorusGeometry(.143, .008, 5, 28), engApronM); strap.rotation.x = Math.PI / 2; strap.position.y = .052; cap.add(strap);
+    const up = new THREE.Vector3(0, 1, 0);
+    for (const sx of [-1, 1]) {
+      const n = new THREE.Vector3(sx * .05, .07, .14).normalize(), q = new THREE.Quaternion().setFromUnitVectors(up, n);
+      const rim = cyl(.04, .04, .026, 12, engBrassM, 0, 0, 0), lens = cyl(.031, .031, .03, 12, engGlassM, 0, 0, 0);
+      for (const [m, r] of [[rim, .152], [lens, .156]]) { m.quaternion.copy(q); m.position.copy(n).multiplyScalar(r); cap.add(m); }
+    }
+    cap.add(box(.03, .016, .016, engBrassM, 0, .076, .14));
     hat.traverse(m => { if (m.isMesh) m.castShadow = true; });
     const ch = new THREE.Group(); ch.position.set(0, .7, -.24);
     ch.add(box(.24, .22, .12, M.wood, 0, 0, 0), box(.25, .03, .13, M.timber, 0, .12, 0));
@@ -582,7 +595,41 @@ function scorpPlan(v, S, home) {
   const L = routeLen(v, home.x, home.z);
   const tow = L / TOW_V, carry = SC_BREAK_T * S.pk + L / engWalkV(v) + SC_BUILD_T;
   S.mode = tow <= carry ? 'tow' : 'carry';
+  // towed (Jack: he and the scorpion used to spin round together as he set off): he first walks to the end of its trail as it
+  // stands and takes the handle, then turns it slowly on its wheels toward the way out (`S.hitch`); already towing, only the turn
+  if (S.mode === 'tow') { S.hitch = S.st === 'tow' && S.hitch !== 'walk' ? 'turn' : 'walk'; S.yaw = S.g.rotation.y; S.turnTo = null; }
   S.st = S.mode === 'tow' ? 'tow' : 'pack';
+}
+// towing: the hero's distance from the axle, the carriage's turning rate on the spot (rad/s), and the way out (the route's first
+// point a little way off)
+const TOW_R = 1.2, TOW_TURN = .7;
+function towDir(S, home) {
+  const p = findPath(S.x, S.z, home.x, home.z, 1) || [];
+  const q = p.find(q => Math.hypot(q.x - S.x, q.z - S.z) > 1.6) || home;
+  return Math.atan2(q.x - S.x, q.z - S.z);
+}
+const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
+// taking the handle (`S.hitch`): true while it takes the step
+function towHitch(v, S, dt, home) {
+  const yaw = S.yaw, tx = -Math.sin(yaw), tz = -Math.cos(yaw);
+  if (S.hitch === 'walk') {
+    // to the end of its trail, then he turns his back to it
+    const hx = S.x + tx * TOW_R, hz = S.z + tz * TOW_R, d = Math.hypot(hx - v.x, hz - v.z);
+    if (d > .2 && !(v.noProg > 1.5) && !walkTo(v, hx, hz, dt, 1, .15, 1.3 * heroSpeed())) return true;
+    v.walking = false; const psi = yaw + Math.PI; turnTo(v, psi, dt);
+    if (Math.abs(wrapA(psi - v.g.rotation.y)) > .15) return true;
+    S.hitch = 'turn'; v.noProg = 0; return true;
+  }
+  // the turn: the carriage swings round on its wheels toward the way out, slowly, while he walks round with the handle (or, with no
+  // room for him to walk round, it swings round him)
+  if (S.turnTo == null) S.turnTo = towDir(S, home);
+  const want = S.turnTo - Math.PI, dy = wrapA(want - yaw), st = Math.sign(dy) * Math.min(Math.abs(dy), TOW_TURN * dt);
+  S.yaw = wrapA(yaw + st); const nx = -Math.sin(S.yaw), nz = -Math.cos(S.yaw);
+  const px = S.x + nx * TOW_R, pz = S.z + nz * TOW_R;
+  if (canStand(px, pz, 1)) { v.x = px; v.z = pz; } else { S.x = v.x - nx * TOW_R; S.z = v.z - nz * TOW_R; }
+  v.g.rotation.y = S.yaw + Math.PI; v.walking = Math.abs(st) > 1e-4;
+  if (Math.abs(dy) < .03) { S.hitch = null; v.noProg = 0; }
+  return true;
 }
 // the Engineer's own step while his scorpion is not set up at his spot (updateHero): true while it takes the step
 function engStep(v, dt, home) {
@@ -593,10 +640,11 @@ function engStep(v, dt, home) {
   if (off && !(S.st === 'set' && Math.hypot(home.x - S.x, home.z - S.z) < 2.2)) scorpPlan(v, S, home);
   else if (off) S.dest = { x: home.x, z: home.z };
   const work = S.st === 'pack' || S.st === 'build';
-  v.scorpWork = work ? 1 : 0; v.towing = S.st === 'tow';
+  v.scorpWork = work ? 1 : 0; v.towing = S.st === 'tow' && S.hitch !== 'walk';
   if (S.st === 'set') return false;
   v.foe = null; v.drawing = false;
   if (work) { v.walking = false; turnTo(v, Math.atan2(S.x - v.x, S.z - v.z), dt); return true; }
+  if (S.st === 'tow' && S.hitch) return towHitch(v, S, dt, home);
   // on the way: towing at a catapult's pace (the scorpion shooting as it rolls), or walking freely with it on his back
   const dh = Math.hypot(home.x - v.x, home.z - v.z);
   // there, or as near as he can get (the spot taken, or no way onto it): he stops where he stands
@@ -626,6 +674,8 @@ function scorpTick(dt) {
   if (!engScorp) { const S = makeScorpion(skR('scorp')); S.rk = skR('scorp'); S.x = v.x; S.z = v.z; S.cool = 1; S.st = 'carried'; S.pk = 0; S.dest = null;
     scene.add(S.g); engScorp = S; }
   const S = engScorp, done = () => { for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); };
+  if (S.bar && gameOver) S.bar.grp.visible = false;
+  if (gameOver) return;
   if (S.st === 'pack') {
     // its pieces come off one by one, the bow first, into the bundle on his back
     S.pk = Math.max(0, S.pk - dt / SC_BREAK_T); if (S.pk <= 0) { S.st = 'carried'; done(); }
@@ -633,13 +683,14 @@ function scorpTick(dt) {
     S.pk = Math.min(1, S.pk + dt / SC_BUILD_T); if (S.pk >= 1) { S.st = 'set'; S.cool = .6; done(); }
   }
   if (S.st === 'carried') { S.x = v.x; S.z = v.z; }
-  else if (S.st === 'tow') {
+  else if (S.st === 'tow' && !S.hitch) {
     // in the game's step it trails behind him on its handle (heroLooks lines the handle up with his hands each frame)
     const dx = S.x - v.x, dz = S.z - v.z, d = Math.hypot(dx, dz) || 1, L = 1.2;
     if (d > L) { const nx = v.x + dx / d * L, nz = v.z + dz / d * L; S.x = nx; S.z = nz; }
   }
   S.g.visible = S.st !== 'carried';
-  if (S.st !== 'tow') { S.g.position.set(S.x, hAt(S.x, S.z), S.z); S.body.rotation.x += (SC_REST - S.body.rotation.x) * Math.min(1, dt * 8); }
+  if (S.st !== 'tow' || S.hitch === 'walk') { S.g.position.set(S.x, hAt(S.x, S.z), S.z); S.body.rotation.x += (SC_REST - S.body.rotation.x) * Math.min(1, dt * 8); }
+  if (S.st === 'tow' && S.hitch) S.g.rotation.y = S.yaw;
   scorpPose(S); scorpParts(S, S.pk);
   if (!S.bar) S.bar = makeBar(.7);
   const prog = { pack: 1 - S.pk, build: S.pk }[S.st];
@@ -910,7 +961,9 @@ function scorpPull(v, S) {
   v.arms[0].rotation.set(.62, 0, .2); v.arms[1].rotation.set(.62, 0, -.2);
   v.g.updateMatrixWorld(true);
   const h = new THREE.Vector3(.012, -.33, 0), h0 = v.arms[0].localToWorld(h.clone()), h1 = v.arms[1].localToWorld(h.clone()), H = h0.add(h1).multiplyScalar(.5);
-  const phi = v.g.rotation.y + Math.PI, gx = () => S.g.position.x, gz = () => S.g.position.z;
+  // the carriage trails its handle like a cart (Jack: it used to swing round rigidly with him): it points from his hands back to
+  // where its axle was; while he takes the handle and turns it, its own slow turn (`S.yaw`)
+  const phi = S.hitch ? S.yaw : Math.atan2(S.x - H.x, S.z - H.z), gx = () => S.g.position.x, gz = () => S.g.position.z;
   // the trail's lift: its handle (in the body's frame (0, -.12, -.96)) up to his hands' height
   let gy = hAt(S.x, S.z), th = 0;
   for (let i = 0; i < 2; i++) {
@@ -920,7 +973,7 @@ function scorpPull(v, S) {
     gy = hAt(px, pz); S.g.position.set(px, gy, pz);
   }
   const moved = Math.hypot(gx() - S.x, gz() - S.z); if (moved < .5) S.wheels.forEach(w => { w.rotation.x -= moved / .22; });
-  S.x = gx(); S.z = gz(); S.g.rotation.y = phi; S.body.rotation.x = th; scorpPose(S);
+  if (!S.hitch) { S.x = gx(); S.z = gz(); } S.g.rotation.y = phi; S.body.rotation.x = th; scorpPose(S);
   if (S.bar) S.bar.grp.visible = false;
 }
 const LVUP_T = 1.8;
@@ -928,11 +981,12 @@ var lvOwner = null;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
   // the Engineer kneels at his scorpion while he sets it up or packs it, his free hand working at it
-  const work = on && HERO_ID === 'engineer' && v.scorpWork > 0, tow = on && HERO_ID === 'engineer' && v.towing && engScorp;
+  const work = on && !gameOver && HERO_ID === 'engineer' && v.scorpWork > 0, tow = on && HERO_ID === 'engineer' && v.towing && engScorp;
+  const stow = tow || (on && HERO_ID === 'engineer' && engScorp && engScorp.st === 'tow');
   // let go of the handle: his right hand goes over his shoulder for the crossbow and brings it round (half a second)
   const un = on && v.unslingT > 0 ? 1 - (v.unslingT = Math.max(0, v.unslingT - dt)) / .5 : -1;
-  if (v && v.handMallet) { v.handMallet.visible = work; if (v.pivot) v.pivot.visible = !work && !tow && (un < 0 || un > .5); if (v.hipMallet) v.hipMallet.visible = !work;
-    if (v.slungXbow) v.slungXbow.visible = work || tow || (un >= 0 && un <= .5);
+  if (v && v.handMallet) { v.handMallet.visible = work; if (v.pivot) v.pivot.visible = !work && !stow && (un < 0 || un > .5); if (v.hipMallet) v.hipMallet.visible = !work;
+    if (v.slungXbow) v.slungXbow.visible = work || stow || (un >= 0 && un <= .5);
     if (v.scorpPack) { const S = engScorp, st = S && S.st; v.scorpPack.visible = !!S && (st === 'carried' || ((st === 'pack' || st === 'build') && S.pk < .5)); } }
   if (tow) scorpPull(v, engScorp);
   if (un >= 0 && !tow && !work) v.arms[1].rotation.set(-2.7 * Math.sin(Math.PI * un), 0, -.25 * Math.sin(Math.PI * un));
@@ -978,7 +1032,7 @@ function heroLooks(dt, now) {
   // it used to read the fallen hero's place and the error stopped the whole game: Jack)
   // (Jack: smaller, and a poof as it comes and goes: it now appears and vanishes in a puff of feathers where it circles, popping
   // up to size, rather than flying down and fading; with the Ranger fallen it goes at once)
-  if (!v) eagleK = 0;
+  if (!v || gameOver) eagleK = 0;
   if (eagleK > .02) {
     // by rank (Jack): a plain brown hawk circling high at rank 1, the bald eagle at 2, a bigger eagle at 3
     const er = skR('eye'), hawk = er < 2;
@@ -1212,7 +1266,7 @@ function heroModel(id = HERO_ID) {
   const p = makePerson({ hair: hairs[HERO_DEFS[id].hair % hairs.length] }); heroKitFoot(p, id); p.seed = 0;
   // no Inspire standard in the portraits (Jack: it stood up behind the head)
   if (p.standard) { p.standard.visible = false; p.standard = null; p.pennant = null; }
-  // the Engineer's kettle hat casts no shadow in the portraits (its broad brim darkened his whole face: Jack)
+  // the Engineer's cap casts no shadow in the portraits (the old kettle hat's brim darkened his whole face: Jack)
   if (id === 'engineer') for (const o of p.kit || []) if (o.userData && o.userData.helm) o.traverse(m => { if (m.isMesh) m.castShadow = false; });
   p.arms[0].rotation.x = -.35; p.arms[1].rotation.x = -.35; p.pivot.rotation.x = -.4;
   return { g: p.g, p };
@@ -1234,8 +1288,7 @@ function heroBust(now) {
   blink(p, now);
   p.torso.scale.x = p.torso.scale.z = 1 + .015 * Math.sin(t * 1.6);
   codexStage(hpModel);
-  // the Engineer's portrait is taken from a little lower, so his eyes show under the kettle hat's brim
-  const lo = HERO_ID === 'engineer' ? .1 : 0;
+  const lo = 0;
   cxCam.position.set(hd.x + .14, hd.y + .1 - lo, hd.z + 1.05); cxCam.lookAt(hd.x, hd.y - .02 + lo * .2, hd.z);
   cxR.render(cxScene, cxCam); cxScene.remove(hpModel.g);
   return cxR.domElement;
@@ -1262,7 +1315,7 @@ function rosterSnaps(el) {
     const p = rosterModel(cv.dataset.h), g = p.g; cxScene.add(g); g.updateMatrixWorld(true);
     const hd = p.headParts[0].getWorldPosition(new THREE.Vector3());
     codexStage({ r: .01, k: 1.2, c: hd.clone() });
-    const lo = cv.dataset.h === 'engineer' ? .1 : 0;
+    const lo = 0;
     cxCam.position.set(hd.x + .22, hd.y + .1 - lo, hd.z + 1.2); cxCam.lookAt(hd.x, hd.y - .06 + lo * .2, hd.z);
     cxR.render(cxScene, cxCam); cxScene.remove(g); heroCopy(cxR.domElement, cv); cv.dataset.done = 1;
   });

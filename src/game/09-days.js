@@ -332,8 +332,12 @@ function startDay() {
   log(`<b>Wave ${PH.wave - 1} held</b>${hurt ? ` · ${hurt} to repair` : ''}`, 'good');
   if (test === undefined) { saveGame(); log('Saved'); }
 }
+// a defeat's moment: a second after it, sounds out in the world go quiet (sfx), and nothing shoots on (Jack heard the
+// Engineer's scorpion after the castle fell)
+var lostAt = 0;
 function endGame(won) {
   if (gameOver) return; gameOver = true; clearSave();
+  if (!won) { lostAt = performance.now(); volleyQ.length = 0; }
   $('#summary .sheet').classList.toggle('hard', !!hardOn);
   // a win (Jack found the old one abrupt: dawn, rooster and summary all at once): the night music fades out over 1.8 s, a quiet beat,
   // then at 1.2 s the sky starts to lighten slowly (`endDawn`, about 5 s) while the camera drifts to the castle and everyone comes off

@@ -1324,6 +1324,7 @@ function syncMoveFlags() {
     f.position.set(d.x, hAt(d.x, d.z), d.z);
   }
 }
+const MOVE_TURN = .8;
 function updateMoves(dt) {
   syncMoveFlags();
   for (const B of buildings) {
@@ -1336,7 +1337,12 @@ function updateMoves(dt) {
     } else mv.wait = !mv.pusher.pushOn;
     if (mv.wait) continue;
     const g = B.group.position, p = mv.pts[0], dx = p.x - g.x, dz = p.z - g.z, d = Math.hypot(dx, dz), st = Math.min(d, MOVE_SPEED * dt);
-    if (B.turret) B.turret.rotation.y += Math.atan2(Math.sin(Math.atan2(dx, dz) - B.group.rotation.y - B.turret.rotation.y), Math.cos(Math.atan2(dx, dz) - B.group.rotation.y - B.turret.rotation.y)) * Math.min(1, dt * 3);
+    // it turns on the spot at a steady pace before it rolls (Jack: it swung round quickly as it set off, its crew or pusher with it)
+    if (B.turret && d > .05) {
+      const dy = Math.atan2(Math.sin(Math.atan2(dx, dz) - B.group.rotation.y - B.turret.rotation.y), Math.cos(Math.atan2(dx, dz) - B.group.rotation.y - B.turret.rotation.y));
+      B.turret.rotation.y += Math.sign(dy) * Math.min(Math.abs(dy), MOVE_TURN * dt);
+      if (Math.abs(dy) > .3) { (B.manned || []).forEach((on, a) => on && showDefender(B, a)); continue; }
+    }
     if (d > 1e-3) { g.x += dx / d * st; g.z += dz / d * st; g.y = hAt(g.x, g.z); }
     if (d - st < .02) mv.pts.shift();
     const n = cellAt(g.x, g.z), own = B.ev.cj * N + B.ev.ci;
