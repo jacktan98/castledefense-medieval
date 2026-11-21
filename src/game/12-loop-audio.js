@@ -262,9 +262,9 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // (it asked for a Path_placed.mp3 that was never supplied); give it `file` again if a recording comes
   path:      { files: [], fallback: 'hoe' },
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
-  // slots kept for the heroes' own sounds (Jack didn't like the first recordings, 2026-11-21): until a file is given each plays
-  // its old sound (the crossbow's shot) or, for the swing, nothing over the clash
-  scorp:     { files: [], fallback: 'qbolt' },       // the field scorpion's shot: Scorpion_shot.mp3
+  // the heroes' own sounds; Sweeping blow's slot has no file yet (Jack didn't like the first recordings, 2026-11-21), so it plays
+  // nothing over the clash until one is given
+  scorp:     { file: 'sfx/Field_scorpion_shot.mp3',  trim: .7, fallback: 'qbolt' },   // the field scorpion's shot (Jack's recording)
   whoosh:    { file: 'sfx/Flurry_sword.mp3',         trim: .4 },     // Flurry's quick sword swings (Jack's recording)
   hammerSwing: { files: [] },                        // the Captain's Sweeping blow: Hammer_swing.mp3
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
@@ -305,7 +305,7 @@ var LOOPS = {
   wind:  { file: 'sfx/Wind_sound.mp3',             vol: .55, amb: true },
 };
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
-var AUDIO_V = 9;
+var AUDIO_V = 10;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
 var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, scorp: .3, whoosh: .1, hammerSwing: .4, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
