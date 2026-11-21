@@ -264,8 +264,8 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
   // the heroes' own sounds; Sweeping blow's slot has no file yet (Jack didn't like the first recordings, 2026-11-21), so it plays
   // nothing over the clash until one is given
-  scorp:     { file: 'sfx/Field_scorpion_shot.mp3',  trim: .7, fallback: 'qbolt' },   // the field scorpion's shot (Jack's recording)
-  whoosh:    { file: 'sfx/Flurry_sword.mp3',         trim: .4 },     // Flurry's quick sword swings (Jack's recording)
+  scorp:     { file: 'sfx/Field_scorpion_shot.mp3',  trim: 1.1, fallback: 'qbolt' },   // the field scorpion's shot (Jack's recording)
+  whoosh:    { file: 'sfx/Flurry_sword.mp3',         trim: .65 },     // Flurry's quick sword swings (Jack's recording)
   hammerSwing: { files: [] },                        // the Captain's Sweeping blow: Hammer_swing.mp3
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
@@ -298,7 +298,7 @@ var LOOPS = {
   gallop: { file: 'sfx/Horse_gallop.mp3',          vol: .4, amb: true },   // horses on the move (loudest .3 s RMS .126)
   // wooden wheels rolling (Jack's recording): a moving catapult, a raider engine on the move, the Engineer's scorpion in tow;
   // about 5 dB quieter than the gallop, so turned up to match
-  siege: { file: 'sfx/Siege_moving.mp3',          vol: .7, amb: true },
+  siege: { file: 'sfx/Siege_moving.mp3',          vol: 1.2, amb: true },
   // the weather (Jack): rain for rain and drizzle, the wind for blowing sand and dust, snow and ash; they follow the weather's own ease in
   // and out (WX.w). Measured: rain loudest .3 s RMS .069 (steady, median .051), desert wind .196 in gusts (median .036)
   rain:  { file: 'sfx/Rain_sound.mp3',             vol: .42, amb: true },
