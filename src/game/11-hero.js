@@ -437,7 +437,7 @@ function updateHero(v, dt) {
         for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) { hurtEnemy(e, dm * k, v); hit.push(e); }
         sweepFx(v, hit); }
       hurtEnemy(foe, dm, v); if (fin) flurryFinish(v, foe);
-      if (v.quickHit) { const fr = skR('flurry'); sparkBurst(foe.x, walkY(foe.x, foe.z) + .8 * UNIT_K, foe.z, '#ffe08a', [3, 3, 5, 7][fr]); const c = sfx('clash', v); if (c && fr >= 3) c.playbackRate.value = 1.3; }
+      if (v.quickHit) { const fr = skR('flurry'); sparkBurst(foe.x, walkY(foe.x, foe.z) + .8 * UNIT_K, foe.z, '#ffe08a', [3, 3, 5, 7][fr]); const c = sfx('clash', v); if (c && fr >= 3) c.playbackRate.value = 1.3; sfx('whoosh', v); }
       else if (v.strike !== 'sweep') sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
@@ -512,7 +512,7 @@ function blastBolt(foe, at, dm) {
   blastLook(at.x, walkY(at.x, at.z), at.y, at.z, r);
   if (r >= 2) blastFx(at.x, at.z, r - 1, 1.2);
   if (r >= 3) shake(.04, at, 'hit', .6);
-  sfx('blast', { x: at.x, z: at.z }, 1.4);
+  sfx('blast', { x: at.x, z: at.z });
 }
 // the burst's look by rank (the game's and the gallery's; Jack's rule: rank 1 plain, rank 2 a change, rank 3 one signature moment):
 // a puff of dust and a few sparks at 1; a ring of dust and more sparks at 2; at 3 a wide ring, a bright flash of sparks and a shake
@@ -709,7 +709,7 @@ function scorpTick(dt) {
   const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero);
     for (const e of enemies.slice()) { if (e === foe || e.dead || e.dormant) continue; const d = Math.hypot(e.x - to.x, e.z - to.z);
       if (d < SCORP_SPLASH) hurtEnemy(e, dm * (1 - .5 * d / SCORP_SPLASH), hero); }
-    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, 'qbolt'); m.scale.set(1.6, 1.6, 1.6);
+    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, (shotSnd = 'scorp', 'qbolt')); shotSnd = null; m.scale.set(1.6, 1.6, 1.6);
   if (S.rk >= 3) { arrowStreak(m, 2); for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
@@ -737,6 +737,8 @@ function heroBurst(v, sk, n, quick, at) {
 // glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: a steel
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
+// a shot's own sound in place of its kind's (the scorpion's bolt looks like a crossbow bolt but sounds its own: Jack)
+var shotSnd = null;
 const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
 // the Ranger's arrow (Jack: the plain sticks didn't look like arrows): a shaft, a four-sided steel head and two crossed white
 // vanes, one geometry with a group per material; Quick draw's gold one glows (ARROW_GOLD)
@@ -845,7 +847,7 @@ function sweepFx(v, hit) {
   for (const e of hit) { if (e.dead || ENEMY[e.kind].engine || ENEMY[e.kind].boss) continue;
     const d = Math.hypot(e.x - v.x, e.z - v.z) || 1, nx = e.x + (e.x - v.x) / d * .5, nz = e.z + (e.z - v.z) / d * .5;
     if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; } }
-  const c = sfx('clash', v); if (c) c.playbackRate.value = .72; sfx('ramHit', v, .55);
+  const c = sfx('clash', v); if (c) c.playbackRate.value = .72; sfx('ramHit', v, .55); sfx('hammerSwing', v);
 }
 // each frame: the weapon trails, the glints and icons, the glowing arrows' sparks
 const heroTrails = new Map(); var trailFrame = 0;

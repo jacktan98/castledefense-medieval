@@ -262,7 +262,10 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // (it asked for a Path_placed.mp3 that was never supplied); give it `file` again if a recording comes
   path:      { files: [], fallback: 'hoe' },
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
-  blast:     { files: [], fallback: 'rockHit' },
+  blast:     { file: 'sfx/Bolt_blast.mp3',           trim: .9, reach: 35, fallback: 'rockHit' },   // Blasting bolts' burst (Jack's recording)
+  scorp:     { file: 'sfx/Scorpion_shot.mp3',        trim: .7, fallback: 'qbolt' },   // the Engineer's field scorpion looses a bolt (softer than the ballista)
+  whoosh:    { file: 'sfx/Sword_whoosh.mp3',         trim: .5 },     // Flurry's quick sword swings
+  hammerSwing: { file: 'sfx/Hammer_swing.mp3',       trim: .6 },     // the Captain's Sweeping blow, his war hammer swung round
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
   rockFire:  { file: 'sfx/Rock_fired.mp3',           trim: .9 },     // a catapult, mangonel or trebuchet lets its stone go
@@ -298,9 +301,9 @@ var LOOPS = {
   wind:  { file: 'sfx/Wind_sound.mp3',             vol: .55, amb: true },
 };
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
-var AUDIO_V = 7;
+var AUDIO_V = 8;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
-var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
+var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, scorp: .3, whoosh: .1, hammerSwing: .4, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser

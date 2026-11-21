@@ -6836,7 +6836,7 @@ function fireArrow(from, to, onHit, arc, kind) {
   const K = SHOT[kind], m = new THREE.Mesh(K ? K.geo : arrowGeo, K && K.m || arrowMat); m.castShadow = true; m.position.copy(from); scene.add(m);
   const d = from.distanceTo(to);
   arrows.push({ m, from: from.clone(), to: to.clone(), t: 0, dur: Math.max(.25, d / (K ? K.speed : 22)), arc: arc || Math.min(3, d * .15), onHit, spin: kind === 'stone', kind });
-  const snd = sfx(kind === 'bolt' ? 'bolt' : kind === 'qbolt' ? 'qbolt' : kind === 'stone' ? 'rockFire' : 'arrow', from);
+  const snd = sfx(shotSnd || (kind === 'bolt' ? 'bolt' : kind === 'qbolt' ? 'qbolt' : kind === 'stone' ? 'rockFire' : 'arrow'), from);
   if (snd && shotRate) snd.playbackRate.value = shotRate;   // Quick draw's arrows twang higher
   return m;
 }
@@ -9719,7 +9719,7 @@ function updateHero(v, dt) {
         for (const e of enemies.slice()) if (e !== foe && !e.dead && !e.dormant && Math.hypot(e.x - foe.x, e.z - foe.z) < 1.6) { hurtEnemy(e, dm * k, v); hit.push(e); }
         sweepFx(v, hit); }
       hurtEnemy(foe, dm, v); if (fin) flurryFinish(v, foe);
-      if (v.quickHit) { const fr = skR('flurry'); sparkBurst(foe.x, walkY(foe.x, foe.z) + .8 * UNIT_K, foe.z, '#ffe08a', [3, 3, 5, 7][fr]); const c = sfx('clash', v); if (c && fr >= 3) c.playbackRate.value = 1.3; }
+      if (v.quickHit) { const fr = skR('flurry'); sparkBurst(foe.x, walkY(foe.x, foe.z) + .8 * UNIT_K, foe.z, '#ffe08a', [3, 3, 5, 7][fr]); const c = sfx('clash', v); if (c && fr >= 3) c.playbackRate.value = 1.3; sfx('whoosh', v); }
       else if (v.strike !== 'sweep') sfx('clash', v); } }
   } else if (Math.hypot(home.x - v.x, home.z - v.z) > .35) { if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * ride); }
   else { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
@@ -9794,7 +9794,7 @@ function blastBolt(foe, at, dm) {
   blastLook(at.x, walkY(at.x, at.z), at.y, at.z, r);
   if (r >= 2) blastFx(at.x, at.z, r - 1, 1.2);
   if (r >= 3) shake(.04, at, 'hit', .6);
-  sfx('blast', { x: at.x, z: at.z }, 1.4);
+  sfx('blast', { x: at.x, z: at.z });
 }
 // the burst's look by rank (the game's and the gallery's; Jack's rule: rank 1 plain, rank 2 a change, rank 3 one signature moment):
 // a puff of dust and a few sparks at 1; a ring of dust and more sparks at 2; at 3 a wide ring, a bright flash of sparks and a shake
@@ -9991,7 +9991,7 @@ function scorpTick(dt) {
   const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero);
     for (const e of enemies.slice()) { if (e === foe || e.dead || e.dormant) continue; const d = Math.hypot(e.x - to.x, e.z - to.z);
       if (d < SCORP_SPLASH) hurtEnemy(e, dm * (1 - .5 * d / SCORP_SPLASH), hero); }
-    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, 'qbolt'); m.scale.set(1.6, 1.6, 1.6);
+    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, (shotSnd = 'scorp', 'qbolt')); shotSnd = null; m.scale.set(1.6, 1.6, 1.6);
   if (S.rk >= 3) { arrowStreak(m, 2); for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
@@ -10019,6 +10019,8 @@ function heroBurst(v, sk, n, quick, at) {
 // glowing arrows with a trail of sparks and a higher twang, the hand flicking back to the quiver. Sweeping blow: a steel
 // arc behind the hammer, a ring of dust, the raiders it catches knocked back, the cloak flared and a heavier blow's sound.
 var shotRate = 0;
+// a shot's own sound in place of its kind's (the scorpion's bolt looks like a crossbow bolt but sounds its own: Jack)
+var shotSnd = null;
 const glowArrowM = new THREE.MeshBasicMaterial({ color: '#ffd36a', toneMapped: false }), glowArrows = [], heroSprites = [];
 // the Ranger's arrow (Jack: the plain sticks didn't look like arrows): a shaft, a four-sided steel head and two crossed white
 // vanes, one geometry with a group per material; Quick draw's gold one glows (ARROW_GOLD)
@@ -10127,7 +10129,7 @@ function sweepFx(v, hit) {
   for (const e of hit) { if (e.dead || ENEMY[e.kind].engine || ENEMY[e.kind].boss) continue;
     const d = Math.hypot(e.x - v.x, e.z - v.z) || 1, nx = e.x + (e.x - v.x) / d * .5, nz = e.z + (e.z - v.z) / d * .5;
     if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; } }
-  const c = sfx('clash', v); if (c) c.playbackRate.value = .72; sfx('ramHit', v, .55);
+  const c = sfx('clash', v); if (c) c.playbackRate.value = .72; sfx('ramHit', v, .55); sfx('hammerSwing', v);
 }
 // each frame: the weapon trails, the glints and icons, the glowing arrows' sparks
 const heroTrails = new Map(); var trailFrame = 0;
@@ -12686,7 +12688,10 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // (it asked for a Path_placed.mp3 that was never supplied); give it `file` again if a recording comes
   path:      { files: [], fallback: 'hoe' },
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
-  blast:     { files: [], fallback: 'rockHit' },
+  blast:     { file: 'sfx/Bolt_blast.mp3',           trim: .9, reach: 35, fallback: 'rockHit' },   // Blasting bolts' burst (Jack's recording)
+  scorp:     { file: 'sfx/Scorpion_shot.mp3',        trim: .7, fallback: 'qbolt' },   // the Engineer's field scorpion looses a bolt (softer than the ballista)
+  whoosh:    { file: 'sfx/Sword_whoosh.mp3',         trim: .5 },     // Flurry's quick sword swings
+  hammerSwing: { file: 'sfx/Hammer_swing.mp3',       trim: .6 },     // the Captain's Sweeping blow, his war hammer swung round
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
   rockFire:  { file: 'sfx/Rock_fired.mp3',           trim: .9 },     // a catapult, mangonel or trebuchet lets its stone go
@@ -12722,9 +12727,9 @@ var LOOPS = {
   wind:  { file: 'sfx/Wind_sound.mp3',             vol: .55, amb: true },
 };
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
-var AUDIO_V = 7;
+var AUDIO_V = 8;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
-var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
+var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, scorp: .3, whoosh: .1, hammerSwing: .4, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser
@@ -13003,7 +13008,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '42646a87a8'; var updateWait = false, updateT = 0;
+const BUILD = '929303f707'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
