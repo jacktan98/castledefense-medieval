@@ -34,7 +34,7 @@ const HERO_SK = {
   wind: { name: 'Second wind', line: r => `Mends ${[.5, 1, 1.5][r]}% health a second`, k: [.005, .01, .015] },
   // the Engineer's (a first pass, for Jack to review): a scorpion he sets up beside his spot that shoots on its own, repairs to
   // buildings round him, and bolts that burst
-  scorp: { name: 'Field scorpion', line: r => `Sets up a scorpion beside him, ${[15, 20, 25][r]} damage round its strike`, k: [15, 20, 25] },
+  scorp: { name: 'Field scorpion', line: r => `Sets up a scorpion, ${[15, 20, 25][r]} area damage`, k: [15, 20, 25] },
   mend: { name: 'Repairs', line: r => `Mends buildings nearby, ${[.5, 1, 1.5][r]}% a second`, k: [.005, .01, .015] },
   rapid: { name: 'Rapid fire', line: r => `Shoots ${[40, 70, 100][r]}% faster`, k: [.4, .7, 1] },
 };
@@ -326,7 +326,7 @@ function removeHero() {
 function heroStart() {
   // a wave list left open in the last game closes (Jack saw it over the Hero screen)
   { const wp = $('#wavePop'); if (wp) wp.hidden = true; }
-  hero = null; heroDownT = 0; heroMove = false; heroSel = false; heroWasNight = false; setHeroFlag(null); removeScorpion();
+  hero = null; heroDownT = 0; heroMove = false; heroSel = false; heroWasNight = false; setHeroFlag(null); removeScorpion(); clearScorpWrecks();
   if (heroOn()) spawnHero();
   // the HUD tick draws the portrait: startGame first runs while the page is still loading, before menuOn exists
   heroKey = '';
@@ -377,6 +377,9 @@ function deflectShove(v, e) {
   if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; }
 }
 function heroFall(v) {
+  sfx('heroFall', v);
+  // the Engineer's scorpion, standing on the ground, is wrecked as he falls (Jack); one still in pieces on his back falls with him
+  if (engScorp && engScorp.st !== 'carried') wreckScorpion();
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
   if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 });
   hero = null; heroDownT = HERO_CD; heroMove = false; log(`<b>${heroName()}</b> has fallen`, 'warn'); heroKey = '';
@@ -623,6 +626,26 @@ function scorpRig(S, loadK, dt) {
 }
 const scorpLoad = S => clamp(1 - S.cool / (SCORP_T * .85), 0, 1);
 function scorpMuzzle(S) { S.g.updateMatrixWorld(true); return S.t.localToWorld(new THREE.Vector3(0, .5, .55)); }
+// the field scorpion wrecked as the Engineer falls (Jack): timbers fly with dust and the engines' crash, it tips over onto one
+// wheel, its bow slumps, and it sinks into the ground and is gone (scorpWrecks, scorpWreckTick from heroTick)
+const scorpWrecks = [];
+function wreckScorpion() {
+  const S = engScorp; engScorp = null; if (!S) return;
+  if (S.bar) scene.remove(S.bar.grp);
+  const at = { x: S.x, z: S.z }; engineWreck(at, walkY(S.x, S.z));
+  scorpWrecks.push({ S, t: 0, dir: at.fallDir, y0: S.g.position.y, b0: S.body.rotation.x });
+}
+function scorpWreckTick(dt) {
+  for (let i = scorpWrecks.length - 1; i >= 0; i--) {
+    const w = scorpWrecks[i], S = w.S; w.t += dt;
+    S.g.rotation.z = w.dir * .55 * sstep(0, .45, w.t);
+    S.body.rotation.x = w.b0 + .25 * sstep(0, .45, w.t);
+    if (S.t) S.t.rotation.x = -.5 * sstep(.1, .6, w.t);
+    S.g.position.y = w.y0 - .9 * sstep(1.4, 3.2, w.t);
+    if (w.t > 3.2) { scene.remove(S.g); scorpWrecks.splice(i, 1); }
+  }
+}
+function clearScorpWrecks() { for (const w of scorpWrecks) scene.remove(w.S.g); scorpWrecks.length = 0; }
 function removeScorpion() { if (engScorp) { scene.remove(engScorp.g); if (engScorp.bar) scene.remove(engScorp.bar.grp); engScorp = null; } }
 // the length of his way there, along the route he would walk
 function routeLen(v, x, z) {
@@ -1192,7 +1215,7 @@ function heroTick(dt) {
   if (!hero && heroDownT > 0 && (heroDownT -= dt) <= 0) { heroDownT = 0; spawnHero(); log(`<b>${heroName()}</b> returns`, 'good'); }
   else if (!hero && !heroDownT && !gameOver) spawnHero();
   if (heroFlag) heroFlag.visible = flagFocus === 'hero' && !heroHere;
-  scorpTick(dt);
+  scorpTick(dt); scorpWreckTick(dt);
   const night = PH.kind === 'night'; if (heroWasNight && !night && hero && !gameOver) heroXp(20); heroWasNight = night;
 }
 // taps (tap): Move's spot first, then the Heir themself (with nothing being built)
