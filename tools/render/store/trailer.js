@@ -78,13 +78,15 @@ if(want('wall')){const p=await L.open(env,SC.wall.map,W,H,D);await G(p,SC.wall.c
  await G(p,`(()=>{paused=false;const Gt=buildings.find(B=>B.type==='gate'),q=center(Gt);const K=['spear','sword','spear','sword','archer','spear','xbow','sword'];for(let i=0;i<8;i++){const x=q.x-10+Math.random()*20,z=q.z-3-Math.random()*6;if(canStand(x,z,2))SH.spawn(K[i%K.length],1+(i%3),x,z);}for(const e of enemies){e.hp=e.max=e.max/4;}for(const B of buildings)if(B.type!=='castle'){B.max=B.max/20;B.hp=B.max;}SH.spawn('ram',3,q.x,q.z-2.4);SH.run(1.5);
   window.__tick=t=>SH.look(q.x,q.z-3.5-t*.8,{yaw:-.2+t*.3,pitch:.92,dist:17-t*2,y:1});})()`);
  await clip(p,'3-wall',8,{k:.8,cap:['Hold','the line']});await p.close();}
-// SIEGE_S=20 (the Reddit cut, Jack: a longer siege part and the ending): the part runs that many seconds, and a second wave of raiders
+// rocks on the wall's row are cleared first: a rock there refused its wall piece and left a gap (Jack circled one)
+// SIEGE_S=15 (the Reddit cut, Jack: a longer siege part and the ending, then wider and 15 s): the part runs that many seconds, filmed from
+// further back and higher, and a second wave of raiders
 // with a catapult marches in from further back a third of the way through, so the fight lasts to the end
 // 3 siege against siege by day: the town's engines already turned on the raiders' engines, the barracks' and stables' troops out in
 // front of them holding off the raiders rushing them (at .8 speed)
 if(want('siege')){const p=await L.open(env,'plains',W,H,D);
  await G(p,`(()=>{SH.town([['catapult',-4,-1,3,2],['catapult',4,-1,3,2],['catapult',0,-3,3,2],['catapult',-7,0,3,2],['ballista',-3,-5,3,2],['ballista',3,-5,3,2],['tower',-5,3,3],['tower',5,3,3],['house',-3,3,3],['house',3,3,3],['stores',-2,-3,1],['stores',2,-3,1],['torch',0,3,1],['stables',-9,2,3],['stables',9,2,3],['barracks',0,6,3],['house',-7,-3,2],['house',7,-3,2],['house',-6,-1,1]],50);UPK.lance=true;
-  {const K=castleB(),c=center(K),ci=Math.floor(c.x/CELL),cj=Math.floor(c.z/CELL);SH.walls([[ci-17,cj-5],[ci-4,cj-5]],3);SH.walls([[ci+4,cj-5],[ci+17,cj-5]],3);}
+  {const K=castleB(),c=center(K),ci=Math.floor(c.x/CELL),cj=Math.floor(c.z/CELL),wz=(cj-5)*CELL;for(const r of rocks)if(r.z>wz-.7&&r.z<wz+CELL+.7)r.amount=0;seatRocks();SH.walls([[ci-17,cj-5],[ci-4,cj-5]],3);SH.walls([[ci+4,cj-5],[ci+17,cj-5]],3);}
   SH.run(5);SH.hud(false);for(const v of villagers){v.sleeping=false;v.hunger=0;}res.food=999;
   const E=buildings.filter(B=>B.type==='catapult'||B.type==='ballista');let x=0,z=0;for(const B of E){const c=center(B);x+=c.x;z+=c.z;}x/=E.length;z/=E.length;const fz=z-13;
   SH.clearTrees(x,z-6,26);for(const r of rocks)if(Math.hypot(r.x-x,r.z-z+8)<12)r.amount=0;seatRocks();cacheCells();
@@ -104,7 +106,7 @@ if(want('siege')){const p=await L.open(env,'plains',W,H,D);
   for(const B of buildings)if(B.bar)B.bar.grp.visible=false;const lo=updateLight;updateLight=(dt,now)=>{light=1;lo(dt,now);};
   const mx=x,mz=z-6.5;window.__ok=[x,z,SIZE].join(' ');
   // from the town's side, behind its engines (Jack), looking down steeply so little sky and none of the map's edge shows
-  let rushed=0,wave2=${process.env.SIEGE_S?0:1};window.__tick=t=>{if(!wave2&&t>.33){wave2=1;for(let i=0;i<22;i++){const ex=x-10+Math.random()*20,ez=fz-9-Math.random()*9;if(canStand(ex,ez,2))SH.spawn(K[i%K.length],2+(i%2),ex,ez);}SH.spawn('catapult',3,x-1,fz-8);}if(!rushed&&t>.06){rushed=1;window.__ev.push([window.__fi||0,'rush',1]);for(const B of ST)setRally(B,{x:x+(center(B).x<x?-2.5:2.5),z:z-11});for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;}SH.look(mx,mz+1.5,{yaw:.35-t*.3,pitch:.9,dist:16-t*2.5,y:1.5});};})()`);
+  let rushed=0,wave2=${process.env.SIEGE_S?0:1};window.__tick=t=>{if(!wave2&&t>.33){wave2=1;for(let i=0;i<22;i++){const ex=x-10+Math.random()*20,ez=fz-9-Math.random()*9;if(canStand(ex,ez,2))SH.spawn(K[i%K.length],2+(i%2),ex,ez);}SH.spawn('catapult',3,x-1,fz-8);}if(!rushed&&t>.06){rushed=1;window.__ev.push([window.__fi||0,'rush',1]);for(const B of ST)setRally(B,{x:x+(center(B).x<x?-2.5:2.5),z:z-11});for(const B of buildings)if(B.rallyFlag)B.rallyFlag.visible=false;}SH.look(mx,mz+${process.env.SIEGE_S?-2:1.5},${process.env.SIEGE_S?"{yaw:.3-t*.25,pitch:1.02,dist:27-t*3,y:1.5}":"{yaw:.35-t*.3,pitch:.9,dist:16-t*2.5,y:1.5}"});};})()`);
  console.log('siege at',await G(p,'window.__ok'));await clip(p,'5-siege',+(process.env.SIEGE_S||8),{k:.8,cap:['Rally','your army']});await p.close();}
 // a short black screen between the siege and the ending
 if(want('black')){const p=await env.b.newPage({viewport:{width:W,height:H},deviceScaleFactor:D});await p.setContent('<html><body style="margin:0;background:#000"></body></html>');
