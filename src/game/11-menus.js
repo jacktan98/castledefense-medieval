@@ -1059,7 +1059,7 @@ function buildGallery() {
   for (const rk of [1, 2, 3]) {
     demoRow(`Hero skills · Rank ${rk}`, [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
       ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind'],
-      ['Field scorpion', 'engineer', 'scorp'], ['Repairs', 'engineer', 'mend'], ['Blasting bolts', 'engineer', 'blast']], rk);
+      ['Field scorpion', 'engineer', 'scorp'], ['Blasting bolts', 'engineer', 'blast'], ['Repairs', 'engineer', 'mend']], rk);
     gRows[gRows.length - 1].n = 12;
   }
   demoRow('Level up', [['The Heir', 'heir', 'lv'], ['Heir, mounted', 'heir', 'lv', 1], ['The Ranger', 'ranger', 'lv'], ['The Captain', 'captain', 'lv'], ['The Engineer', 'engineer', 'lv']]);

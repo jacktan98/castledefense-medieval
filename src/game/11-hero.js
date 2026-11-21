@@ -51,7 +51,7 @@ const HERO_DEFS = {
   captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [375, 25], dmg: [10.5, .5], rate: 1, spd: [1, 0], hair: 3 },
   // the Engineer (Jack, 2026-11-20: from the draft, design/characters/engineer): a crossbow at a little more reach than the Ranger's bow,
   // slower and harder hitting, and sturdier
-  engineer: { name: 'The Engineer', role: 'Siege', order: ['scorp', 'mend', 'blast'], hp: [160, 10], dmg: [8, 1], rate: 1.2, range: 6, spd: [1, 0], hair: 2, xbow: true },
+  engineer: { name: 'The Engineer', role: 'Siege', order: ['scorp', 'blast', 'mend'], hp: [160, 10], dmg: [8, 1], rate: 1.2, range: 6, spd: [1, 0], hair: 2, xbow: true },
 };
 const HERO_KEY = id => id === 'heir' ? 'mtd-hero' : 'mtd-hero-' + id;
 var HERO_ID = (() => { try { const id = localStorage.getItem('mtd-hero-pick'); return HERO_DEFS[id] ? id : 'heir'; } catch (e) { return 'heir'; } })();
