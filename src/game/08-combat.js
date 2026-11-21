@@ -1263,6 +1263,8 @@ function headLook(figs, dt, idle) {
 function updateFallen(dt) {
   for (let n = fallen.length - 1; n >= 0; n--) {
     const f = fallen[n], v = f.v; f.t += dt;
+    // a hero first staggers in pain, then falls (dyingPose); the sinking is counted from the fall
+    if (f.pain) { const d = dyingPose(f); v.g.position.y = walkY(v.g.position.x, v.g.position.z) - Math.max(0, d - 1.2) * .6; if (d > 2.4) { scene.remove(v.g); fallen.splice(n, 1); } continue; }
     fallPose(v, f.t); v.g.position.y = walkY(v.x, v.z) - Math.max(0, f.t - 1.2) * .6;
     if (f.t > 2.4) { scene.remove(v.g); fallen.splice(n, 1); }
   }

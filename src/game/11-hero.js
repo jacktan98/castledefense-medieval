@@ -376,12 +376,61 @@ function deflectShove(v, e) {
   e.flinchAt = performance.now(); const nx = e.x + (e.x - v.x) / d * .35, nz = e.z + (e.z - v.z) / d * .35;
   if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; }
 }
+// a hero's last moments (Jack: the recordings have a pain grunt and then the fall's thud): the blow throws the hero back a step,
+// a hand goes to the chest, the eyes shut, the knees sag, and only then does the body fall, timed so it meets the ground on the
+// thud of the take that played (HERO_THUD: seconds into each file); with no sound it falls about a second after the blow
+const HERO_THUD = { 'sfx/Hero_fall_1.mp3': 1.053, 'sfx/Hero_fall_2.mp3': 1.297 }, FALL_GROUND = [.54, .85, .5], HORSE_GROUND = .75;
+// every joint the stagger and the fall move, as one list of numbers, so the two can be blended
+function poseChans(p) {
+  const c = [], add = (o, w, ...ax) => { if (o) for (const a of ax) c.push([o[w], a]); };
+  add(p.body, 'position', 'x', 'y', 'z'); add(p.body, 'rotation', 'x', 'y', 'z');
+  for (const o of [...p.arms, ...p.legs]) add(o, 'rotation', 'x', 'y', 'z');
+  add(p.horse, 'position', 'y'); add(p.horse, 'rotation', 'x', 'y', 'z'); add(p.horseHead, 'rotation', 'x', 'y');
+  for (const l of p.horseLegs || []) { add(l, 'rotation', 'x'); add(l.userData.knee, 'rotation', 'x'); }
+  return c;
+}
+const poseGet = f => f.ch.map(([o, a]) => o[a]), poseSet = (f, v) => f.ch.forEach(([o, a], i) => o[a] = v[i]);
+// kneel(), added to the pose already there
+function kneelAdd(p, c) { p.body.position.y -= .2 * c; p.legs[0].rotation.x -= 1.3 * c; p.legs[1].rotation.x += .6 * c; }
+function dyingPose(f) {
+  const v = f.v, t = f.t, T = f.pain, k = s => clamp(s, 0, 1), e = s => s * s * (3 - 2 * s);
+  if (t >= T) {
+    // the fall, from where the stagger left the body, eased in over its first moment
+    if (!f.end) { f.t = T - 1e-4; dyingPose(f); f.t = t; f.end = poseGet(f); }
+    const d = (t - T) * f.k; poseSet(f, f.end); fallPose(v, d);
+    const w = e(k(d / .18)), now = poseGet(f); poseSet(f, now.map((x, i) => f.end[i] + (x - f.end[i]) * w));
+    return d;
+  }
+  poseSet(f, f.base);
+  // the figure only bends at the ground, so the stagger is small leans and the knees giving way, never a big stoop
+  const jolt = e(k(t / .1)) * (1 - .75 * e(k((t - .12) / .3))), hold = e(k((t - .02) / .16)), sag = e(k((t - .12) / Math.max(.1, T - .12)));
+  const b = v.body, a0 = v.arms[0], a1 = v.arms[1], L = (o, ax, to) => o[ax] += (to - o[ax]) * hold;
+  L(b.rotation, 'x', 0); L(b.rotation, 'y', 0); L(b.rotation, 'z', 0);
+  b.rotation.x += -.14 * jolt + (v.horse ? .3 : .12) * sag; b.rotation.z += .06 * sag * Math.sin(t * 8);
+  // a hand pressed to the wound, the weapon arm hanging slack
+  L(a0.rotation, 'x', -.55); L(a0.rotation, 'y', 0); L(a0.rotation, 'z', .8); L(a1.rotation, 'x', .1); L(a1.rotation, 'y', 0); L(a1.rotation, 'z', .18);
+  if (v.horse) { v.horse.rotation.x -= .14 * jolt; if (v.horseHead) v.horseHead.rotation.x -= .35 * jolt; }
+  else {
+    // the knees giving way, and a stumble back from the blow
+    L(b.position, 'y', 0); L(v.legs[0].rotation, 'x', 0); L(v.legs[1].rotation, 'x', 0); L(v.legs[0].rotation, 'z', 0); L(v.legs[1].rotation, 'z', 0);
+    kneelAdd(v, .45 * sag);
+    const r = v.g.rotation.y, s = .2 * e(k(t / .3)), x = f.x0 - Math.sin(r) * s, z = f.z0 - Math.cos(r) * s;
+    if (canStand(x, z, 1)) { v.g.position.x = x; v.g.position.z = z; }
+  }
+  if (v.eyes) v.eyes.scale.y = 1 - .85 * hold;
+  return 0;
+}
 function heroFall(v) {
-  sfx('heroFall', v);
+  const src = sfx('heroFall', v), c = src && clips.heroFall[lastPick.heroFall];
+  const thud = c && HERO_THUD[c.f] ? (HERO_THUD[c.f] - c.from) / src.playbackRate.value : 1;
+  // on foot it topples backwards or twists sideways (the drop to the knees is the stagger's own)
+  v.fallK = Math.random() < .5 ? 0 : 2;
+  const G = v.horse && v.horseLegs ? HORSE_GROUND : FALL_GROUND[v.fallK], pain = Math.max(.42, thud - G);
+  const f = { v, t: 0, pain, k: G / Math.max(.2, thud - pain), x0: v.g.position.x, z0: v.g.position.z, ch: poseChans(v) }; f.base = poseGet(f);
   // the Engineer's scorpion, standing on the ground, is wrecked as he falls (Jack); one still in pieces on his back falls with him
   if (engScorp && engScorp.st !== 'carried') wreckScorpion();
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
-  if (v.sbar) scene.remove(v.sbar.grp); fallen.push({ v, t: 0 });
+  if (v.sbar) scene.remove(v.sbar.grp); fallen.push(f);
   hero = null; heroDownT = HERO_CD; heroMove = false; log(`<b>${heroName()}</b> has fallen`, 'warn'); heroKey = '';
 }
 function heroXp(n) {

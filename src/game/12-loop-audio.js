@@ -371,13 +371,13 @@ const loadSfx = () => { if (actx) for (const k in SND) {
   for (const f of S.files || [S.file]) sfxBytes('audio/' + f).then(ab => ab && sfxDecode(ab)).then(b => { if (!b) { sfxLoad.bad.push(f); return; } sfxLoad.ok++;
     if (S.strikes) {
       const cuts = strikes(b), sr = b.sampleRate;
-      for (const [from, len] of cuts) clips[k].push({ buf: b, from, len, gain: gainFor(levelOf(b, Math.floor(from * sr), Math.floor((from + len) * sr)), S.trim) });
-      if (!cuts.length) clips[k].push({ buf: b, from: 0, len: b.duration, gain: gainFor(levelOf(b), S.trim) });
+      for (const [from, len] of cuts) clips[k].push({ f, buf: b, from, len, gain: gainFor(levelOf(b, Math.floor(from * sr), Math.floor((from + len) * sr)), S.trim) });
+      if (!cuts.length) clips[k].push({ f, buf: b, from: 0, len: b.duration, gain: gainFor(levelOf(b), S.trim) });
     } else {   // skip any silence before the sound starts (some recordings open with ~0.4 s of it), so it lands on its event
       const d = b.getChannelData(0); let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
       let i0 = 0; while (i0 < d.length && Math.abs(d[i0]) < pk * .03) i0++;
       const from = Math.max(0, i0 / b.sampleRate - .01);
-      clips[k].push({ buf: b, from, len: b.duration - from, gain: gainFor(levelOf(b), S.trim) });
+      clips[k].push({ f, buf: b, from, len: b.duration - from, gain: gainFor(levelOf(b), S.trim) });
     }
   }).catch(() => sfxLoad.bad.push(f)).finally(sfxReport);
 } };
