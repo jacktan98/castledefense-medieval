@@ -560,20 +560,34 @@ function makeScorpion(r = 1) {
   // everything but the wheels sits on a body hinged at the axle, so the trail lifts to his hands as he tows it
   const body = new THREE.Group(); body.position.y = .22; body.userData.scorpBody = true; g.add(body);
   const add = o => { body.add(o); return o; };
-  const wheels = [-1, 1].map(sx => { const w = new THREE.Group(); w.position.set(sx * .3, .22, 0); w.userData.wheel = true; g.add(w);
-    const rim = cyl(.22, .22, .05, 12, M.timber, 0, 0, 0); rim.rotation.z = Math.PI / 2; w.add(rim);
-    if (r >= 2) { const ty = cyl(.228, .228, .035, 12, M.iron, 0, 0, 0); ty.rotation.z = Math.PI / 2; w.add(ty); }
-    for (let k = 0; k < 3; k++) { const sp = box(.03, .4, .025, M.wood, sx * .01, 0, 0); sp.rotation.x = k * Math.PI / 3; w.add(sp); }
-    const hub = cyl(.05, .05, .08, 8, M.iron, 0, 0, 0); hub.rotation.z = Math.PI / 2; w.add(hub); return w; });
-  const axle = add(cyl(.03, .03, .64, 6, M.iron, 0, 0, 0)); axle.rotation.z = Math.PI / 2;
-  const bed = add(box(.44, .06, .42, M.wood, 0, .09, .02));
+  // a look of its own at each rank (Jack): rank 1 a rough piece knocked together in the field (solid plank wheels with a batten
+  // across, a rough bed lashed with rope, a small bow); rank 2 a proper carriage (spoked wheels with iron tyres, a timber bed with
+  // iron corner bands, a timber shield board, a rack of spare bolts, a bigger bow); rank 3 a fine one (iron-studded wheels, the
+  // bed boarded in the town's colour, the shield board painted and banded in iron, a pennant at the back, a bigger bow still)
+  const fm = r >= 2 ? M.timber : M.rough;
+  const wheels = [-1, 1].map(sx => { let w;
+    if (r >= 2) { w = spokeWheel(.22, true, sx * .3, .22, 0, .05); g.add(w);
+      if (r >= 3) for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, st = cyl(.016, .016, .07, 5, M.iron, 0, Math.sin(a) * .232, Math.cos(a) * .232); st.rotation.z = Math.PI / 2; w.add(st); }
+    } else { w = new THREE.Group(); w.position.set(sx * .3, .22, 0); w.userData.wheel = true; w.userData.r = .22; g.add(w);
+      const rim = cyl(.22, .22, .06, 9, M.rough, 0, 0, 0); rim.rotation.z = Math.PI / 2; w.add(rim);
+      w.add(box(.08, .4, .05, M.timber, 0, 0, 0)); const hub = cyl(.045, .045, .09, 6, M.timber, 0, 0, 0); hub.rotation.z = Math.PI / 2; w.add(hub); }
+    return w; });
+  const axle = add(cyl(.03, .03, .64, 6, r >= 2 ? M.iron : M.timber, 0, 0, 0)); axle.rotation.z = Math.PI / 2;
+  const bed = add(box(.44, .06, .42, r >= 3 ? kiteM : fm, 0, .09, .02));
+  if (r === 1) for (const x of [-.17, .17]) bed.add(box(.035, .075, .44, engRopeM, x, 0, 0));
+  else for (const [x, z] of [[-.2, -.18], [.2, -.18], [-.2, .22], [.2, .22]]) bed.add(box(.05, .075, .05, M.iron, x, 0, z));
+  if (r >= 2) { const rk = new THREE.Group(); rk.position.set(.25, .1, .05); bed.add(rk); rk.add(box(.05, .09, .3, M.timber, 0, 0, 0));
+    for (const dy of [-.025, 0, .025]) { rk.add(box(.02, .02, .42, M.timber, .035, .06 + dy, 0)); const hd = cone(.02, .06, 4, M.iron, .035, .06 + dy, .24); hd.rotation.x = Math.PI / 2; rk.add(hd); } }
   // the trail runs back to the towing handle he pulls by
   const trail = new THREE.Group(); body.add(trail);
-  const tb = box(.09, .07, .95, M.timber, 0, -.02, -.5); tb.rotation.x = -.2; trail.add(tb); trail.add(box(.28, .05, .05, M.timber, 0, -.12, -.96));
+  const tb = box(.09, .07, .95, fm, 0, -.02, -.5); tb.rotation.x = -.2; trail.add(tb); trail.add(box(.28, .05, .05, fm, 0, -.12, -.96));
+  if (r >= 2) trail.add(box(.1, .085, .05, M.iron, 0, -.06, -.72));
+  if (r >= 3) { const pn = new THREE.Group(); pn.position.set(-.12, -.05, -.85); trail.add(pn); pn.add(box(.022, .7, .022, M.timber, 0, .35, 0), box(.006, .14, .2, kiteM, 0, .62, -.1), cone(.022, .05, 6, M.iron, 0, .72, 0)); }
   // the bow on a mount kept level whichever way the carriage tips; the bow itself turns on the mount to aim
   const mount = new THREE.Group(); mount.position.set(0, .11, .02); mount.userData.mount = true; body.add(mount);
-  const t = ballistaTurret(BALLISTA_K[0] * .62); mount.add(t);
-  if (r >= 2) { t.add(box(.62, .22, .035, M.wood, 0, .36, .55)); for (const x of [-.22, .22]) t.add(box(.04, .24, .045, M.iron, x, .36, .56)); }
+  const t = ballistaTurret(BALLISTA_K[0] * [.55, .55, .62, .68][r]); mount.add(t);
+  if (r >= 2) { t.add(box(.62, .22, .035, r >= 3 ? kiteM : M.wood, 0, .36, .55)); for (const x of [-.22, .22]) t.add(box(.04, .24, .045, M.iron, x, .36, .56));
+    if (r >= 3) for (const y of [.27, .45]) t.add(box(.64, .03, .04, M.iron, 0, y, .56)); }
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
   // the order its pieces come off as he takes it apart, and go back on as he builds it (reversed)
   const parts = [wheels[0], wheels[1], axle, bed, trail, mount];
