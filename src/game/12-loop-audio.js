@@ -262,10 +262,12 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // (it asked for a Path_placed.mp3 that was never supplied); give it `file` again if a recording comes
   path:      { files: [], fallback: 'hoe' },
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
-  blast:     { file: 'sfx/Bolt_blast.mp3',           trim: .9, reach: 35, fallback: 'rockHit' },   // Blasting bolts' burst (Jack's recording)
-  scorp:     { file: 'sfx/Scorpion_shot.mp3',        trim: .7, fallback: 'qbolt' },   // the Engineer's field scorpion looses a bolt (softer than the ballista)
-  whoosh:    { file: 'sfx/Sword_whoosh.mp3',         trim: .5 },     // Flurry's quick sword swings
-  hammerSwing: { file: 'sfx/Hammer_swing.mp3',       trim: .6 },     // the Captain's Sweeping blow, his war hammer swung round
+  // slots kept for the heroes' own sounds (Jack didn't like the first recordings, 2026-11-21): until a file is given each plays
+  // its old sound (the siege stone's landing, the crossbow's shot) or, for the swings, nothing over the clash
+  blast:     { files: [], fallback: 'rockHit' },     // Blasting bolts' burst: Bolt_blast.mp3
+  scorp:     { files: [], fallback: 'qbolt' },       // the field scorpion's shot: Scorpion_shot.mp3
+  whoosh:    { files: [] },                          // Flurry's quick sword swings: Sword_whoosh.mp3
+  hammerSwing: { files: [] },                        // the Captain's Sweeping blow: Hammer_swing.mp3
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
   rockFire:  { file: 'sfx/Rock_fired.mp3',           trim: .9 },     // a catapult, mangonel or trebuchet lets its stone go

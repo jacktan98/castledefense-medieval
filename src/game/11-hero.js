@@ -99,14 +99,8 @@ const heroGold = mat('#e8b94a'); heroGold.metalness = .6; heroGold.roughness = .
 // helm with a blue plume, a dark blue cloak and a gold clasp. Head gear is marked helm, so it turns with the head (turnHead)
 const HERO_HAIR = hairs[1];
 const fletchM = mat('#efe6d2'), arrowWoodM = mat('#9a6b3c');
-// the heroes' finer kit (Jack: more like the Engineer's): the Heir's ermine (white fur flecked with black tails), boots, and the
-// Ranger's hood mantle (double-sided: its inside shows at the open front)
-const ermineM = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
-  x.fillStyle = '#f3efe6'; x.fillRect(0, 0, 64, 64); x.fillStyle = '#1d1a18';
-  for (const [a, b] of [[8, 6], [40, 4], [24, 26], [56, 28], [6, 44], [36, 48]]) { x.fillRect(a, b, 3, 8); x.fillRect(a - 2, b + 6, 7, 2); }
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 1);
-  return new THREE.MeshStandardMaterial({ map: t, roughness: .95, side: THREE.DoubleSide }); })();
-const heirBootM = mat('#4d3320'), heirCuffM = mat('#8a6a44'), rangerBootM = mat('#6b5136'), rangerCuffM = mat('#80623f');
+// the heroes' finer kit (Jack: more like the Engineer's): the Heir's riding boots
+const heirBootM = mat('#4d3320'), heirCuffM = mat('#8a6a44'), pouchFlapM = mat('#80623f');
 const rangerTunM = mat('#5b4630'), rangerGreenM = mat('#4f6e36'), rangerCloakM = mat('#3f5a2e'),
   capCloakM = teamMat(mat('#1f3d73'), 'town', '#1f3d73');
 const engCoatM = quiltMat('#7a6f60', '#5f564a'), engApronM = (() => { const m = mat('#6b4a2c'); m.side = THREE.DoubleSide; return m; })(),
@@ -139,14 +133,10 @@ function heroKit(v, id = HERO_ID, foot) {
     const hood = new THREE.Mesh(new THREE.SphereGeometry(.16, 14, 8, Math.PI / 2 + .85, Math.PI * 2 - 1.7, 0, Math.PI * .64), rangerCloakM);
     cap.position.set(0, 1.04, -.01); hood.position.set(0, 1.04, -.01); hd.add(cap, hood);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 6), rangerCloakM); tip.position.set(0, 1.1, -.17); tip.rotation.x = -1.9; hd.add(tip);
-    // the hood's mantle over the shoulders, open at the throat (so from behind it reads as a hood, not a bowl), a pouch and a
-    // hunting knife at the belt, soft leather boots with turned-down tops
-    const capeM = rangerCloakM.clone(); capeM.side = THREE.DoubleSide;
-    const mant = new THREE.Mesh(new THREE.CylinderGeometry(.135, .275, .2, 14, 1, true, .75, Math.PI * 2 - 1.5), capeM); mant.position.y = .86; put(mant);
-    put(box(.075, .085, .045, leatherM, .135, .43, .155)); put(box(.08, .015, .05, rangerCuffM, .135, .47, .158));
+    // a pouch and a hunting knife at the belt (Jack: finer kit, like the Engineer's)
+    put(box(.075, .085, .045, leatherM, .135, .43, .155)); put(box(.08, .015, .05, pouchFlapM, .135, .47, .158));
     const kn = new THREE.Group(); kn.position.set(-.18, .44, .1); kn.rotation.z = .2; put(kn);
     kn.add(box(.035, .15, .03, leatherM, 0, -.06, 0), box(.022, .07, .022, M.timber, 0, .05, 0), box(.05, .012, .03, M.iron, 0, .015, 0));
-    boots(rangerBootM, rangerCuffM);
     const qv = new THREE.Group(); qv.position.set(.1, .72, -.205); qv.rotation.z = -.35; put(qv); qv.add(cyl(.05, .045, .34, 8, leatherM, 0, 0, 0));
     // arrows standing up out of it (Jack: make them read as arrows): shafts well clear of the rim, each with a white fletching
     // of two crossed vanes, one red
@@ -224,10 +214,8 @@ function heroKit(v, id = HERO_ID, foot) {
       c.position.y = 1.12; put(c);
       // the Heir's shoulder plates in the crown's gold (Jack)
       for (const o of (v.armour || []).concat(v.kit)) if (o.userData && o.userData.pauldron) o.material = heroGold;
-      // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): an ermine collar over the shoulders, a small
-      // gold crown on the chest, an empty scabbard at the left hip with a gold tip, and tall riding boots
-      const er = new THREE.Mesh(new THREE.CylinderGeometry(.13, .245, .085, 14, 1, true), ermineM); er.position.y = .88; put(er);
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(.245, .014, 5, 20), ermineM); rim.rotation.x = Math.PI / 2; rim.position.y = .838; put(rim);
+      // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): a small gold crown on the chest, an empty
+      // scabbard at the left hip with a gold tip, and tall riding boots with turned tops
       const cr2 = new THREE.Group(); cr2.position.set(0, .7, .212); put(cr2);
       cr2.add(box(.085, .025, .012, heroGold, 0, 0, 0)); for (const dx of [-.032, 0, .032]) cr2.add(box(.016, .035, .012, heroGold, dx, .028, 0));
       const sb = new THREE.Group(); sb.position.set(-.215, .5, -.02); sb.rotation.set(.55, 0, -.1); sb.userData.scabbard = true; put(sb);
@@ -270,11 +258,13 @@ function heroKit(v, id = HERO_ID, foot) {
       let hinge = new THREE.Group(); hinge.position.set(0, .88, -.19); put(hinge); v.cape = [];
       for (let i = 0; i < 4; i++) { if (i) { const h2 = new THREE.Group(); h2.position.y = -.14; hinge.add(h2); hinge = h2; }
         const s = box(.42 + i * .02, .145, .03, capCloakM, 0, -.07, 0); s.castShadow = true; hinge.add(s); v.cape.push(hinge);
-        // white edging down its sides and along its hem, like the helm's (Jack: finer kit)
-        for (const sx of [-1, 1]) hinge.add(box(.022, .147, .034, capTrimM, sx * (.21 + i * .01), -.07, 0));
-        if (i === 3) hinge.add(box(.48, .025, .036, capTrimM, 0, -.13, 0)); }
-      // steel greaves over the shins with a knee plate
-      for (const i of [0, 1]) { onLeg(box(.08, .2, .025, steelM, 0, -.28, .07), i); onLeg(box(.09, .06, .04, steelM, 0, -.16, .06), i); }
+      }
+      // a medallion on his chest (Jack): a gold disc on a short gold chain, white enamel inside its rim and a gold cross on it, so it shows on the blue surcoat
+      { const md = new THREE.Group(); md.position.set(0, .7, .214); put(md);
+        const disc = cyl(.05, .05, .012, 14, heroGold, 0, 0, 0); disc.rotation.x = Math.PI / 2; md.add(disc);
+        const inner = cyl(.036, .036, .014, 14, capTrimM, 0, 0, .002); inner.rotation.x = Math.PI / 2; md.add(inner);
+        md.add(box(.012, .045, .016, heroGold, 0, 0, .004), box(.034, .012, .016, heroGold, 0, .006, .004));
+        for (const sx of [-1, 1]) { const ch = box(.008, .13, .008, heroGold, sx * .045, .085, -.004); ch.rotation.z = sx * .45; md.add(ch); } }
     }
   }
   if (v.hatG) v.hatG.visible = false;
@@ -546,7 +536,7 @@ function blastBolt(foe, at, dm) {
   blastLook(at.x, walkY(at.x, at.z), at.y, at.z, r);
   if (r >= 2) blastFx(at.x, at.z, r - 1, 1.2);
   if (r >= 3) shake(.04, at, 'hit', .6);
-  sfx('blast', { x: at.x, z: at.z });
+  sfx('blast', { x: at.x, z: at.z }, 1.4);
 }
 // the burst's look by rank (the game's and the gallery's; Jack's rule: rank 1 plain, rank 2 a change, rank 3 one signature moment):
 // a puff of dust and a few sparks at 1; a ring of dust and more sparks at 2; at 3 a wide ring, a bright flash of sparks and a shake
