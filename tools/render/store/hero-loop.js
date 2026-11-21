@@ -9,7 +9,7 @@ const T=+(process.argv[5]||14),A=.3,FPS=30,N=T*FPS,K=FPS;fs.mkdirSync(OUT,{recur
  await p.evaluate(()=>G(`(()=>{const R=Math.random;let k=0;Math.random=()=>(k++<1?.1:R());try{buildShowcase(2);}finally{Math.random=R;}const K=castleB();showYaw0=(K.face||0)*Math.PI/2+(window.YAW0||.25);showPh=0;yaw=showYaw0;weatherReset(null);showMapPick();})()`));
  await p.addStyleTag({content:'#mapPick>*,#titleCrown,.cornerBtns{visibility:hidden!important} body.showcase #mapPick.modal.tome{background:none!important}'});
  await p.waitForTimeout(3000);
- await p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};window.__y0=showYaw0;showYaw0=0;`));
+ await p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};if(!performance.__own){performance.__own=1;performance.now=()=>window.__T;}window.__y0=showYaw0;showYaw0=0;`));
  await p.waitForTimeout(300);
  for(let i=-60;i<N+K;i++){const y=A*Math.sin(2*Math.PI*i/N);
   await p.evaluate(([y])=>G(`showT=-1e9;showPh=__y0+${y}-.001;`),[y]);

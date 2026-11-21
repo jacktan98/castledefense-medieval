@@ -3,7 +3,7 @@ const L=require('./lib');const fs=require('fs');const [W,H,D,OUT]=[+process.argv
 fs.mkdirSync(OUT,{recursive:true});let F=0;const FPS=30;
 const G=(p,c)=>p.evaluate(c=>G(c),c);
 // take over the frame loop: requestAnimationFrame only stores the callback; step() runs one 1/30 s frame
-const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};`));
+const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};if(!performance.__own){performance.__own=1;performance.now=()=>window.__T;}`));
 const step=p=>p.evaluate(()=>{const cb=window.__cb;window.__cb=null;window.__T+=1000/30;if(cb)cb(window.__T);});
 const fade=(p,o)=>p.evaluate(o=>{let d=document.getElementById('fadeDiv');if(!d){d=document.createElement('div');d.id='fadeDiv';d.style.cssText='position:fixed;inset:0;background:#000;z-index:999;pointer-events:none';document.body.appendChild(d);}d.style.opacity=o;},o);
 async function clip(p,secs,camFn){await own(p);await p.waitForTimeout(300);await step(p);const n=secs*FPS;

@@ -7,7 +7,9 @@ const [W,H,D,OUT]=[+process.argv[2],+process.argv[3],+process.argv[4],process.ar
 const FPS=30;fs.mkdirSync(OUT,{recursive:true});
 const G=(p,c)=>p.evaluate(c=>G(c),c);
 // the frame loop is ours: requestAnimationFrame only keeps the callback; step() runs one frame of game time (k: slow motion)
-const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};`));
+// performance.now() follows that stepped time too: the game's idle animations (horses' heads and tails, capes, blinks) read it,
+// and with the real clock, which runs on by however long each frame takes to render, they jumped every frame (Jack saw twitching)
+const own=p=>p.evaluate(()=>G(`adaptResolution=()=>{};window.__T=performance.now();window.requestAnimationFrame=cb=>{window.__cb=cb;return 1;};if(!performance.__own){performance.__own=1;performance.now=()=>window.__T;}`));
 const step=(p,k=1)=>p.evaluate(k=>{const cb=window.__cb;window.__cb=null;window.__T+=1000/30*k;if(cb)cb(window.__T);},k);
 // every sound the game plays is noted with the frame it fell on and how loud it would be from where the camera looks
 const hear=p=>G(p,`(()=>{if(window.__heard)return;window.__heard=1;window.__ev=[];const o=sfx;sfx=(n,at,v)=>{let g=v===undefined?1:v;if(at&&at.x!==undefined){const d=Math.hypot(at.x-target.x,at.z-target.z);g*=d<7?1:Math.max(.12,1-(d-7)/28);}window.__ev.push([window.__fi||0,n,g]);return o(n,at,v);};})()`);
