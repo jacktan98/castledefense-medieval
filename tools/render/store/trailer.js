@@ -70,7 +70,7 @@ if(want('town')){const p=await L.open(env,SC.hero.map,W,H,D);
    // morning slides toward dusk, as the next part is night
    const k=Math.min(1,Math.max(0,(t-.2)/.8));PH.t=DUSK+6-(DUSK*.8+6)*k*k*(3-2*k);
    SH.cam({yaw:-.3+t*.55,pitch:.95-t*.1,dist:26-t*3,dx:0,dz:0,y:1});};})()`);
- await clip(p,'1-town',9.5,{cap:['Build','your town']});await p.close();}
+ await clip(p,'1-town',9,{cap:['Build','your town']});await p.close();}
 // 2 hold the line: Raider Keep at night, a wave right at the wall and the gate, the towers shooting (at .8 speed)
 if(want('wall')){const p=await L.open(env,SC.wall.map,W,H,D);await G(p,SC.wall.code);
  await G(p,`(()=>{paused=false;const Gt=buildings.find(B=>B.type==='gate'),q=center(Gt);const K=['spear','sword','spear','sword','archer','spear','xbow','sword'];for(let i=0;i<8;i++){const x=q.x-10+Math.random()*20,z=q.z-3-Math.random()*6;if(canStand(x,z,2))SH.spawn(K[i%K.length],1+(i%3),x,z);}for(const e of enemies){e.hp=e.max=e.max/4;}for(const B of buildings)if(B.type!=='castle'){B.max=B.max/20;B.hp=B.max;}SH.spawn('ram',3,q.x,q.z-2.4);SH.run(1.5);
@@ -105,13 +105,29 @@ if(want('siege')){const p=await L.open(env,'plains',W,H,D);
 // a short black screen between the siege and the ending
 if(want('black')){const p=await env.b.newPage({viewport:{width:W,height:H},deviceScaleFactor:D});await p.setContent('<html><body style="margin:0;background:#000"></body></html>');
  for(let i=0;i<15;i++)await shot(p,'6-black',i);fs.writeFileSync(`${OUT}/6-black.json`,'[]');console.log('black 15');await p.close();}
-// 5 the title over the Blighted Isle, and "Your castle awaits" under it, big and gold
+// 5 the title over the Blighted Isle, "Your castle awaits" under it, big and gold, and under that where to get it (Jack): Apple's App
+// Store badge for the full game and a matching black badge with itch.io's mark for the free demo (as reddit2.js's ending)
 if(want('title')){const p=await L.open(env,SC.title.map,W,H,D);await G(p,SC.title.code);
  // the title a little lower in the trailer than on the store picture (Jack)
  await p.addStyleTag({content:'.gameTitle{top:9vh!important}'});await p.waitForTimeout(3000);
- await p.evaluate(()=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),d=document.createElement('div');d.id='awaits';d.innerHTML='<span>Your castle awaits</span>';
-  d.style.cssText='position:fixed;left:0;right:0;bottom:0;height:36%;display:flex;align-items:center;justify-content:center;z-index:9998;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 45%,rgba(0,0,0,.7))';
-  const s=d.firstChild;s.style.cssText=`display:inline-block;font-family:${cs.fontFamily};color:#f6d77a;font-size:${parseFloat(cs.fontSize)*1.05}px;letter-spacing:.03em;-webkit-text-stroke:2px #3a2009;paint-order:stroke fill;text-shadow:0 3px 14px rgba(0,0,0,.9),0 0 22px rgba(243,207,110,.35)`;document.body.appendChild(d);});
- await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const k=Math.min(1,Math.max(0,(t-.5)/.25));d.style.opacity=k;d.firstChild.style.transform='scale('+(1.08-.08*k)+')';}}`);
- await clip(p,'8-title',4,{fin:20,fout:0});await p.close();}
+ const BADGE='data:image/svg+xml;base64,'+fs.readFileSync(__dirname+'/../../../site/img/appstore-badge.svg').toString('base64');
+ // itch.io's mark (simple-icons, CC0) in itch.io's red
+ const ITCH=fs.readFileSync(__dirname+'/itchio-mark.svg','utf8').match(/ d="([^"]+)"/)[1];
+ await p.evaluate(([B,I])=>{const t=document.querySelector('.gameTitle'),cs=getComputedStyle(t),F=parseFloat(cs.fontSize),h=F*1.05,d=document.createElement('div');d.id='awaits';
+  d.innerHTML='<span class=aw>Your castle awaits</span><div class=row><div class=col><div class=l1>Full game</div><img src="'+B+'"></div><div class=col><div class=l1>Free demo</div><div class=itch><svg viewBox="0 0 24 24"><path fill="#fa5c5c" d="'+I+'"/></svg><div><small>Play the demo on</small><b>itch.io</b></div></div></div></div>';
+  d.style.cssText=`position:fixed;left:0;right:0;bottom:0;height:52%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${F*.32}px;z-index:9998;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 35%,rgba(0,0,0,.72))`;
+  const aw=d.querySelector('.aw');aw.style.cssText=`display:inline-block;opacity:0;font-family:${cs.fontFamily};color:#f6d77a;font-size:${F*.95}px;letter-spacing:.03em;-webkit-text-stroke:2px #3a2009;paint-order:stroke fill;text-shadow:0 3px 14px rgba(0,0,0,.9),0 0 22px rgba(243,207,110,.35)`;
+  const s=d.querySelector('.row');s.style.cssText=`opacity:0;display:flex;align-items:flex-end;gap:${F*.8}px;font-family:${cs.fontFamily};letter-spacing:.03em;text-shadow:0 3px 14px rgba(0,0,0,.9)`;
+  for(const c of s.querySelectorAll('.col'))c.style.cssText=`display:flex;flex-direction:column;align-items:center;gap:${F*.14}px`;
+  for(const l of s.querySelectorAll('.l1'))l.style.cssText=`color:#fff1c8;font-size:${F*.48}px;-webkit-text-stroke:1.5px #3a2009;paint-order:stroke fill`;
+  s.querySelector('img').style.cssText=`height:${h}px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
+  const it=s.querySelector('.itch');it.style.cssText=`height:${h}px;box-sizing:border-box;display:flex;align-items:center;gap:${h*.2}px;padding:0 ${h*.32}px 0 ${h*.24}px;background:#000;border:${h/40}px solid #a6a6a6;border-radius:${h*.2}px;font-family:'Helvetica Neue',Helvetica,'Liberation Sans',Arial,sans-serif;letter-spacing:0;text-shadow:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.8))`;
+  it.querySelector('svg').style.cssText=`height:${h*.62}px;width:${h*.62}px`;
+  it.querySelector('div').style.cssText=`display:flex;flex-direction:column;color:#fff;line-height:1`;
+  it.querySelector('small').style.cssText=`font-size:${h*.2}px;margin-bottom:${h*.04}px`;
+  it.querySelector('b').style.cssText=`font-size:${h*.46}px;font-weight:700;letter-spacing:-.01em`;
+  document.body.appendChild(d);},[BADGE,ITCH]);
+ // the words first, then the badges
+ await G(p,`window.__tick=t=>{const d=document.getElementById('awaits');if(d){const a=Math.min(1,Math.max(0,(t-.3)/.2)),b=Math.min(1,Math.max(0,(t-.5)/.2));const w=d.querySelector('.aw'),r=d.querySelector('.row');w.style.opacity=a;w.style.transform='scale('+(1.08-.08*a)+')';r.style.opacity=b;r.style.transform='translateY('+(1-b)*12+'px)';}}`);
+ await clip(p,'8-title',4.5,{fin:20,fout:0});await p.close();}
 await env.b.close();env.server.close();})();
