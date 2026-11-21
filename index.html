@@ -9306,9 +9306,9 @@ const HERO_SK = {
   wind: { name: 'Second wind', line: r => `Mends ${[.5, 1, 1.5][r]}% health a second`, k: [.005, .01, .015] },
   // the Engineer's (a first pass, for Jack to review): a scorpion he sets up beside his spot that shoots on its own, repairs to
   // buildings round him, and bolts that burst
-  scorp: { name: 'Field scorpion', line: r => `Sets up a scorpion beside him, ${[14, 20, 28][r]} damage`, k: [14, 20, 28] },
+  scorp: { name: 'Field scorpion', line: r => `Sets up a scorpion beside him, ${[15, 20, 25][r]} damage round its strike`, k: [15, 20, 25] },
   mend: { name: 'Repairs', line: r => `Mends buildings nearby, ${[.5, 1, 1.5][r]}% a second`, k: [.005, .01, .015] },
-  blast: { name: 'Blasting bolts', line: r => `Every 4th bolt bursts, ${[40, 60, 80][r]}% to raiders beside`, k: [.4, .6, .8] },
+  blast: { name: 'Blasting bolts', line: r => `Every 5th bolt bursts, ${[40, 70, 100][r]}% to raiders beside`, k: [.4, .7, 1] },
 };
 // how far a skill's look has grown (Jack: rank 1 plain, each rank showier): the hero's rank in that skill, or a gallery figure's own
 // (`p.rk`, the gallery shows every skill at ranks 1, 2 and 3); only the looks read it, never the game's numbers
@@ -9323,7 +9323,7 @@ const HERO_DEFS = {
   captain: { name: 'The Captain', role: 'Defender', order: ['firm', 'sweep', 'wind'], hp: [375, 25], dmg: [10.5, .5], rate: 1, spd: [1, 0], hair: 3 },
   // the Engineer (Jack, 2026-11-20: from the draft, design/characters/engineer): a crossbow at a little more reach than the Ranger's bow,
   // slower and harder hitting, and sturdier
-  engineer: { name: 'The Engineer', role: 'Siege', order: ['scorp', 'mend', 'blast'], hp: [160, 12], dmg: [8, 1], rate: 1.3, range: 6, spd: [1, 0], hair: 2, xbow: true },
+  engineer: { name: 'The Engineer', role: 'Siege', order: ['scorp', 'mend', 'blast'], hp: [160, 10], dmg: [8, 1], rate: 1.2, range: 6, spd: [1, 0], hair: 2, xbow: true },
 };
 const HERO_KEY = id => id === 'heir' ? 'mtd-hero' : 'mtd-hero-' + id;
 var HERO_ID = (() => { try { const id = localStorage.getItem('mtd-hero-pick'); return HERO_DEFS[id] ? id : 'heir'; } catch (e) { return 'heir'; } })();
@@ -9733,9 +9733,9 @@ function rangerStep(v, dt, home) {
   const b = heroBurst(v, 'quick', 5, .2, .3); v.glinted = false;
 
   const xb = heroDef().xbow, dm = heroDmg() * (1 + decorFx(v.x, v.z, 'troopDmg')) * heroBuff(v), from = xb ? xbowPoint(v) : bowPoint(v);
-  // the Engineer's crossbow: a short bolt; Blasting bolts, every 4th bursts on the raider and those beside it
+  // the Engineer's crossbow: a short bolt; Blasting bolts, every 5th bursts on the raider and those beside it
   if (xb) { const to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + (foe.horse ? 1.2 : .8) * UNIT_K, foe.z);
-    const bl = HERO.sk.blast && (v.boltN = (v.boltN || 0) + 1) % 4 === 0;
+    const bl = HERO.sk.blast && (v.boltN = (v.boltN || 0) + 1) % 5 === 0;
     const m = fireArrow(from, to, () => { if (bl) blastBolt(foe, to, dm); if (!foe.dead) hurtEnemy(foe, dm, v); }, null, 'qbolt');
     // the bursting bolt by rank: like the others at 1, heavier at 2, glowing and trailing sparks at 3
     if (bl) { const r = skR('blast'); if (r >= 2) m.scale.set(1.5, 1.5, 1.2); if (r >= 3) { m.material = glowArrowM; glowArrows.push(m); } }
@@ -9771,7 +9771,7 @@ function blastBolt(foe, at, dm) {
   blastLook(at.x, walkY(at.x, at.z), at.y, at.z, r);
   if (r >= 2) blastFx(at.x, at.z, r - 1, 1.2);
   if (r >= 3) shake(.04, at, 'hit', .6);
-  sfx('rockHit', { x: at.x, z: at.z });
+  sfx('blast', { x: at.x, z: at.z }, 1.4);
 }
 // the burst's look by rank (the game's and the gallery's; Jack's rule: rank 1 plain, rank 2 a change, rank 3 one signature moment):
 // a puff of dust and a few sparks at 1; a ring of dust and more sparks at 2; at 3 a wide ring, a bright flash of sparks and a shake
@@ -9796,13 +9796,13 @@ function heroRepair(v, dt) {
 }
 function mendRing(x, y, z, rad) { for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; sparkBurst(x + Math.cos(a) * rad, y + .15, z + Math.sin(a) * rad, '#ffd24a', 1); } }
 // Field scorpion (Jack): a small ballista on a two-wheeled carriage, resting on its trail. Set up at his spot it turns to the nearest
-// raider within 9 m and shoots a bolt every 3.5 s. Sent elsewhere (Move or Recall) he works out which is quicker (`scorpPlan`): for a
+// raider within 9 m and shoots a bolt every 3 s. Sent elsewhere (Move or Recall) he works out which is quicker (`scorpPlan`): for a
 // short way he takes the handle at once and tows it at a catapult's pace (TOW_V), his crossbow slung on his back, the scorpion still
 // shooting as it rolls; there he lets go and takes his crossbow out again. For a long way he takes it apart (SC_BREAK_T) into a bundle on
 // his back, walks freely and builds it again where he stops (SC_BUILD_T). States (`S.st`): set, tow, pack, carried, build;
 // `S.pk` 0 in pieces (on his back), 1 whole.
 var engScorp = null;
-const SCORP_R = 9, SCORP_T = 3.5, SC_BREAK_T = 6, SC_BUILD_T = 6.5, TOW_V = MOVE_SPEED, SC_REST = -.07;
+const SCORP_R = 9, SCORP_T = 3, SCORP_SPLASH = 1.2, SC_BREAK_T = 6, SC_BUILD_T = 6.5, TOW_V = MOVE_SPEED, SC_REST = -.07;
 // by rank: plain at 1; at 2 iron tyres on its wheels, iron feet on its legs and a timber shield board across its front; at 3
 // (signature) each bolt leaves with a puff of dust and a streak of air behind it (scorpTick)
 function makeScorpion(r = 1) {
@@ -9925,7 +9925,12 @@ function scorpTick(dt) {
   if (S.cool > 0 || Math.abs(dy) > .25) return;
   S.cool = SCORP_T;
   const from = scorpMuzzle(S), to = new THREE.Vector3(foe.x, walkY(foe.x, foe.z) + .7 * UNIT_K, foe.z), dm = HERO_SK.scorp.k[HERO.sk.scorp - 1];
-  const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero); }, .2, 'qbolt'); m.scale.set(1.6, 1.6, 1.6);
+  // its bolt strikes an area (Jack): full damage on the raider, and every other raider within SCORP_SPLASH m takes from full at the
+  // middle to half at the edge, with a puff of dust where it lands
+  const m = fireArrow(from, to, () => { if (!foe.dead) hurtEnemy(foe, dm, hero);
+    for (const e of enemies.slice()) { if (e === foe || e.dead || e.dormant) continue; const d = Math.hypot(e.x - to.x, e.z - to.z);
+      if (d < SCORP_SPLASH) hurtEnemy(e, dm * (1 - .5 * d / SCORP_SPLASH), hero); }
+    dustAt(to.x, walkY(to.x, to.z), to.z); }, .2, 'qbolt'); m.scale.set(1.6, 1.6, 1.6);
   if (S.rk >= 3) { arrowStreak(m, 2); for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); }
 }
 // which strike the hero plays (`v.strike`, read by the pose loop): the Heir alternates the overhead chop with a sword thrust (Flurry's
@@ -12617,6 +12622,8 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   // a path tile laid: one soft hoe stroke into the earth (Jack: the hoe is its sound for now); no file of its own is fetched
   // (it asked for a Path_placed.mp3 that was never supplied); give it `file` again if a recording comes
   path:      { files: [], fallback: 'hoe' },
+  // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
+  blast:     { files: [], fallback: 'rockHit' },
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
   rockFire:  { file: 'sfx/Rock_fired.mp3',           trim: .9 },     // a catapult, mangonel or trebuchet lets its stone go
@@ -12654,7 +12661,7 @@ var LOOPS = {
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
 var AUDIO_V = 7;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
-var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
+var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser
@@ -12932,7 +12939,7 @@ document.addEventListener('visibilitychange', autoPause); addEventListener('page
 // Stage 12): on start and whenever the app comes back, version.json (written by tools/build.js) is checked against this page's
 // build; a newer one reloads the page at once if the title or campaign is up (the campaign opens again after), else as soon
 // as the player is back on a menu that way; never in a game, or while a stage is being unlocked on the campaign
-const BUILD = '0454490bf0'; var updateWait = false, updateT = 0;
+const BUILD = '77abef0014'; var updateWait = false, updateT = 0;
 function checkUpdate() {
   // the itch.io demo has no version.json: no update check there
   if (window.MTD_DEMO || (location.protocol !== 'https:' && !/[?&]sw\b/.test(location.search))) return;
