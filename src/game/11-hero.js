@@ -210,19 +210,19 @@ function heroKit(v, id = HERO_ID, foot) {
     for (const o of v.kit.slice()) if (o.userData && o.userData.helm) { o.parent && o.parent.remove(o); v.kit.splice(v.kit.indexOf(o), 1); }
     if (id === 'heir') {
       const c = head(); c.add(cyl(.118, .122, .055, 12, heroGold, 0, 0, 0));
-      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .118, .055, Math.cos(a) * .118); c.add(p); }
+      // the points stand on the band's top, a little in from its edge and turned flat to the front, so no part of their dark
+      // underside pokes out through the band (Jack saw a black speck on its front)
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, p = new THREE.Mesh(new THREE.ConeGeometry(.026, .07, 4), heroGold); p.position.set(Math.sin(a) * .1, .0605, Math.cos(a) * .1); p.rotation.y = a + Math.PI / 4; c.add(p); }
       c.position.y = 1.12; put(c);
       // the Heir's shoulder plates in the crown's gold (Jack)
       for (const o of (v.armour || []).concat(v.kit)) if (o.userData && o.userData.pauldron) o.material = heroGold;
       // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): a small gold crown on the chest, an empty
       // scabbard at the left hip with a gold tip, and tall riding boots with turned tops
       // the crown in the middle of the chest, a little above its middle (Jack: between the first spot and just under the collar)
-      // the surcoat is six-sided with a corner at the front (its radius .169 at this height): the crown sits on that corner, each half
-      // turned flat onto the face beside it, so it lies on the chest (Jack: it floated in front of it)
-      const cr2 = new THREE.Group(); cr2.position.set(0, .755, .169); put(cr2);
-      for (const sx of [-1, 1]) { const h = new THREE.Group(); h.rotation.y = sx * Math.PI / 6; cr2.add(h);
-        h.add(box(.044, .025, .012, heroGold, sx * .022, 0, .007), box(.016, .035, .012, heroGold, sx * .034, .028, .007)); }
-      cr2.add(box(.016, .035, .012, heroGold, 0, .028, .007));
+      // straight, its middle touching the surcoat's front corner (radius .169 at this height) (Jack: bent round the corner it showed
+      // gaps; at z .21 it floated in front of the chest)
+      const cr2 = new THREE.Group(); cr2.position.set(0, .755, .175); put(cr2);
+      cr2.add(box(.085, .025, .012, heroGold, 0, 0, 0)); for (const dx of [-.032, 0, .032]) cr2.add(box(.016, .035, .012, heroGold, dx, .028, 0));
       const sb = new THREE.Group(); sb.position.set(-.215, .5, -.02); sb.rotation.set(.55, 0, -.1); sb.userData.scabbard = true; put(sb);
       sb.add(box(.04, .34, .055, leatherM, 0, -.16, 0), box(.046, .045, .062, heroGold, 0, -.32, 0), box(.046, .03, .062, heroGold, 0, .01, 0));
       if (v.horse) sb.visible = false;
