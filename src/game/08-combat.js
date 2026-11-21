@@ -1078,8 +1078,12 @@ function gateWait(v, tx, tz) {
 function updateSoldier(v, dt) {
   const B = v.post.B, k = v.kitTier - 1, S = v.cav ? RIDER : SOLDIER, walkK = 1 + decorFx(v.x, v.z, 'troopWalk'), ride = (v.cav ? RIDER.speed : 1) * walkK;
   v.attackT = Math.max(0, (v.attackT || 0) - dt); v.cool = (v.cool || 0) - dt;
-  const base = (!v.post.fled && B.rally) || doorPoint(B), [ox, oz] = v.summoned && !B.rally ? summonSpot(B, v.post.a) : SQUAD[v.post.a % SQUAD.length], hx = base.x + ox, hz = base.z + oz;
+  // riders' squad spots spread wider: a horse is .5 m round in the push apart, and at the foot soldiers' .8 m spacing two horses
+  // overlapped, pushed each other off their spots and stepped back on, over and over (Jack saw horses twitch)
+  const sq = SQUAD[v.post.a % SQUAD.length], sk = v.cav ? 1.35 : 1;
+  const base = (!v.post.fled && B.rally) || doorPoint(B), [ox, oz] = v.summoned && !B.rally ? summonSpot(B, v.post.a) : [sq[0] * sk, sq[1] * sk], hx = base.x + ox, hz = base.z + oz;
   if (v.march) {
+    v.held = false; v.engaged = null;
     if (Math.hypot(hx - v.x, hz - v.z) > .5 && (v.marchT -= dt) > 0) { v.foe = null; if (!gateWait(v, hx, hz)) walkTo(v, hx, hz, dt, 1, .3, 1.3 * ride); return; }
     v.march = false;
   }
@@ -1093,11 +1097,17 @@ function updateSoldier(v, dt) {
     // a charge: the castle's riders always know it, the stables' only with Lance charge (Jack); they spur on at a new foe and
     // their first blow on it hits twice as hard, with a burst of dust
     const charge = v.cav && v.charged !== foe && (v.summoned || UPK.lance);
-    if (d > reach) { if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride * (charge ? 1.35 : 1)); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }    // can't reach that one
-    else { turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = S.rate * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = v.toolKind === 'spear' ? SPEAR_T : SWORD_T; hurtEnemy(foe, S.dmg[k] * (1 + decorFx(v.x, v.z, 'troopDmg')) * (charge ? 2 : 1) * heroBuff(v), v);
+    // once striking, it keeps striking until pushed well past its reach (as the raiders do, `e.engaged`): the crowd's pushes used to
+    // flip it between stepping in and striking every few frames, and it twitched (Jack)
+    v.held = false;
+    if (d > reach + (v.engaged === foe ? .4 : 0)) { v.engaged = null; if (gateWait(v, foe.x, foe.z)) return; walkTo(v, foe.x, foe.z, dt, 1, reach * .9, 1.25 * ride * (charge ? 1.35 : 1)); if (v.noProg > 4) { v.skip = { e: foe, t: 4 }; v.foe = null; } }    // can't reach that one
+    else { v.engaged = foe; turnTo(v, Math.atan2(foe.x - v.x, foe.z - v.z), dt); if (v.cool <= 0) { v.cool = S.rate * (1 - decorFx(v.x, v.z, 'troopRate')); v.attackT = v.toolKind === 'spear' ? SPEAR_T : SWORD_T; hurtEnemy(foe, S.dmg[k] * (1 + decorFx(v.x, v.z, 'troopDmg')) * (charge ? 2 : 1) * heroBuff(v), v);
       if (charge) { const y = walkY(foe.x, foe.z); for (let n = 0; n < 3; n++) dustAt(foe.x + (Math.random() - .5) * .6, y, foe.z + (Math.random() - .5) * .6); shake(.03, foe, 'charge', .8); }
       v.charged = foe; sfx('clash', v); } }
-  } else if (Math.hypot(hx - v.x, hz - v.z) > .35) { if (!gateWait(v, hx, hz)) walkTo(v, hx, hz, dt, 1, .3, 1.3 * ride); }
+  // holding its spot: once there it only walks back when pushed .9 m off it, so a neighbour's push no longer sets off a step back
+  // every few frames (Jack saw soldiers and horses twitch)
+  } else if (Math.hypot(hx - v.x, hz - v.z) > (v.held ? .9 : .35)) { v.engaged = null; v.held = false; if (!gateWait(v, hx, hz)) walkTo(v, hx, hz, dt, 1, .3, 1.3 * ride); }
+  else if (!v.held && !v.walking) { v.held = true; v.engaged = null; }
   // the castle's riders, at their place, face away from the castle (out of the door, or out from it at a rally flag)
   else if (v.summoned) { const c = center(B); turnTo(v, B.rally ? Math.atan2(hx - c.x, hz - c.z) : faceAngle(B), dt); }
 }
