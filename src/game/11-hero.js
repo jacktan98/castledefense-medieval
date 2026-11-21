@@ -170,6 +170,15 @@ function heroKit(v, id = HERO_ID, foot) {
     if (v.pivot) v.pivot.parent.remove(v.pivot);
     v.toolKind = 'crossbow'; v.pivot = makeTool('crossbow'); v.arms[1].add(v.pivot);
     v.handMallet = makeTool('hammer'); v.handMallet.visible = false; v.arms[1].add(v.handMallet);
+    // his crossbow slung across his back while his hands are on the scorpion (towing it, or working at it)
+    v.slungXbow = makeTool('crossbow'); v.slungXbow.position.set(.02, .93, -.33); v.slungXbow.rotation.set(0, Math.PI / 2, .25); v.slungXbow.visible = false; put(v.slungXbow);
+    // the scorpion taken apart, carried on his back: its timbers bound in a bundle across the chest, a wheel strapped behind them
+    const bd = new THREE.Group(); bd.position.set(0, .72, -.37); bd.visible = false; bd.userData.scorpPack = true;
+    const wh = cyl(.15, .15, .035, 12, M.timber, 0, 0, -.02); wh.rotation.x = Math.PI / 2; bd.add(wh);
+    const hb = cyl(.035, .035, .05, 8, M.iron, 0, 0, -.03); hb.rotation.x = Math.PI / 2; bd.add(hb);
+    for (const [y, a] of [[.02, .55], [-.02, -.5], [.05, .1]]) { const tm = box(.5, .04, .04, M.timber, 0, y, -.06); tm.rotation.z = a; bd.add(tm); }
+    for (const x of [-.13, .13]) bd.add(box(.03, .16, .1, engRopeM, x, 0, -.05));
+    bd.traverse(m => { if (m.isMesh) m.castShadow = true; }); put(bd); v.scorpPack = bd;
     v.soldier = true; v.cav = false;
   } else {
     // the Heir's horse by Royal horse's rank (Jack): a blanket at rank 1; the flank cloths from 2; at 3 gold trim on them and a steel plate down its face
@@ -378,11 +387,11 @@ function updateHero(v, dt) {
     if ((v.windFx = (v.windFx || 0) - dt) <= 0) { v.windFx = [.5, .5, .25, .16][skR('wind')]; const a = Math.random() * 6.283; sparkBurst(v.rx + Math.cos(a) * .22, walkY(v.rx, v.rz) + .3 + Math.random() * .6, v.rz + Math.sin(a) * .22, '#d6ffd9', 1); }
     // rank 3 (Jack: so it differs from rank 2): small gold orbs float slowly up round him
     if (skR('wind') >= 3 && (v.orbT = (v.orbT || 0) - dt) <= 0) { v.orbT = .55; windOrb(v.rx, walkY(v.rx, v.rz), v.rz); } }
+  // the Engineer and his scorpion: towed, carried or being set up, it takes his step (Jack)
+  if (HERO_ID === 'engineer' && engStep(v, dt, home)) { heroMend(v, dt, null); return; }
   if (v.march) {
     if (Math.hypot(home.x - v.x, home.z - v.z) > .4 && (v.marchT -= dt) > 0) {
       v.foe = null; v.drawing = false;
-      // the Engineer packs his scorpion up first (Jack), then tows it
-      if (scorpPacking(v, dt)) { v.marchT += dt; heroMend(v, dt, null); return; }
       if (!gateWait(v, home.x, home.z)) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * heroSpeed() * (1 + decorFx(v.x, v.z, 'troopWalk')));
       heroMend(v, dt, null); return;
     }
@@ -439,16 +448,10 @@ function heroFoe(v, home, dt, inR, outR, far, reachOf) {
 // Twin shot sends a second arrow at another raider, Quick draw fires a burst of quick shots
 function rangerStep(v, dt, home) {
   const R = heroRange();
-  // setting the scorpion up (or packing it): he kneels at it and does not shoot
-  if (v.scorpWork > 0) { v.scorpWork -= dt; v.foe = null; v.drawing = false; v.walking = false;
-    if (engScorp) turnTo(v, Math.atan2(engScorp.x - v.x, engScorp.z - v.z), dt);
-    heroMend(v, dt, null); return; }
   if (v.skip && (v.skip.t -= dt) <= 0) v.skip = null;
   const foe = heroFoe(v, home, dt, R, R + .5, e => Math.hypot(e.x - v.x, e.z - v.z));
   v.foe = foe; v.drawing = !!foe && !(v.attackT > 0) && v.cool < DRAW;
   const away = Math.hypot(home.x - v.x, home.z - v.z);
-  // pushed well off his spot with the scorpion set up: he packs it before walking back (a nudge of a step doesn't count)
-  if (away > 1.2 && !foe && scorpPacking(v, dt)) { heroMend(v, dt, null); return; }
   if (away > .35) { if (!foe || v.cool > DRAW) walkTo(v, home.x, home.z, dt, 1, .3, 1.3 * heroSpeed()); }
   else if (!foe) { const K = castleB(); if (K && !heroAt) turnTo(v, faceAngle(K), dt); heroHere = true; }
   heroMend(v, dt, foe);
@@ -520,82 +523,137 @@ function heroRepair(v, dt) {
   }
 }
 function mendRing(x, y, z, rad) { for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; sparkBurst(x + Math.cos(a) * rad, y + .15, z + Math.sin(a) * rad, '#ffd24a', 1); } }
-// Field scorpion (Jack): a small ballista on a two-wheeled carriage. Packed, it rolls behind the Engineer on its wheels, its prop legs
-// folded up and its bow tipped down, and he tows it wherever he goes; he sets it up only once a raider comes within his own reach
-// (SETUP_T, kneeling at it, the legs coming down and the bow levelling), and must pack it up again before he can move off (PACK_T).
-// Set up, it turns to the nearest raider within 9 m and shoots a bolt every 3.5 s while he stands (`engScorp`, from heroTick).
+// Field scorpion (Jack): a small ballista on a two-wheeled carriage. Set up at his spot it turns to the nearest raider within 9 m and
+// shoots a bolt every 3.5 s. Sent elsewhere (Move or Recall) he works out which is quicker (`scorpPlan`): for a short way he folds
+// its legs (HITCH_T) and tows it by the handle at a catapult's pace (TOW_V), his crossbow slung on his back; for a long one he takes
+// it apart (SC_BREAK_T) into a bundle on his back and walks freely, then builds it again where he stops (SC_BUILD_T). Whichever way he
+// came, he sets it up as soon as he gets there (Jack). States (`S.st`): set, hitch, tow, setting, pack, carried, build.
+// `S.k` is 0 folded for the road, 1 set up; `S.pk` 0 in pieces (on his back), 1 whole.
 var engScorp = null;
-const SCORP_R = 9, SCORP_T = 3.5, SETUP_T = 2.2, PACK_T = 2.2, SCORP_TOW = 1.15;
+const SCORP_R = 9, SCORP_T = 3.5, SETUP_T = 2.2, HITCH_T = 1.6, SC_BREAK_T = 6, SC_BUILD_T = 6.5, TOW_V = MOVE_SPEED;
 // by rank: plain at 1; at 2 iron tyres on its wheels, iron feet on its legs and a timber shield board across its front; at 3
 // (signature) each bolt leaves with a puff of dust and a streak of air behind it (scorpTick)
 function makeScorpion(r = 1) {
-  const g = new THREE.Group(), add = (o, to = g) => { to.add(o); return o; };
-  // the carriage: an axle on two spoked wheels, a bed and a trail running back to the towing handle
+  const g = new THREE.Group();
+  // everything but the wheels sits on a body hinged at the axle, so the trail lifts to his hands as he tows it
+  const body = new THREE.Group(); body.position.y = .22; body.userData.scorpBody = true; g.add(body);
+  const add = o => { body.add(o); return o; };
   const wheels = [-1, 1].map(sx => { const w = new THREE.Group(); w.position.set(sx * .3, .22, 0); w.userData.wheel = true; g.add(w);
     const rim = cyl(.22, .22, .05, 12, M.timber, 0, 0, 0); rim.rotation.z = Math.PI / 2; w.add(rim);
     if (r >= 2) { const ty = cyl(.228, .228, .035, 12, M.iron, 0, 0, 0); ty.rotation.z = Math.PI / 2; w.add(ty); }
     for (let k = 0; k < 3; k++) { const sp = box(.03, .4, .025, M.wood, sx * .01, 0, 0); sp.rotation.x = k * Math.PI / 3; w.add(sp); }
     const hub = cyl(.05, .05, .08, 8, M.iron, 0, 0, 0); hub.rotation.z = Math.PI / 2; w.add(hub); return w; });
-  add(cyl(.03, .03, .64, 6, M.iron, 0, .22, 0)).rotation.z = Math.PI / 2;
-  add(box(.44, .06, .42, M.wood, 0, .31, .02));
-  const trail = add(box(.09, .07, .95, M.timber, 0, .2, -.5)); trail.rotation.x = -.2;
-  add(box(.28, .05, .05, M.timber, 0, .1, -.96));
-  // two prop legs at the front, folded up while packed, down to the ground once set up
-  const legs = new THREE.Group(); legs.position.set(0, .3, .2); legs.userData.legs = true; g.add(legs);
+  const axle = add(cyl(.03, .03, .64, 6, M.iron, 0, 0, 0)); axle.rotation.z = Math.PI / 2;
+  const bed = add(box(.44, .06, .42, M.wood, 0, .09, .02));
+  // the trail runs back to the towing handle he pulls by
+  const trail = new THREE.Group(); body.add(trail);
+  const tb = box(.09, .07, .95, M.timber, 0, -.02, -.5); tb.rotation.x = -.2; trail.add(tb); trail.add(box(.28, .05, .05, M.timber, 0, -.12, -.96));
+  // two prop legs at the front, folded up for the road, down to the ground once set up
+  const legs = new THREE.Group(); legs.position.set(0, .08, .2); legs.userData.legs = true; body.add(legs);
   for (const sx of [-1, 1]) { legs.add(box(.045, .34, .045, M.timber, sx * .17, -.16, .06)); if (r >= 2) legs.add(box(.06, .05, .06, M.iron, sx * .17, -.32, .06)); }
-  // the bow on a mount that tips it down for travel and levels it to shoot; the bow itself turns on the mount to aim
-  const mount = new THREE.Group(); mount.position.set(0, .33, .02); mount.userData.mount = true; g.add(mount);
+  // the bow on a mount that stows it pointing up for the road and levels it to shoot; the bow itself turns on the mount to aim
+  const mount = new THREE.Group(); mount.position.set(0, .11, .02); mount.userData.mount = true; body.add(mount);
   const t = ballistaTurret(BALLISTA_K[0] * .62); mount.add(t);
   if (r >= 2) { t.add(box(.62, .22, .035, M.wood, 0, .36, .55)); for (const x of [-.22, .22]) t.add(box(.04, .24, .045, M.iron, x, .36, .56)); }
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
-  const S = { g, t, mount, legs, wheels, k: 0, st: 'packed' }; scorpPose(S, 0); return S;
+  // the order its pieces come off as he takes it apart, and go back on as he builds it (reversed)
+  const parts = [wheels[0], wheels[1], axle, bed, trail, legs, mount];
+  const S = { g, body, t, mount, legs, wheels, parts, k: 1, pk: 1, st: 'set' }; scorpPose(S, 1); return S;
 }
-// k: 0 packed for the road, 1 set up to shoot
+// k: 0 folded for the road, 1 set up to shoot
 function scorpPose(S, k) {
   const e = k * k * (3 - 2 * k);
   S.legs.rotation.x = -1.5 * (1 - e); S.mount.rotation.x = -1.05 * (1 - e);
   if (k < 1) S.t.rotation.y *= .9;
   S.t.traverse(o => { if (o.userData.bolt) o.visible = k >= 1; });
 }
+// pk: how far built; each piece grows in over its own share of the build (and shrinks away the same in reverse)
+function scorpParts(S, pk) {
+  const n = S.parts.length;
+  S.parts.forEach((p, i) => { const s = clamp(pk * n - i, 0, 1); p.visible = s > .01; p.scale.setScalar(Math.max(.01, s < 1 ? .4 + .6 * s : 1)); });
+}
 function scorpMuzzle(S) { S.g.updateMatrixWorld(true); return S.t.localToWorld(new THREE.Vector3(0, .5, .55)); }
 function removeScorpion() { if (engScorp) { scene.remove(engScorp.g); if (engScorp.bar) scene.remove(engScorp.bar.grp); engScorp = null; } }
-// the Engineer packs up before he moves off (from updateHero while he marches): true while he must wait
-function scorpPacking(v, dt) {
-  const S = engScorp; if (!S || HERO_ID !== 'engineer') return false;
-  if (S.st === 'set' || S.st === 'setting') { S.st = 'packing'; S.tm = PACK_T * S.k; v.scorpWork = S.tm; }
-  if (S.st !== 'packing') return false;
-  v.walking = false; turnTo(v, Math.atan2(S.x - v.x, S.z - v.z), dt); return true;
+// the length of his way there, along the route he would walk
+function routeLen(v, x, z) {
+  const p = findPath(v.x, v.z, x, z, 1); if (!p || !p.length) return Math.hypot(x - v.x, z - v.z) * 1.15;
+  let L = 0, px = v.x, pz = v.z; for (const q of p) { L += Math.hypot(q.x - px, q.z - pz); px = q.x; pz = q.z; } return L + Math.hypot(x - px, z - pz);
+}
+const engWalkV = v => v.speed * 1.3 * heroSpeed();
+// a new spot: tow it or carry it, whichever gets it shooting there sooner (Jack)
+function scorpPlan(v, S, home) {
+  S.dest = { x: home.x, z: home.z };
+  if (S.st === 'carried' || S.st === 'pack' || S.st === 'build') { if (S.st === 'build') S.st = 'pack'; S.mode = 'carry'; return; }
+  const L = routeLen(v, home.x, home.z);
+  const fold = S.st === 'tow' ? 0 : HITCH_T * S.k;
+  const tow = fold + L / TOW_V + SETUP_T, carry = SC_BREAK_T * S.pk + L / engWalkV(v) + SC_BUILD_T;
+  S.mode = tow <= carry ? 'tow' : 'carry';
+  if (S.mode === 'tow') { if (S.st !== 'tow') S.st = 'hitch'; }
+  else S.st = 'pack';
+}
+// the Engineer's own step while his scorpion is not set up at his spot (updateHero): true while it takes the step
+function engStep(v, dt, home) {
+  const S = engScorp; if (!S) return false;
+  // the spot moved away from where the scorpion stands (Move or Recall): plan the trip. A short shuffle (pushed in a crowd) is
+  // only a walk back to it, leaving the scorpion where it is
+  const off = S.dest ? Math.hypot(home.x - S.dest.x, home.z - S.dest.z) > .6 : true;
+  if (off && !(S.st === 'set' && Math.hypot(home.x - S.x, home.z - S.z) < 2.2)) scorpPlan(v, S, home);
+  else if (off) S.dest = { x: home.x, z: home.z };
+  const work = S.st === 'hitch' || S.st === 'setting' || S.st === 'pack' || S.st === 'build';
+  v.scorpWork = work ? 1 : 0; v.towing = S.st === 'tow';
+  if (S.st === 'set') return false;
+  v.foe = null; v.drawing = false;
+  if (work) { v.walking = false; turnTo(v, Math.atan2(S.x - v.x, S.z - v.z), dt); return true; }
+  // on the way: towing at a catapult's pace, or walking freely with it on his back; set up as soon as he gets there
+  const dh = Math.hypot(home.x - v.x, home.z - v.z);
+  // there, or as near as he can get (the spot taken, or no way onto it): he sets up where he stands
+  const there = dh < .45 || (dh < 2.5 && v.noProg > 1.5) || v.noProg > 5 || walkTo(v, home.x, home.z, dt, 1, .3, S.st === 'tow' ? TOW_V / v.speed : 1.3 * heroSpeed());
+  if (there) {
+    v.march = false; v.walking = false;
+    if (S.st === 'tow') { S.st = 'setting'; }
+    else {
+      // unpacked beside him, a little ahead and to his right, facing the way he came
+      const a = v.g.rotation.y; S.x = v.x + Math.sin(a) * .5 + Math.cos(a) * .85; S.z = v.z + Math.cos(a) * .5 - Math.sin(a) * .85;
+      if (!canStand(S.x, S.z, 1)) { S.x = v.x + Math.sin(a) * 1.1; S.z = v.z + Math.cos(a) * 1.1; }
+      S.g.rotation.y = a; S.body.rotation.x = 0; S.st = 'build'; S.pk = 0; S.k = 0;
+    }
+  }
+  return true;
 }
 function scorpTick(dt) {
   const v = hero, want = v && HERO_ID === 'engineer' && HERO.sk.scorp > 0;
-  if (!want) { removeScorpion(); return; }
-  const back = () => { const a = v.g.rotation.y; return { x: v.x - Math.sin(a) * SCORP_TOW, z: v.z - Math.cos(a) * SCORP_TOW }; };
+  if (!want) { removeScorpion(); if (v) { v.scorpWork = 0; v.towing = false; } return; }
   if (engScorp && engScorp.rk !== skR('scorp')) {
-    const o = engScorp, n = makeScorpion(skR('scorp')); Object.assign(n, { x: o.x, z: o.z, st: o.st, k: o.k, tm: o.tm, cool: o.cool, rk: skR('scorp') });
-    n.g.position.copy(o.g.position); n.g.rotation.y = o.g.rotation.y; n.t.rotation.y = o.t.rotation.y; n.bar = o.bar; scene.remove(o.g); scene.add(n.g); engScorp = n; scorpPose(n, n.k); }
-  if (!engScorp) { const S = makeScorpion(skR('scorp')), p = back(); S.rk = skR('scorp'); S.x = p.x; S.z = p.z; S.cool = 1; S.g.rotation.y = v.g.rotation.y; scene.add(S.g); engScorp = S; }
-  const S = engScorp;
-  if (S.st === 'packed') {
-    // towed: held on its trail a little behind him, rolling and turning as he walks
-    const dx = S.x - v.x, dz = S.z - v.z, d = Math.hypot(dx, dz) || 1;
-    if (d > SCORP_TOW) { const nx = v.x + dx / d * SCORP_TOW, nz = v.z + dz / d * SCORP_TOW, moved = Math.hypot(nx - S.x, nz - S.z);
-      S.x = nx; S.z = nz; S.wheels.forEach(w => { w.rotation.x -= moved / .22; }); }
-    S.g.rotation.y = Math.atan2(S.x - v.x, S.z - v.z);
-    // set up only with a raider within his own reach, and only once he has stopped
-    const R = heroRange();
-    if (!v.march && !v.walking && enemies.some(e => !e.dead && !e.dormant && Math.hypot(e.x - v.x, e.z - v.z) < R)) {
-      S.st = 'setting'; S.tm = SETUP_T; v.scorpWork = SETUP_T; }
-  } else if (S.st === 'setting') {
-    S.tm -= dt; S.k = Math.min(1, 1 - S.tm / SETUP_T);
-    if (S.tm <= 0) { S.st = 'set'; S.k = 1; S.cool = .6; for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); }
-  } else if (S.st === 'packing') {
-    S.tm -= dt; S.k = Math.max(0, S.tm / PACK_T);
-    if (S.tm <= 0) { S.st = 'packed'; S.k = 0; v.scorpWork = 0; for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); }
+    const o = engScorp, n = makeScorpion(skR('scorp'));
+    Object.assign(n, { x: o.x, z: o.z, st: o.st, k: o.k, pk: o.pk, dest: o.dest, mode: o.mode, cool: o.cool, rk: skR('scorp'), bar: o.bar });
+    n.g.position.copy(o.g.position); n.g.rotation.y = o.g.rotation.y; n.t.rotation.y = o.t.rotation.y; n.body.rotation.x = o.body.rotation.x;
+    scene.remove(o.g); scene.add(n.g); engScorp = n; }
+  // a new scorpion (the game's start, or after he falls) comes in pieces on his back: he builds it at his spot
+  if (!engScorp) { const S = makeScorpion(skR('scorp')); S.rk = skR('scorp'); S.x = v.x; S.z = v.z; S.cool = 1; S.st = 'carried'; S.pk = 0; S.k = 0; S.dest = null;
+    scene.add(S.g); engScorp = S; }
+  const S = engScorp, done = () => { for (let i = 0; i < 3; i++) dustAt(S.x, hAt(S.x, S.z), S.z); sfx('build', { x: S.x, z: S.z }); };
+  if (S.st === 'hitch') { S.k = Math.max(0, S.k - dt / HITCH_T); if (S.k <= 0) S.st = 'tow'; }
+  else if (S.st === 'setting') { S.k = Math.min(1, S.k + dt / SETUP_T); if (S.k >= 1) { S.st = 'set'; S.cool = .6; done(); } }
+  else if (S.st === 'pack') {
+    // the legs fold first, then the pieces come off one by one into the bundle on his back
+    S.pk = Math.max(0, S.pk - dt / SC_BREAK_T); S.k = Math.min(S.k, Math.max(0, (S.pk - .8) / .2));
+    if (S.pk <= 0) { S.st = 'carried'; done(); }
+  } else if (S.st === 'build') {
+    S.pk = Math.min(1, S.pk + dt / SC_BUILD_T); S.k = Math.max(0, (S.pk - .8) / .2);
+    if (S.pk >= 1) { S.st = 'set'; S.k = 1; S.cool = .6; done(); }
   }
-  S.g.position.set(S.x, hAt(S.x, S.z), S.z); scorpPose(S, S.k);
+  if (S.st === 'carried') { S.x = v.x; S.z = v.z; }
+  else if (S.st === 'tow') {
+    // in the game's step it trails behind him on its handle (heroLooks lines the handle up with his hands each frame)
+    const dx = S.x - v.x, dz = S.z - v.z, d = Math.hypot(dx, dz) || 1, L = 1.2;
+    if (d > L) { const nx = v.x + dx / d * L, nz = v.z + dz / d * L; S.x = nx; S.z = nz; }
+  }
+  S.g.visible = S.st !== 'carried';
+  if (S.st !== 'tow') { S.g.position.set(S.x, hAt(S.x, S.z), S.z); S.body.rotation.x *= Math.max(0, 1 - dt * 8); }
+  scorpPose(S, S.k); scorpParts(S, S.pk);
   if (!S.bar) S.bar = makeBar(.7);
-  const busy = S.st === 'setting' || S.st === 'packing';
-  S.bar.grp.visible = busy; if (busy) { S.bar.grp.position.set(S.x, hAt(S.x, S.z) + 1.25, S.z); S.bar.set(S.st === 'setting' ? S.k : 1 - S.k); }
+  const prog = { hitch: 1 - S.k, setting: S.k, pack: 1 - S.pk, build: S.pk }[S.st];
+  S.bar.grp.visible = prog !== undefined; if (prog !== undefined) { S.bar.grp.position.set(S.x, hAt(S.x, S.z) + 1.25, S.z); S.bar.set(prog); }
   if (S.st !== 'set') return;
   S.cool -= dt;
   let foe = null, bd = SCORP_R; for (const e of enemies) if (!e.dead && !e.dormant) { const d = Math.hypot(e.x - S.x, e.z - S.z); if (d < bd) { bd = d; foe = e; } }
@@ -850,13 +908,36 @@ function eaglePoof(p) {
   }
   sparkBurst(p.x, p.y, p.z, '#fff6d8', 6);
 }
+// towing (heroLooks, after the pose loop): he leans into it, both hands reaching back to the handle, and the scorpion's trail is lifted
+// on its axle to his hands, the carriage hanging behind him and rolling on its wheels
+function scorpPull(v, S) {
+  v.body.rotation.x = .16;
+  v.arms[0].rotation.set(.62, 0, .2); v.arms[1].rotation.set(.62, 0, -.2);
+  v.g.updateMatrixWorld(true);
+  const h = new THREE.Vector3(.012, -.33, 0), h0 = v.arms[0].localToWorld(h.clone()), h1 = v.arms[1].localToWorld(h.clone()), H = h0.add(h1).multiplyScalar(.5);
+  const phi = v.g.rotation.y + Math.PI, gx = () => S.g.position.x, gz = () => S.g.position.z;
+  // the trail's lift: its handle (in the body's frame (0, -.12, -.96)) up to his hands' height
+  let gy = hAt(S.x, S.z), th = 0;
+  for (let i = 0; i < 2; i++) {
+    const want = clamp(H.y - gy - .22, -.15, .7);
+    th = .124 + Math.asin(clamp(want / .9675, -1, 1));
+    const zl = -.12 * Math.sin(th) - .96 * Math.cos(th), px = H.x - zl * Math.sin(phi), pz = H.z - zl * Math.cos(phi);
+    gy = hAt(px, pz); S.g.position.set(px, gy, pz);
+  }
+  const moved = Math.hypot(gx() - S.x, gz() - S.z); if (moved < .5) S.wheels.forEach(w => { w.rotation.x -= moved / .22; });
+  S.x = gx(); S.z = gz(); S.g.rotation.y = phi; S.body.rotation.x = th;
+  if (S.bar) S.bar.grp.visible = false;
+}
 const LVUP_T = 1.8;
 var lvOwner = null;
 function heroLooks(dt, now) {
   const v = hero, on = v && v.g.visible;
   // the Engineer kneels at his scorpion while he sets it up or packs it, his free hand working at it
-  const work = on && HERO_ID === 'engineer' && v.scorpWork > 0;
-  if (v && v.handMallet) { v.handMallet.visible = work; if (v.pivot) v.pivot.visible = !work; if (v.hipMallet) v.hipMallet.visible = !work; }
+  const work = on && HERO_ID === 'engineer' && v.scorpWork > 0, tow = on && HERO_ID === 'engineer' && v.towing && engScorp;
+  if (v && v.handMallet) { v.handMallet.visible = work; if (v.pivot) v.pivot.visible = !work && !tow; if (v.hipMallet) v.hipMallet.visible = !work;
+    if (v.slungXbow) v.slungXbow.visible = work || tow;
+    if (v.scorpPack) { const S = engScorp, st = S && S.st; v.scorpPack.visible = !!S && (st === 'carried' || ((st === 'pack' || st === 'build') && S.pk < .5)); } }
+  if (tow) scorpPull(v, engScorp);
   if (work) {
     kneel(v, .75);
     const p = (now / 1000 / .55) % 1, w = stroke(p);
