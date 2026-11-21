@@ -259,12 +259,14 @@ function heroKit(v, id = HERO_ID, foot) {
       for (let i = 0; i < 4; i++) { if (i) { const h2 = new THREE.Group(); h2.position.y = -.14; hinge.add(h2); hinge = h2; }
         const s = box(.42 + i * .02, .145, .03, capCloakM, 0, -.07, 0); s.castShadow = true; hinge.add(s); v.cape.push(hinge);
       }
-      // a medallion on his chest (Jack): a gold disc on a short gold chain, white enamel inside its rim and a gold cross on it, so it shows on the blue surcoat
-      { const md = new THREE.Group(); md.position.set(0, .7, .214); put(md);
-        const disc = cyl(.05, .05, .012, 14, heroGold, 0, 0, 0); disc.rotation.x = Math.PI / 2; md.add(disc);
-        const inner = cyl(.036, .036, .014, 14, capTrimM, 0, 0, .002); inner.rotation.x = Math.PI / 2; md.add(inner);
-        md.add(box(.012, .045, .016, heroGold, 0, 0, .004), box(.034, .012, .016, heroGold, 0, .006, .004));
-        for (const sx of [-1, 1]) { const ch = box(.008, .13, .008, heroGold, sx * .045, .085, -.004); ch.rotation.z = sx * .45; md.add(ch); } }
+      // his captain's badge high on the chest, on the side away from his shield (Jack; it replaced a medallion on a chain): a
+      // small shield of white enamel in a gold rim, with two gold chevrons of rank
+      { const bd = new THREE.Group(); bd.position.set(.122, .8, .19); bd.rotation.y = .5; put(bd);
+        const heater = k => { const sh = new THREE.Shape(); sh.moveTo(-.032 * k, .034 * k); sh.lineTo(.032 * k, .034 * k); sh.lineTo(.032 * k, .002 * k);
+          sh.quadraticCurveTo(.028 * k, -.026 * k, 0, -.04 * k); sh.quadraticCurveTo(-.028 * k, -.026 * k, -.032 * k, .002 * k); sh.closePath(); return sh; };
+        const rim = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1.18), { depth: .008, bevelEnabled: false }), heroGold); rim.position.z = -.004; bd.add(rim);
+        const field = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1), { depth: .01, bevelEnabled: false }), capTrimM); bd.add(field);
+        for (const y of [.008, -.012]) for (const sx of [-1, 1]) { const c = box(.034, .009, .006, heroGold, sx * .014, y, .012); c.rotation.z = sx * .55; bd.add(c); } }
     }
   }
   if (v.hatG) v.hatG.visible = false;
