@@ -1048,7 +1048,7 @@ function buildGallery() {
     p.foes = [];
     if (['flurry', 'firm', 'sweep'].includes(demo)) p.foes.push(dummy('sword', x + fx * 1.15, z + fz * 1.15, fw + Math.PI));
     if (demo === 'firm' || demo === 'sweep') p.foes.push(dummy('spear', x + fx * .9 - fz * .9, z + fz * .9 + fx * .9, fw + Math.PI + .6));
-    if (demo === 'scorp' || demo === 'blast') p.foes.push(dummy('spear', x + fx * 3, z + fz * 3, fw + Math.PI));
+    if (demo === 'scorp' || demo === 'rapid') p.foes.push(dummy('spear', x + fx * 3, z + fz * 3, fw + Math.PI));
     // Repairs: a battered cottage beside the Engineer for the gold specks to rise off
     if (demo === 'mend') { const h = makeModel('house', 2, true, 0, 0); h.scale.setScalar(.6); h.position.set(x + .9, 0, z - 1.1); gScene.add(h); p.prop = h; }
     if (['twin', 'eye', 'quick'].includes(demo)) for (const s of demo === 'twin' ? [-.75, .75] : [0]) p.foes.push(dummy('spear', x + fx * 3 - fz * s, z + fz * 3 + fx * s, fw + Math.PI));
@@ -1059,7 +1059,7 @@ function buildGallery() {
   for (const rk of [1, 2, 3]) {
     demoRow(`Hero skills · Rank ${rk}`, [['Inspire', 'heir', 'cry'], ['Flurry', 'heir', 'flurry'], ['Royal horse', 'heir', 'horse', 1], ['Twin shot', 'ranger', 'twin'], ['Eagle eye', 'ranger', 'eye'],
       ['Quick draw', 'ranger', 'quick'], ['Deflect', 'captain', 'firm'], ['Sweeping blow', 'captain', 'sweep'], ['Second wind', 'captain', 'wind'],
-      ['Field scorpion', 'engineer', 'scorp'], ['Blasting bolts', 'engineer', 'blast'], ['Repairs', 'engineer', 'mend']], rk);
+      ['Field scorpion', 'engineer', 'scorp'], ['Quick reload', 'engineer', 'rapid'], ['Repairs', 'engineer', 'mend']], rk);
     gRows[gRows.length - 1].n = 12;
   }
   demoRow('Level up', [['The Heir', 'heir', 'lv'], ['Heir, mounted', 'heir', 'lv', 1], ['The Ranger', 'ranger', 'lv'], ['The Captain', 'captain', 'lv'], ['The Engineer', 'engineer', 'lv']]);

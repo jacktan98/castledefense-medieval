@@ -263,10 +263,9 @@ var SND = {   // game event -> file in audio/sfx (or audio/music) and its trim a
   path:      { files: [], fallback: 'hoe' },
   // Blasting bolts' burst: no explosion recording yet, so the siege stone landing for now
   // slots kept for the heroes' own sounds (Jack didn't like the first recordings, 2026-11-21): until a file is given each plays
-  // its old sound (the siege stone's landing, the crossbow's shot) or, for the swings, nothing over the clash
-  blast:     { files: [], fallback: 'rockHit' },     // Blasting bolts' burst: Bolt_blast.mp3
+  // its old sound (the crossbow's shot) or, for the swing, nothing over the clash
   scorp:     { files: [], fallback: 'qbolt' },       // the field scorpion's shot: Scorpion_shot.mp3
-  whoosh:    { files: [] },                          // Flurry's quick sword swings: Sword_whoosh.mp3
+  whoosh:    { file: 'sfx/Flurry_sword.mp3',         trim: .4 },     // Flurry's quick sword swings (Jack's recording)
   hammerSwing: { files: [] },                        // the Captain's Sweeping blow: Hammer_swing.mp3
   bolt:      { file: 'sfx/Ballista_bolt_shot.mp3',   trim: 1 },      // a ballista looses its bolt (yours or the raiders')
   qbolt:     { file: 'sfx/Crossbow_quiver_shot.mp3', trim: .8 },     // a crossbow shoots (yours or the raiders')
@@ -297,15 +296,18 @@ var LOOPS = {
   fire:  { file: 'sfx/Fire_sound.mp3',             vol: 1.3, amb: true },
   river: { file: 'sfx/River_water_flow.mp3',       vol: 1.0, amb: true },
   gallop: { file: 'sfx/Horse_gallop.mp3',          vol: .4, amb: true },   // horses on the move (loudest .3 s RMS .126)
+  // wooden wheels rolling (Jack's recording): a moving catapult, a raider engine on the move, the Engineer's scorpion in tow;
+  // about 5 dB quieter than the gallop, so turned up to match
+  siege: { file: 'sfx/Siege_moving.mp3',          vol: .7, amb: true },
   // the weather (Jack): rain for rain and drizzle, the wind for blowing sand and dust, snow and ash; they follow the weather's own ease in
   // and out (WX.w). Measured: rain loudest .3 s RMS .069 (steady, median .051), desert wind .196 in gusts (median .036)
   rain:  { file: 'sfx/Rain_sound.mp3',             vol: .42, amb: true },
   wind:  { file: 'sfx/Wind_sound.mp3',             vol: .55, amb: true },
 };
 // bump when a sound file is replaced, so phones fetch the new file instead of a cached copy
-var AUDIO_V = 8;
+var AUDIO_V = 9;
 var TARGET_LOUD = .09, LOUD_WINDOW = .3, GAIN_MIN = .1, GAIN_MAX = 6, MASTER = .9, PEAK_CEILING = .95 / MASTER;
-var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, blast: .15, scorp: .3, whoosh: .1, hammerSwing: .4, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
+var SFX_GAP = { ramHit: .3, hen: 2, pig: 1.5, cow: 4, neigh: 3, bolt: .1, qbolt: .06, rockFire: .15, rockHit: .15, scorp: .3, whoosh: .1, hammerSwing: .4, path: .12, clash: .12, block: .15, eagle: 2.5, arrowHit: .08, grunt: 3, yawn: 3, nope: .3, rooster: 2, chop: .15, pick: .15, hoe: .2, hammer: .12, arrow: .08, attack: .1, coins: .3, click: .05 };   // min seconds between repeats
 var STROKE_SFX = { axe: 'chop', pick: 'pick', hoe: 'hoe', hammer: 'hammer' };
 // the mute button and M are only for ?debug now (Jack removed the corner buttons), so a player is never left muted with no way back
 // ?open (the temporary tester shortcut) shows the admin panel too: Jack, to set up store screenshots in a browser
@@ -326,7 +328,7 @@ function duck(on, s) {
 try { const m = localStorage.getItem('mtd-music'), f = localStorage.getItem('mtd-sfx'); if (m !== null) musicVol = clamp(+m || 0, 0, 1); if (f !== null) sfxVol = clamp(+f || 0, 0, 1); } catch (e) {}
 musicOff = musicVol === 0; sfxOff = sfxVol === 0;
 // var: sfx()/setMusic() can run during the startup reset, before this block executes
-var loopWanted = {}, loopNode = {}, ambK = { fire: 0, river: 0, gallop: 0, rain: 0, wind: 0 }, AMB_KEYS = ['fire', 'river', 'gallop', 'rain', 'wind'], actx = null, master = null, audioUnlocked = false, musicWant = 'day', dayTrack = 'music', clips = {}, sfxLast = {}, lastPick = {}, loopEl = {}, stinger = null;
+var loopWanted = {}, loopNode = {}, ambK = { fire: 0, river: 0, gallop: 0, siege: 0, rain: 0, wind: 0 }, AMB_KEYS = ['fire', 'river', 'gallop', 'siege', 'rain', 'wind'], actx = null, master = null, audioUnlocked = false, musicWant = 'day', dayTrack = 'music', clips = {}, sfxLast = {}, lastPick = {}, loopEl = {}, stinger = null;
 try { actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.gain.value = MASTER; master.connect(actx.destination);
   musicBus = actx.createGain(); musicBus.gain.value = musicVol; musicBus.connect(master); sfxBus = actx.createGain(); sfxBus.gain.value = sfxVol; sfxBus.connect(master); bedBus = actx.createGain(); bedBus.connect(sfxBus); } catch (e) { actx = null; }
 // loudness = RMS of the loudest LOUD_WINDOW; the gain brings it to TARGET_LOUD x trim without the peak passing the ceiling
@@ -507,10 +509,15 @@ function updateAmbience(dt) {
     let dh = 1e9; const near = u => { dh = Math.min(dh, Math.hypot(u.rx - target.x, u.rz - target.z)); };
     for (const e of enemies) if (e.horse && !e.dead && e.walking) near(e);
     for (const v of villagers) if (v.horse && v.g.visible && v.walking) near(v);
+    // wheels rolling: a catapult being moved, a raider engine on the move, the Engineer's scorpion in tow
+    let dw = 1e9; const wheel = (x, z) => { dw = Math.min(dw, Math.hypot(x - target.x, z - target.z)); };
+    for (const B of buildings) if (B.move && !B.move.wait && !B.dead) wheel(B.group.position.x, B.group.position.z);
+    for (const e of enemies) if (!e.dead && e.walking && ENEMY[e.kind].engine) wheel(e.rx, e.rz);
+    if (typeof engScorp !== 'undefined' && engScorp && engScorp.st === 'tow' && hero && hero.walking) wheel(engScorp.x, engScorp.z);
     // no fire, river, hooves or animal calls behind a menu: they belong to a game, not the title scene
     const quiet = menuOn() ? 0 : 1;
     const ws = (WX.cfg && WX_SND[WX.cfg.kind]) || {}, wxk = quiet * WX.w * (.6 + .4 * zoom);
-    const want = { fire: quiet * Math.pow(clamp(1 - df / 16, 0, 1), 1.5) * zoom, river: quiet * Math.pow(clamp(1 - dr / 22, 0, 1), 1.3) * zoom, gallop: quiet * Math.pow(clamp(1 - dh / 18, 0, 1), 1.3) * zoom,
+    const want = { fire: quiet * Math.pow(clamp(1 - df / 16, 0, 1), 1.5) * zoom, river: quiet * Math.pow(clamp(1 - dr / 22, 0, 1), 1.3) * zoom, gallop: quiet * Math.pow(clamp(1 - dh / 18, 0, 1), 1.3) * zoom, siege: quiet * Math.pow(clamp(1 - dw / 18, 0, 1), 1.3) * zoom,
       rain: wxk * (ws.rain || 0), wind: wxk * (ws.wind || 0) };
     // birdsong fades out under rain
     if (loopNode.birds) loopNode.birds.gain.value = LOOPS.birds.vol * (1 - .9 * Math.min(1, ambK.rain * 1.5));
@@ -530,7 +537,7 @@ function updateAmbience(dt) {
     const v = LOOPS[k].vol * ambK[k];
     if (loopNode[k]) loopNode[k].gain.value = v; else if (loopEl[k]) loopEl[k].volume = Math.min(1, v);
   }
-  if (ambK.fire === 0 || ambK.river === 0 || ambK.gallop === 0) { const want = { fire: ambK.fire > .01, river: ambK.river > .01, gallop: ambK.gallop > .01 }; if (Object.keys(want).some(k => loopEl[k] && !want[k] && !loopEl[k].paused)) syncMusic(); }
+  if (ambK.fire === 0 || ambK.river === 0 || ambK.gallop === 0 || ambK.siege === 0) { const want = { fire: ambK.fire > .01, river: ambK.river > .01, gallop: ambK.gallop > .01, siege: ambK.siege > .01 }; if (Object.keys(want).some(k => loopEl[k] && !want[k] && !loopEl[k].paused)) syncMusic(); }
 }
 // the theme loops day and night with birdsong under it by day; victory and defeat stop it and play once
 function setMusic(name) { musicWant = name; syncMusic(); }
@@ -551,7 +558,7 @@ function syncMusic() {
   const mu = on && !musicOff, fx = on && !sfxOff;   // the pause card's Music and Sounds toggles
   // the day theme playing now (it falls back to the first if the second is missing)
   const dayK = loopEl[dayTrack] ? dayTrack : 'music', dayOn = mu && !end && !nightOn && musicWant !== 'none';
-  const want = { music: dayOn && dayK === 'music', music2: dayOn && dayK === 'music2', night: mu && !!nightOn, birds: fx && musicWant === 'day' && !birdless(), fire: fx && !end && ambK.fire > .01, river: fx && !end && ambK.river > .01, gallop: fx && !end && ambK.gallop > .01, rain: fx && !end && ambK.rain > .01, wind: fx && !end && ambK.wind > .01 };
+  const want = { music: dayOn && dayK === 'music', music2: dayOn && dayK === 'music2', night: mu && !!nightOn, birds: fx && musicWant === 'day' && !birdless(), fire: fx && !end && ambK.fire > .01, river: fx && !end && ambK.river > .01, gallop: fx && !end && ambK.gallop > .01, siege: fx && !end && ambK.siege > .01, rain: fx && !end && ambK.rain > .01, wind: fx && !end && ambK.wind > .01 };
   loopWanted = want;
   // a loop that refuses to play says why in the console (Xcode shows it in the app: Jack heard no music there)
   for (const k in loopEl) { const el = loopEl[k]; if (!el.getAttribute('src')) continue; if (want[k] && el.paused) el.play().catch(e => { if (!loopFail[k]) { loopFail[k] = 1; console.log('loop ' + k + ' did not play: ' + (e && e.name) + ' · audio ' + (actx && actx.state)); } }); else if (!want[k] && !el.paused) el.pause(); }
