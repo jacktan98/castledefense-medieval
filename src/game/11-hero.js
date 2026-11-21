@@ -563,7 +563,7 @@ function makeScorpion(r = 1) {
   // a look of its own at each rank (Jack): rank 1 a rough piece knocked together in the field (solid plank wheels with a batten
   // across, a rough bed lashed with rope, a small bow); rank 2 a proper carriage (spoked wheels with iron tyres, a timber bed with
   // iron corner bands, a timber shield board, a rack of spare bolts, a bigger bow); rank 3 a fine one (iron-studded wheels, the
-  // bed boarded in the town's colour, the shield board painted and banded in iron, a pennant at the back, a bigger bow still)
+  // bed boarded in the town's colour, the shield board painted and banded in iron, a bigger bow still; its pennant at the back was dropped: Jack)
   const fm = r >= 2 ? M.timber : M.rough;
   const wheels = [-1, 1].map(sx => { let w;
     if (r >= 2) { w = spokeWheel(.22, true, sx * .3, .22, 0, .05); g.add(w);
@@ -582,13 +582,14 @@ function makeScorpion(r = 1) {
   const trail = new THREE.Group(); body.add(trail);
   const tb = box(.09, .07, .95, fm, 0, -.02, -.5); tb.rotation.x = -.2; trail.add(tb); trail.add(box(.28, .05, .05, fm, 0, -.12, -.96));
   if (r >= 2) trail.add(box(.1, .085, .05, M.iron, 0, -.06, -.72));
-  if (r >= 3) { const pn = new THREE.Group(); pn.position.set(-.12, -.05, -.85); trail.add(pn); pn.add(box(.022, .7, .022, M.timber, 0, .35, 0), box(.006, .14, .2, kiteM, 0, .62, -.1), cone(.022, .05, 6, M.iron, 0, .72, 0)); }
   // the bow on a mount kept level whichever way the carriage tips; the bow itself turns on the mount to aim
   const mount = new THREE.Group(); mount.position.set(0, .11, .02); mount.userData.mount = true; body.add(mount);
   const t = ballistaTurret(BALLISTA_K[0] * [.55, .55, .62, .68][r]); mount.add(t);
   if (r >= 2) { t.add(box(.62, .22, .035, r >= 3 ? kiteM : M.wood, 0, .36, .55)); for (const x of [-.22, .22]) t.add(box(.04, .24, .045, M.iron, x, .36, .56));
     if (r >= 3) for (const y of [.27, .45]) t.add(box(.64, .03, .04, M.iron, 0, y, .56)); }
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
+  // rank 1 is dirtied and dulled like a tier-1 building, so it reads as the tier-1 ballista's dark brown (Jack)
+  if (r <= 1) { let n = 0; g.traverse(o => { if (o.isMesh && !NO_TINT.has(o.material)) o.material = tinted(o.material, 1, (n++ * 5) % 6); }); }
   // the order its pieces come off as he takes it apart, and go back on as he builds it (reversed)
   const parts = [wheels[0], wheels[1], axle, bed, trail, mount];
   const S = { g, body, t, mount, wheels, parts, pk: 1, st: 'set' }; body.rotation.x = SC_REST; scorpPose(S); return S;
@@ -603,6 +604,23 @@ function scorpParts(S, pk) {
   const n = S.parts.length;
   S.parts.forEach((p, i) => { const s = clamp(pk * n - i, 0, 1); p.visible = s > .01; p.scale.setScalar(Math.max(.01, s < 1 ? .4 + .6 * s : 1)); });
 }
+// it winds and looses like the town's ballista (Jack: the strings stood still and a bolt just came out): through its reload the
+// winch at the back turns and hauls the slider and string back by the pulley rope, the bolt is laid in once it is drawn, and on
+// the shot the slider and string fly forward; loadK 0 just loosed, 1 drawn and loaded
+function scorpRig(S, loadK, dt) {
+  if (!S.rig) { const R = S.rig = { statics: [] }; S.t.traverse(o => { const u = o.userData; if (u.slider) R.slider = o; if (u.bsL) R.bsL = o; if (u.bsR) R.bsR = o; if (u.prope) R.prope = o;
+    if (u.trope) R.trope = o; if (u.crank) R.crank = o; if (u.bolt) R.bolt = o; if (u.staticString) R.statics.push(o); }); }
+  const R = S.rig; if (!R.slider) return;
+  R.statics.forEach(o => o.visible = false); if (R.trope) R.trope.visible = false;
+  S.fireT = Math.max(0, (S.fireT || 0) - dt);
+  const zs = S.fireT > 0 ? BAL_REST : lerp(BAL_REST, BAL_DRAWN, sstep(0, 1, loadK)), winding = S.fireT <= 0 && loadK < 1;
+  R.slider.position.z = zs;
+  for (const [m, sx] of [[R.bsL, -1], [R.bsR, 1]]) { rA.set(sx * BAL_TIP[0], BAL_TIP[1], BAL_TIP[2]); rB.set(0, .585, zs); setRope(m, rA, rB); }
+  if (R.bolt) { R.bolt.visible = S.pk >= 1 && loadK > .97 && S.fireT <= 0; R.bolt.position.z = zs + .325; }
+  if (winding && R.crank) R.crank.rotation.x -= dt * 7;
+  if (R.prope) { rA.set(0, .56, -.52); rB.set(0, .585, zs - .04); setRope(R.prope, rA, rB); R.prope.visible = winding || loadK > .97; }
+}
+const scorpLoad = S => clamp(1 - S.cool / (SCORP_T * .85), 0, 1);
 function scorpMuzzle(S) { S.g.updateMatrixWorld(true); return S.t.localToWorld(new THREE.Vector3(0, .5, .55)); }
 function removeScorpion() { if (engScorp) { scene.remove(engScorp.g); if (engScorp.bar) scene.remove(engScorp.bar.grp); engScorp = null; } }
 // the length of his way there, along the route he would walk
@@ -714,7 +732,7 @@ function scorpTick(dt) {
   S.g.visible = S.st !== 'carried';
   if (S.st !== 'tow' || S.hitch === 'walk') { S.g.position.set(S.x, hAt(S.x, S.z), S.z); S.body.rotation.x += (SC_REST - S.body.rotation.x) * Math.min(1, dt * 8); }
   if (S.st === 'tow' && S.hitch) S.g.rotation.y = S.yaw;
-  scorpPose(S); scorpParts(S, S.pk);
+  scorpPose(S); scorpParts(S, S.pk); scorpRig(S, scorpLoad(S), dt);
   if (!S.bar) S.bar = makeBar(.7);
   const prog = { pack: 1 - S.pk, build: S.pk }[S.st];
   S.bar.grp.visible = prog !== undefined; if (prog !== undefined) { S.bar.grp.position.set(S.x, hAt(S.x, S.z) + 1.25, S.z); S.bar.set(prog); }
@@ -725,7 +743,7 @@ function scorpTick(dt) {
   const want2 = Math.atan2(foe.x - S.x, foe.z - S.z) - S.g.rotation.y; let dy = want2 - S.t.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
   S.t.rotation.y += Math.sign(dy) * Math.min(Math.abs(dy), dt * 3);
   if (S.cool > 0 || Math.abs(dy) > .25) return;
-  S.cool = SCORP_T;
+  S.cool = SCORP_T; S.fireT = .35; scorpRig(S, 0, 0);
   const from = scorpMuzzle(S), dm = HERO_SK.scorp.k[HERO.sk.scorp - 1];
   // shot like the ballista's (Jack): a heavy bolt flown dead straight past the raider into the ground 1 m beyond, where it throws
   // up earth and stays stuck, slanting; it strikes an area: full damage on the raider, and every other raider within SCORP_SPLASH m
@@ -1479,9 +1497,10 @@ function galDemo(p, t, dt) {
       if (!p.scorpM || p.scorpM.rk !== r) { if (p.scorpM) gScene.remove(p.scorpM.g); const S = p.scorpM = makeScorpion(r); S.rk = r;
         S.g.position.set(x0 + fz * 1.1, 0, z0 - fx * 1.1); S.g.rotation.y = fw; scorpPose(S, 1); gScene.add(S.g); }
       if (crossed(prev, c, 1)) { const S = p.scorpM.g.position, fr = scorpMuzzle(p.scorpM), f = foeAt(p.foes[0]), to = f.clone().sub(fr).setY(0).normalize().multiplyScalar(Math.hypot(f.x - fr.x, f.z - fr.z) + 1).add(fr).setY(0); galArrow(fr, to, undefined, r >= 3 ? 2 : 0, 'bolt');
-        if (r >= 3) for (let i = 0; i < 3; i++) dustAt(S.x, 0, S.z); }
+        if (r >= 3) for (let i = 0; i < 3; i++) dustAt(S.x, 0, S.z); p.scorpM.fireT = .35; }
+      scorpRig(p.scorpM, clamp(((c + 1) % 2) / 1.6, 0, 1), dt);
     } else if (d === 'rapid') {
-      // Rapid fire: a bolt every 1.2 s, 15/30/45% sooner by rank; a streak behind it from rank 2, gold with sparks at 3
+      // Rapid fire: a bolt every 1.2 s, 40/70/100% faster by rank; a streak behind it from rank 2, gold with sparks at 3
       const per = 1.2 / (1 + [0, .4, .7, 1][r]), c2 = T % per, pv = p.prevR == null ? c2 : p.prevR; p.prevR = c2;
       if (c2 < pv) galArrow(xbowPoint(p), foeAt(p.foes[0]), r >= 3 ? 'sparks' : undefined, r >= 2 ? 2 : 0, 'qbolt');
     } else if (p.prop) {
