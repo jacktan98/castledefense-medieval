@@ -216,7 +216,8 @@ function heroKit(v, id = HERO_ID, foot) {
       for (const o of (v.armour || []).concat(v.kit)) if (o.userData && o.userData.pauldron) o.material = heroGold;
       // more than a man-at-arms with a crown (Jack: finer kit, like the Engineer's): a small gold crown on the chest, an empty
       // scabbard at the left hip with a gold tip, and tall riding boots with turned tops
-      const cr2 = new THREE.Group(); cr2.position.set(0, .7, .212); put(cr2);
+      // the crown high on the chest at the side, where the Captain wears his badge (Jack)
+      const cr2 = new THREE.Group(); cr2.position.set(.122, .8, .19); cr2.rotation.y = .5; put(cr2);
       cr2.add(box(.085, .025, .012, heroGold, 0, 0, 0)); for (const dx of [-.032, 0, .032]) cr2.add(box(.016, .035, .012, heroGold, dx, .028, 0));
       const sb = new THREE.Group(); sb.position.set(-.215, .5, -.02); sb.rotation.set(.55, 0, -.1); sb.userData.scabbard = true; put(sb);
       sb.add(box(.04, .34, .055, leatherM, 0, -.16, 0), box(.046, .045, .062, heroGold, 0, -.32, 0), box(.046, .03, .062, heroGold, 0, .01, 0));
@@ -260,13 +261,13 @@ function heroKit(v, id = HERO_ID, foot) {
         const s = box(.42 + i * .02, .145, .03, capCloakM, 0, -.07, 0); s.castShadow = true; hinge.add(s); v.cape.push(hinge);
       }
       // his captain's badge high on the chest, on the side away from his shield (Jack; it replaced a medallion on a chain): a
-      // small shield of white enamel in a gold rim, with two gold chevrons of rank
+      // small shield in the town's colour in a white rim, with two white chevrons of rank (Jack: white, not gold)
       { const bd = new THREE.Group(); bd.position.set(.122, .8, .19); bd.rotation.y = .5; put(bd);
         const heater = k => { const sh = new THREE.Shape(); sh.moveTo(-.032 * k, .034 * k); sh.lineTo(.032 * k, .034 * k); sh.lineTo(.032 * k, .002 * k);
           sh.quadraticCurveTo(.028 * k, -.026 * k, 0, -.04 * k); sh.quadraticCurveTo(-.028 * k, -.026 * k, -.032 * k, .002 * k); sh.closePath(); return sh; };
-        const rim = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1.18), { depth: .008, bevelEnabled: false }), heroGold); rim.position.z = -.004; bd.add(rim);
-        const field = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1), { depth: .01, bevelEnabled: false }), capTrimM); bd.add(field);
-        for (const y of [.008, -.012]) for (const sx of [-1, 1]) { const c = box(.034, .009, .006, heroGold, sx * .014, y, .012); c.rotation.z = sx * .55; bd.add(c); } }
+        const rim = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1.18), { depth: .008, bevelEnabled: false }), capTrimM); rim.position.z = -.004; bd.add(rim);
+        const field = new THREE.Mesh(new THREE.ExtrudeGeometry(heater(1), { depth: .01, bevelEnabled: false }), kiteM); bd.add(field);
+        for (const y of [.008, -.012]) for (const sx of [-1, 1]) { const c = box(.034, .009, .006, capTrimM, sx * .014, y, .012); c.rotation.z = sx * .55; bd.add(c); } }
     }
   }
   if (v.hatG) v.hatG.visible = false;
