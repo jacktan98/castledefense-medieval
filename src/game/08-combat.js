@@ -189,10 +189,11 @@ function bossGear(p, kind) {
 // ram: a log slung from a frame on four wheels, under a plank roof from tier 2, hides and an iron head at tier 3
 const RAM_Y = .62, RAM_ROPE = .78, RAM_T = 2.0;   // the ram's log height, rope length, one charge (drawn back, driven in, knocked back)
 const ENG_LEN = { ballista: 1.7, catapult: [1.6, 1.8, 2.0], ram: 2.3 };
-function wheel(g, r, x, y, z, iron) {
-  const w = cyl(r, r, .08, 12, M.wood, x, y, z); w.rotation.z = Math.PI / 2; g.add(w);
-  const h = cyl(r * .3, r * .3, .1, 8, iron ? M.iron : M.timber, x, y, z); h.rotation.z = Math.PI / 2; g.add(h);
-  if (iron) { const t = cyl(r + .008, r + .008, .03, 12, M.iron, x + Math.sign(x) * .03, y, z); t.rotation.z = Math.PI / 2; g.add(t); }
+function wheel(g, r, x, y, z, iron) { g.add(spokeWheel(r, iron, x, y, z)); }
+// an engine's (or a moving catapult's) wheels roll with the ground it covers
+function rollWheels(o, root, d) {
+  if (o.wheelsOf !== root) { o.wheelsOf = root; o.wheels = []; root.traverse(m => { if (m.userData && m.userData.wheel) o.wheels.push(m); }); }
+  for (const w of o.wheels) w.rotation.x += d / w.userData.r;
 }
 function pennant(g, x, y, z) {
   g.add(cyl(.02, .02, 1.0, 5, M.timber, x, y + .5, z));
@@ -676,6 +677,9 @@ function ramSwing(p) {
 }
 const RAM_HIT = .55;
 function animEngine(e, dt, sw) {
+  // its wheels roll with the ground it covers (its drawn place, so they turn smoothly)
+  const wd = e.wx === undefined ? 0 : Math.hypot(e.rx - e.wx, e.rz - e.wz); e.wx = e.rx; e.wz = e.rz;
+  if (wd > 0 && wd < .5) rollWheels(e, e.g, wd);
   e.g.updateMatrixWorld(true);
   const t = performance.now() / 1000, rig = e.rig || {}, back = -e.len / 2 - .32, k = rig.k || 1;
   const work = e.aiming && !e.walking && e.kind !== 'ram';
@@ -1343,7 +1347,7 @@ function updateMoves(dt) {
       B.turret.rotation.y += Math.sign(dy) * Math.min(Math.abs(dy), MOVE_TURN * dt);
       if (Math.abs(dy) > .3) { (B.manned || []).forEach((on, a) => on && showDefender(B, a)); continue; }
     }
-    if (d > 1e-3) { g.x += dx / d * st; g.z += dz / d * st; g.y = hAt(g.x, g.z); }
+    if (d > 1e-3) { g.x += dx / d * st; g.z += dz / d * st; g.y = hAt(g.x, g.z); if (B.turret) rollWheels(B, B.turret, st); }
     if (d - st < .02) mv.pts.shift();
     const n = cellAt(g.x, g.z), own = B.ev.cj * N + B.ev.ci;
     if (n !== own) {                                       // into the next cell: take it, or stop where it is if it is taken

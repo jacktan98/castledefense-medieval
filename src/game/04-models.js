@@ -929,6 +929,19 @@ function pushRig(k) {
   const R = CATA_RIG[k], S = .67, A = .26, ph = .7, sy = .05 + S * Math.cos(ph), th = Math.acos(clamp((sy - R.hand[0]) / A, -1, 1));
   return { z: R.hand[1] + .04 - (S * Math.sin(ph) + A * Math.sin(th)), lean: ph, arm: -(th + ph) };
 }
+// a siege engine's wheel (the catapult line's, the raiders' engines): a plank disc with three darker spokes standing proud of
+// both faces and an iron hub, an iron tyre on iron-shod engines; a group marked `wheel` (its radius in `r`), so it is kept apart
+// when the model is merged and rolls as the engine moves (Jack: the catapults' plain discs never turned; the scorpion's did)
+function spokeWheel(r, iron, x, y, z, th = .08) {
+  const w = new THREE.Group(); w.position.set(x, y, z); w.userData.wheel = true; w.userData.r = r;
+  const d = cyl(r, r, th, 12, M.wood, 0, 0, 0); d.rotation.z = Math.PI / 2; w.add(d);
+  for (let k = 0; k < 3; k++) { const sp = box(th + .022, r * 1.84, r * .16, M.timber, 0, 0, 0); sp.rotation.x = k * Math.PI / 3; w.add(sp); }
+  const hub = cyl(r * .28, r * .28, th + .05, 8, M.iron, 0, 0, 0); hub.rotation.z = Math.PI / 2; w.add(hub);
+  // the iron tyre is only a band round the rim, so the wooden face and its spokes still show
+  if (iron) { const ty = new THREE.Mesh(new THREE.CylinderGeometry(r + .012, r + .012, th + .006, 12, 1, true), M.iron); ty.rotation.z = Math.PI / 2; w.add(ty); }
+  w.traverse(m => { if (m.isMesh) m.castShadow = true; });
+  return w;
+}
 function makeCatapult(tier) {
   const g = new THREE.Group(), e = new THREE.Group(); e.userData.turret = true; g.add(e);
   const arm = new THREE.Group(); arm.userData.arm = true;
@@ -936,7 +949,7 @@ function makeCatapult(tier) {
     const k = tier === 1 ? 1 : 1.15, fm = tier === 1 ? M.rough : M.timber; e.scale.setScalar(k);
     for (const sx of [-1, 1]) e.add(box(.12, .18, 1.5, fm, sx * .36, .3, 0));
     for (const z of [-.6, .6]) e.add(box(.84, .12, .12, fm, 0, .3, z));
-    for (const sx of [-1, 1]) for (const z of [-.5, .5]) { const w = cyl(.22, .22, .08, 10, M.wood, sx * .47, .22, z); w.rotation.z = Math.PI / 2; e.add(w); if (tier === 2) { const r = cyl(.225, .225, .03, 10, M.iron, sx * .52, .22, z); r.rotation.z = Math.PI / 2; e.add(r); } }
+    for (const sx of [-1, 1]) for (const z of [-.5, .5]) e.add(spokeWheel(.22, tier === 2, sx * .47, .22, z));
     for (const sx of [-1, 1]) e.add(box(.1, .75, .1, fm, sx * .3, .65, .28));
     e.add(box(.72, .14, .16, fm, 0, 1.02, .28)); e.add(box(.5, .12, .1, M.canvas, 0, 1.02, .2));   // the stop beam, padded
     const tb = cyl(.13, .13, .62, 8, ropeM, 0, .4, -.32); tb.rotation.z = Math.PI / 2; e.add(tb);
@@ -964,7 +977,7 @@ function makeCatapult(tier) {
     for (let n = 0; n < 3; n++) { const st = new THREE.Mesh(new THREE.DodecahedronGeometry(.15, 0), M.stone2); st.position.set(-.85, .12, .2 + n * .3); st.castShadow = true; st.userData.ammo = true; e.add(st); }
     for (const sz of [-1, 1]) {                                                       // wheels on iron-bound axles under the frame
       e.add(box(1.36, .06, .06, M.iron, 0, .24, sz * .62));
-      for (const sx of [-1, 1]) { const w = cyl(.24, .24, .08, 12, M.wood, sx * .64, .24, sz * .62); w.rotation.z = Math.PI / 2; e.add(w); const r = cyl(.245, .245, .03, 12, M.iron, sx * .69, .24, sz * .62); r.rotation.z = Math.PI / 2; e.add(r); }
+      for (const sx of [-1, 1]) e.add(spokeWheel(.24, true, sx * .64, .24, sz * .62));
     }
     for (const sx of [-1, 1]) e.add(box(.08, .2, .08, M.timber, sx * .42, .26, -.85));   // posts carrying the winch drum
   }
