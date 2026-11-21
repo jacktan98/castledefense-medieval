@@ -475,6 +475,16 @@ function sfx(name, at, vol = 1) {
   src.sndName = name; src.t0 = now; liveSfx.add(src); src.onended = () => liveSfx.delete(src);
   return src;
 }
+// one part of one take of a sound (a hero's fall plays its grunt and its thud apart, each on its own moment)
+function sfxSeg(name, at, c, off, dur) {
+  if (muted || !actx || actx.state !== 'running' || sfxOff || !c || dur <= 0) return;
+  if (at && lostAt && gameOver && performance.now() - lostAt > 1000) return;
+  const S = SND[name] || {}; let v = 1;
+  if (at) { v *= clamp(1 - Math.hypot(at.x - target.x, at.z - target.z) / (S.reach || 28), 0, 1) * clamp(1.25 - dist / 80, S.near || .3, 1); if (v < .03) return; }
+  const src = actx.createBufferSource(), g = actx.createGain();
+  src.buffer = c.buf; g.gain.value = c.gain * v; src.connect(g); g.connect(sfxBus); src.start(0, off, dur);
+  src.sndName = name; src.t0 = actx.currentTime; liveSfx.add(src); src.onended = () => liveSfx.delete(src);
+}
 // every one-shot still sounding, so leaving a game can cut them off (Jack heard the last stage's sounds carry on in the menu)
 var liveSfx = new Set();
 // (also the fire, river and hoof loops: behind a menu the game is paused and updateAmbience doesn't run, so they kept the last

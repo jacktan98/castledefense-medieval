@@ -376,10 +376,12 @@ function deflectShove(v, e) {
   e.flinchAt = performance.now(); const nx = e.x + (e.x - v.x) / d * .35, nz = e.z + (e.z - v.z) / d * .35;
   if (canStand(nx, nz, 2)) { e.x = nx; e.z = nz; }
 }
-// a hero's last moments (Jack: the recordings have a pain grunt and then the fall's thud): the blow throws the hero back a step,
-// a hand goes to the chest, the eyes shut, the knees sag, and only then does the body fall, timed so it meets the ground on the
-// thud of the take that played (HERO_THUD: seconds into each file); with no sound it falls about a second after the blow
+// a hero's last moments (Jack: the recordings have a pain grunt and then the fall's thud; then: slower, the grunt a little after the
+// blow and the fall later): the blow throws the hero back a step, the grunt follows (HERO_GRUNT_AT), a hand goes to the chest, the
+// eyes shut and the knees slowly give way over HERO_PAIN_T, and only then does the body fall; the recording is played in two parts,
+// the grunt and the thud (HERO_THUD: seconds into each file), the thud as the body meets the ground
 const HERO_THUD = { 'sfx/Hero_fall_1.mp3': 1.053, 'sfx/Hero_fall_2.mp3': 1.297 }, FALL_GROUND = [.54, .85, .5], HORSE_GROUND = .75;
+const HERO_GRUNT_AT = .2, HERO_PAIN_T = 1.25;
 // every joint the stagger and the fall move, as one list of numbers, so the two can be blended
 function poseChans(p) {
   const c = [], add = (o, w, ...ax) => { if (o) for (const a of ax) c.push([o[w], a]); };
@@ -394,6 +396,10 @@ const poseGet = f => f.ch.map(([o, a]) => o[a]), poseSet = (f, v) => f.ch.forEac
 function kneelAdd(p, c) { p.body.position.y -= .2 * c; p.legs[0].rotation.x -= 1.3 * c; p.legs[1].rotation.x += .6 * c; }
 function dyingPose(f) {
   const v = f.v, t = f.t, T = f.pain, k = s => clamp(s, 0, 1), e = s => s * s * (3 - 2 * s);
+  // the grunt a moment after the blow, the thud as the body lands
+  const c = f.take, th = c && HERO_THUD[c.f], at = { x: v.g.position.x, z: v.g.position.z };
+  if (!f.grunt && t >= HERO_GRUNT_AT) { f.grunt = true; if (th) sfxSeg('heroFall', at, c, c.from, th - .12 - c.from); }
+  if (!f.thud && t >= T + f.G - .02) { f.thud = true; if (th) sfxSeg('heroFall', at, c, th - .04, c.buf.duration - th + .04); }
   if (t >= T) {
     // the fall, from where the stagger left the body, eased in over its first moment
     if (!f.end) { f.t = T - 1e-4; dyingPose(f); f.t = t; f.end = poseGet(f); }
@@ -406,7 +412,9 @@ function dyingPose(f) {
   const jolt = e(k(t / .1)) * (1 - .75 * e(k((t - .12) / .3))), hold = e(k((t - .02) / .16)), sag = e(k((t - .12) / Math.max(.1, T - .12)));
   const b = v.body, a0 = v.arms[0], a1 = v.arms[1], L = (o, ax, to) => o[ax] += (to - o[ax]) * hold;
   L(b.rotation, 'x', 0); L(b.rotation, 'y', 0); L(b.rotation, 'z', 0);
-  b.rotation.x += -.14 * jolt + (v.horse ? .3 : .12) * sag; b.rotation.z += .06 * sag * Math.sin(t * 8);
+  // a second spasm of pain part way through, so the long stagger never reads as slow motion
+  const spasm = Math.exp(-Math.pow((t - .62) / .07, 2));
+  b.rotation.x += -.14 * jolt - .07 * spasm + (v.horse ? .3 : .12) * sag; b.rotation.z += .06 * sag * Math.sin(t * 6);
   // a hand pressed to the wound, the weapon arm hanging slack
   L(a0.rotation, 'x', -.55); L(a0.rotation, 'y', 0); L(a0.rotation, 'z', .8); L(a1.rotation, 'x', .1); L(a1.rotation, 'y', 0); L(a1.rotation, 'z', .18);
   if (v.horse) { v.horse.rotation.x -= .14 * jolt; if (v.horseHead) v.horseHead.rotation.x -= .35 * jolt; }
@@ -421,12 +429,11 @@ function dyingPose(f) {
   return 0;
 }
 function heroFall(v) {
-  const src = sfx('heroFall', v), c = src && clips.heroFall[lastPick.heroFall];
-  const thud = c && HERO_THUD[c.f] ? (HERO_THUD[c.f] - c.from) / src.playbackRate.value : 1;
   // on foot it topples backwards or twists sideways (the drop to the knees is the stagger's own)
   v.fallK = Math.random() < .5 ? 0 : 2;
-  const G = v.horse && v.horseLegs ? HORSE_GROUND : FALL_GROUND[v.fallK], pain = Math.max(.42, thud - G);
-  const f = { v, t: 0, pain, k: G / Math.max(.2, thud - pain), x0: v.g.position.x, z0: v.g.position.z, ch: poseChans(v) }; f.base = poseGet(f);
+  const L = clips.heroFall || []; let n = Math.floor(Math.random() * L.length); if (L.length > 1 && n === lastPick.heroFall) n = (n + 1) % L.length;
+  lastPick.heroFall = n;
+  const f = { v, t: 0, pain: HERO_PAIN_T, k: 1, take: L[n], G: v.horse && v.horseLegs ? HORSE_GROUND : FALL_GROUND[v.fallK], x0: v.g.position.x, z0: v.g.position.z, ch: poseChans(v) }; f.base = poseGet(f);
   // the Engineer's scorpion, standing on the ground, is wrecked as he falls (Jack); one still in pieces on his back falls with him
   if (engScorp && engScorp.st !== 'carried') wreckScorpion();
   v.gone = true; v.soldier = false; release(v); const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1);
